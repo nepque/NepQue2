@@ -112,6 +112,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/stores/bySlug/:slug", async (req, res) => {
+    try {
+      const slug = req.params.slug;
+      const store = await storage.getStoreBySlug(slug);
+      
+      if (!store) {
+        return res.status(404).json({ message: "Store not found" });
+      }
+      
+      res.json(store);
+    } catch (error) {
+      console.error("Error fetching store by slug:", error);
+      res.status(500).json({ message: "Failed to fetch store" });
+    }
+  });
+  
   app.get("/api/stores/:id", async (req, res) => {
     try {
       const id = Number(req.params.id);
@@ -128,6 +144,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/categories/bySlug/:slug", async (req, res) => {
+    try {
+      const slug = req.params.slug;
+      const category = await storage.getCategoryBySlug(slug);
+      
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      
+      res.json(category);
+    } catch (error) {
+      console.error("Error fetching category by slug:", error);
+      res.status(500).json({ message: "Failed to fetch category" });
+    }
+  });
+  
   app.get("/api/categories/:id", async (req, res) => {
     try {
       const id = Number(req.params.id);

@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Amazon Coupons - CouponHunt</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#2563eb",
+              secondary: "#f97316",
+            },
+            borderRadius: {
+              none: "0px",
+              sm: "4px",
+              DEFAULT: "8px",
+              md: "12px",
+              lg: "16px",
+              xl: "20px",
+              "2xl": "24px",
+              "3xl": "32px",
+              full: "9999px",
+              button: "8px",
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css"
+    />
+    <style>
+      :where([class^="ri-"])::before { content: "\f3c2"; }
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+      .coupon-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      }
+      input[type="number"]::-webkit-inner-spin-button,
+      input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      .filter-tab {
+        white-space: nowrap;
+      }
+      .filter-tab.active {
+        background-color: #2563eb;
+        color: white;
+      }
+      .coupon-code-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+        border: 2px dashed #e5e7eb;
+        border-radius: 8px;
+        padding: 12px 16px;
+        background-color: #f9fafb;
+      }
+      .copied-message {
+        position: absolute;
+        top: -40px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #10b981;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 14px;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      .copied-message.show {
+        opacity: 1;
+      }
+      .coupon-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+      }
+      .filter-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+      }
+      .custom-checkbox {
+        position: relative;
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        margin-right: 8px;
+      }
+      .custom-checkbox input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .checkmark {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 20px;
+        width: 20px;
+        background-color: #fff;
+        border: 2px solid #e5e7eb;
+        border-radius: 4px;
+      }
+      .custom-checkbox input:checked ~ .checkmark {
+        background-color: #2563eb;
+        border-color: #2563eb;
+      }
+      .checkmark:after {
+        content: "";
+        position: absolute;
+        display: none;
+      }
+      .custom-checkbox input:checked ~ .checkmark:after {
+        display: block;
+      }
+      .custom-checkbox .checkmark:after {
+        left: 6px;
+        top: 2px;
+        width: 6px;
+        height: 12px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+      }
+      .skeleton {
+        animation: pulse 1.5s infinite;
+      }
+      @keyframes pulse {
+        0%, 100% {
+          opacity: 0.5;
+        }
+        50% {
+          opacity: 0.8;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+      <div class="container mx-auto px-4 py-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <a href="#" class="text-2xl font-['Pacifico'] text-primary mr-8"
+              >CouponHunt</a
+            >
+            <nav class="hidden md:flex space-x-6">
+              <a href="#" class="text-gray-700 hover:text-primary font-medium"
+                >Stores</a
+              >
+              <a href="#" class="text-gray-700 hover:text-primary font-medium"
+                >Categories</a
+              >
+              <a href="#" class="text-gray-700 hover:text-primary font-medium"
+                >Today's Deals</a
+              >
+              <a href="#" class="text-gray-700 hover:text-primary font-medium"
+                >Blog</a
+              >
+            </nav>
+          </div>
+          <div class="flex items-center space-x-4">
+            <div class="relative">
+              <input
+                type="text"
+                placeholder="Search for stores or coupons"
+                class="w-64 lg:w-80 pl-10 pr-4 py-2 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              />
+              <div
+                class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 flex items-center justify-center text-gray-400"
+              >
+                <i class="ri-search-line"></i>
+              </div>
+            </div>
+            <a
+              href="#"
+              class="hidden md:flex items-center text-gray-700 hover:text-primary"
+            >
+              <div class="w-8 h-8 flex items-center justify-center">
+                <i class="ri-user-line"></i>
+              </div>
+              <span class="ml-1 font-medium">Sign In</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Store Header -->
+    <section class="bg-white border-b">
+      <div class="container mx-auto px-4 py-6">
+        <div class="flex items-center mb-4">
+          <a
+            href="https://readdy.ai/home/6b9d40db-3602-4728-a556-650b41f0b6e7/d8dfa15f-31da-4332-9f39-79bb81b80ebb"
+            data-readdy="true"
+            class="text-primary hover:text-primary/80 flex items-center"
+          >
+            <div class="w-5 h-5 flex items-center justify-center mr-1">
+              <i class="ri-arrow-left-line"></i>
+            </div>
+            <span>Back to Stores</span>
+          </a>
+        </div>
+        <div
+          class="flex flex-col md:flex-row items-start md:items-center gap-6"
+        >
+          <div
+            class="w-20 h-20 flex items-center justify-center bg-blue-50 rounded-xl"
+          >
+            <i class="ri-amazon-fill text-4xl text-blue-600"></i>
+          </div>
+          <div class="flex-1">
+            <div class="flex items-center mb-1">
+              <h1 class="text-2xl font-bold text-gray-800 mr-2">Amazon</h1>
+              <div
+                class="w-5 h-5 flex items-center justify-center bg-green-100 rounded-full"
+              >
+                <i class="ri-check-line text-xs text-green-600"></i>
+              </div>
+              <span class="text-sm text-green-600 ml-1">Verified Store</span>
+            </div>
+            <div class="flex items-center text-sm text-gray-500 mb-2">
+              <div class="flex items-center mr-4">
+                <div
+                  class="w-4 h-4 flex items-center justify-center text-yellow-400 mr-1"
+                >
+                  <i class="ri-star-fill"></i>
+                </div>
+                <span>4.8/5</span>
+              </div>
+              <span class="mr-4">58 Active Coupons</span>
+              <span>Last Updated: May 2, 2025</span>
+            </div>
+            <p class="text-gray-600">
+              Find the best Amazon coupons, promo codes, and deals to save on
+              everything from electronics to household essentials.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filters -->
+    <section class="bg-white shadow-sm sticky top-16 z-40">
+      <div class="container mx-auto px-4 py-3">
+        <div class="flex flex-col md:flex-row justify-between gap-4">
+          <div class="overflow-x-auto pb-1 -mx-1">
+            <div class="flex space-x-2 px-1 min-w-max">
+              <button
+                class="filter-tab active px-4 py-2 rounded-full text-sm font-medium transition-colors"
+                data-category="all"
+              >
+                All Coupons (58)
+              </button>
+              <button
+                class="filter-tab px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 transition-colors"
+                data-category="electronics"
+              >
+                Electronics (15)
+              </button>
+              <button
+                class="filter-tab px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 transition-colors"
+                data-category="home"
+              >
+                Home & Kitchen (12)
+              </button>
+              <button
+                class="filter-tab px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 transition-colors"
+                data-category="fashion"
+              >
+                Fashion (10)
+              </button>
+              <button
+                class="filter-tab px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 transition-colors"
+                data-category="beauty"
+              >
+                Beauty & Personal Care (8)
+              </button>
+              <button
+                class="filter-tab px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 transition-colors"
+                data-category="toys"
+              >
+                Toys & Games (7)
+              </button>
+              <button
+                class="filter-tab px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 transition-colors"
+                data-category="books"
+              >
+                Books & Media (6)
+              </button>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3">
+            <div class="relative">
+              <select
+                id="sortDropdown"
+                class="appearance-none bg-gray-100 text-gray-700 py-2 pl-4 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+              >
+                <option value="newest">Newest</option>
+                <option value="popular">Most Popular</option>
+                <option value="expiring">Expiring Soon</option>
+              </select>
+              <div
+                class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none w-4 h-4 flex items-center justify-center text-gray-500"
+              >
+                <i class="ri-arrow-down-s-line"></i>
+              </div>
+            </div>
+            <button
+              id="filterButton"
+              class="flex items-center bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+            >
+              <div class="w-4 h-4 flex items-center justify-center mr-1">
+                <i class="ri-filter-3-line"></i>
+              </div>
+              <span>Filter</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Coupons Grid -->
+    <section class="py-8">
+      <div class="container mx-auto px-4">
+        <div
+          id="couponsGrid"
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          <!-- Coupon Card 1 -->
+          <div
+            class="coupon-card bg-white rounded-lg shadow-sm overflow-hidden transition duration-300"
+            data-category="electronics"
+          >
+            <div class="bg-blue-50 p-4 flex items-center">
+              <div
+                class="w-12 h-12 flex items-center justify-center bg-white rounded-full shadow-sm"
+              >
+                <i class="ri-amazon-fill text-xl text-blue-600"></i>
+              </div>
+              <div class="ml-3">
+                <h3 class="font-medium text-gray-800">Amazon</h3>
+                <div class="flex items-center mt-1">
+                  <div class="w-4 h-4 flex items-center justify-center">
+                    <i class="ri-check-line text-xs text-green-500"></i>
+                  </div>
+                  <span class="text-xs text-green-500 ml-1">Verified</span>
+                  <span class="mx-2 text-gray-300">|</span>
+                  <span class="text-xs text-gray-500">Used 3.2K times</span>
+                </div>
+              </div>
+            </div>
+            <div class="p-5">
+              <div class="flex items-center mb-3">
+                <span
+                  class="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded"
+                  >30% OFF</span
+                >
+                <span class="ml-2 text-xs text-gray-500"
+                  >Ends May 15, 2025</span
+                >
+              </div>
+              <p class="text-gray-700 mb-4">
+                30% Off on Electronics with Prime Membership
+              </p>
+              <div class="flex items-center text-xs text-gray-500 mb-4">
+                <div class="w-4 h-4 flex items-center justify-center mr-1">
+                  <i class="ri-checkbox-circle-line text-green-500"></i>
+                </div>
+                <span>98% Success Rate</span>
+              </div>
+              <button
+                class="show-coupon-btn w-full bg-primary text-white py-3 rounded-button font-medium hover:bg-primary/90 whitespace-nowrap"
+                data-code="PRIME30OFF"
+              >
+                Show Coupon Code
+              </button>
+            </div>
+          </div>
+
+          <!-- Coupon Card 2 -->
+          <div
+            class="coupon-card bg-white rounded-lg shadow-sm overflow-hidden transition duration-300"
+            data-category="home"
+          >
+            <div class="bg-blue-50 p-4 flex items-center">
+              <div
+                class="w-12 h-12 flex items-center justify-center bg-white rounded-full shadow-sm"
+              >
+                <i class="ri-amazon-fill text-xl text-blue-600"></i>
+              </div>
+              <div class="ml-3">
+                <h3 class="font-medium text-gray-800">Amazon</h3>
+                <div class="flex items-center mt-1">
+                  <div class="w-4 h-4 flex items-center justify-center">
+                    <i class="ri-check-line text-xs text-green-500"></i>
+                  </div>
+                  <span class="text-xs text-green-500 ml-1">Verified</span>
+                  <span class="mx-2 text-gray-300">|</span>
+                  <span class="text-xs text-gray-500">Used 2.7K times</span>
+                </div>
+              </div>
+            </div>
+            <div class="p-5">
+              <div class="flex items-center mb-3">
+                <span
+                  class="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded"
+                  >$20 OFF</span
+                >
+                <span class="ml-2 text-xs text-gray-500"
+                  >Ends May 20, 2025</span
+                >
+              </div>
+              <p class="text-gray-700 mb-4">
+                $20 Off on Home & Kitchen Appliances over $100
+              </p>
+              <div class="flex items-center text-xs text-gray-500 mb-4">
+                <div class="w-4 h-4 flex items-center justify-center mr-1">
+                  <i class="ri-checkbox-circle-line text-green-500"></i>
+                </div>
+                <span>95% Success Rate</span>
+              </div>
+              <button
+                class="show-coupon-btn w-full bg-primary text-white py-3 rounded-button font-medium hover:bg-primary/90 whitespace-nowrap"
+                data-code="HOME20OFF"
+              >
+                Show Coupon Code
+              </button>
+            </div>
+          </div>
+
+          <!-- Coupon Card 3 -->
+          <div
+            class="coupon-card bg-white rounded-lg shadow-sm overflow-hidden transition duration-300"
+            data-category="fashion"
+          >
+            <div class="bg-blue-50 p-4 flex items-center">
+              <div
+                class="w-12 h-12 flex items-center justify-center bg-white rounded-full shadow-sm"
+              >
+                <i class="ri-amazon-fill text-xl text-blue-600"></i>
+              </div>
+              <div class="ml-3">
+                <h3 class="font-medium text-gray-800">Amazon</h3>
+                <div class="flex items-center mt-1">
+                  <div class="w-4 h-4 flex items-center justify-center">
+                    <i class="ri-check-line text-xs text-green-500"></i>
+                  </div>
+                  <span class="text-xs text-green-500 ml-1">Verified</span>
+                  <span class="mx-2 text-gray-300">|</span>
+                  <span class="text-xs text-gray-500">Used 1.9K times</span>
+                </div>
+              </div>
+            </div>
+            <div class="p-5">
+              <div class="flex items-center mb-3">
+                <span
+                  class="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded"
+                  >25% OFF</span
+                >
+                <span class="ml-2 text-xs text-gray-500"
+                  >Ends May 25, 2025</span
+                >
+              </div>
+              <p class="text-gray-700 mb-4">
+                25% Off on Fashion Items - Amazon Brands
+              </p>
+              <div class="flex items-center text-xs text-gray-500 mb-4">
+                <div class="w-4 h-4 flex items-center justify-center mr-1">
+                  <i class="ri-checkbox-circle-line text-green-500"></i>
+                </div>
+                <span>93% Success Rate</span>
+              </div>
+              <button
+                class="show-coupon-btn w-full bg-primary text-white py-3 rounded-button font-medium hover:bg-primary/90 whitespace-nowrap"
+                data-code="FASHION25"
+              >
+                Show Coupon Code
+              </button>
+            </div>
+          </div>
+
+          <!-- Coupon Card 4 -->
+          <div
+            class="coupon-card bg-white rounded-lg shadow-sm overflow-hidden transition duration-300"
+            data-category="beauty"
+          >
+            <div class="bg-blue-50 p-4 flex items-center">
+              <div
+                class="w-12 h-12 flex items-center justify-center bg-white rounded-full shadow-sm"
+              >
+                <i class="ri-amazon-fill text-xl text-blue-600"></i>
+              </div>
+              <div class="ml-3">
+                <h3 class="font-medium text-gray-800">Amazon</h3>
+                <div class="flex items-center mt-1">
+                  <div class="w-4 h-4 flex items-center justify-center">
+                    <i class="ri-check-line text-xs text-green-500"></i>
+                  </div>
+                  <span class="text-xs text-green-500 ml-1">Verified</span>
+                  <span class="mx-2 text-gray-300">|</span>
+                  <span class="text-xs text-gray-500">Used 1.5K times</span>
+                </div>
+              </div>
+            </div>
+            <div class="p-5">
+              <div class="flex items-center mb-3">
+                <span
+                  class="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded"
+                  >15% OFF</span
+                >
+                <span class="ml-2 text-xs text-gray-500"
+                  >Ends May 18, 2025</span
+                >
+              </div>
+              <p class="text-gray-700 mb-4">
+                15% Off on Beauty & Personal Care Products
+              </p>
+              <div class="flex items-center text-xs text-gray-500 mb-4">
+                <div class="w-4 h-4 flex items-center justify-center mr-1">
+                  <i class="ri-checkbox-circle-line text-green-500"></i>
+                </div>
+                <span>91% Success Rate</span>
+              </div>
+              <button
+                class="show-coupon-btn w-full bg-primary text-white py-3 rounded-button font-medium hover:bg-primary/90 whitespace-nowrap"
+                data-code="BEAUTY15"
+              >
+                Show Coupon Code
+              </button>
+            </div>
+          </div>
+
+          <!-- Coupon Card 5 -->
+          <div
+            class="coupon-card bg-white rounded-lg shadow-sm overflow-hidden transition duration-300"
+            data-category="electronics"
+          >
+            <div class="bg-blue-50 p-4 flex items-center">
+              <div
+                class="w-12 h-12 flex items-center justify-center bg-white rounded-full shadow-sm"
+              >
+                <i class="ri-amazon-fill text-xl text-blue-600"></i>
+              </div>
+              <div class="ml-3">
+                <h3 class="font-medium text-gray-800">Amazon</h3>
+                <div class="flex items-center mt-1">
+                  <div class="w-4 h-4 flex items-center justify-center">
+                    <i class="ri-check-line text-xs text-green-500"></i>
+                  </div>
+                  <span class="text-xs text-green-500 ml-1">Verified</span>
+                  <span class="mx-2 text-gray-300">|</span>
+                  <span class="text-xs text-gray-500">Used 2.2K times</span>
+                </div>
+              </div>
+            </div>
+            <div class="p-5">
+              <div class="flex items-center mb-3">
+                <span
+                  class="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded"
+                  >$50 OFF</span
+                >
+                <span class="ml-2 text-xs text-gray-500"
+                  >Ends May 12, 2025</span
+                >
+              </div>
+              <p class="text-gray-700 mb-4">
+                $50 Off on Smart Home Devices over $200
+              </p>
+              <div class="flex items-center text-xs text-gray-500 mb-4">
+                <div class="w-4 h-4 flex items-center justify-center mr-1">
+                  <i class="ri-checkbox-circle-line text-green-500"></i>
+                </div>
+                <span>97% Success Rate</span>
+              </div>
+              <button
+                class="show-coupon-btn w-full bg-primary text-white py-3 rounded-button font-medium hover:bg-primary/90 whitespace-nowrap"
+                data-code="SMARTHOME50"
+              >
+                Show Coupon Code
+              </button>
+            </div>
+          </div>
+
+          <!-- Coupon Card 6 -->
+          <div
+            class="coupon-card bg-white rounded-lg shadow-sm overflow-hidden transition duration-300"
+            data-category="toys"
+          >
+            <div class="bg-blue-50 p-4 flex items-center">
+              <div
+                class="w-12 h-12 flex items-center justify-center bg-white rounded-full shadow-sm"
+              >
+                <i class="ri-amazon-fill text-xl text-blue-600"></i>
+              </div>
+              <div class="ml-3">
+                <h3 class="font-medium text-gray-800">Amazon</h3>
+                <div class="flex items-center mt-1">
+                  <div class="w-4 h-4 flex items-center justify-center">
+                    <i class="ri-check-line text-xs text-green-500"></i>
+                  </div>
+                  <span class="text-xs text-green-500 ml-1">Verified</span>
+                  <span class="mx-2 text-gray-300">|</span>
+                  <span class="text-xs text-gray-500">Used 1.3K times</span>
+                </div>
+              </div>
+            </div>
+            <div class="p-5">
+              <div class="flex items-center mb-3">
+                <span
+                  class="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded"
+                  >20% OFF</span
+                >
+                <span class="ml-2 text-xs text-gray-500"
+                  >Ends May 22, 2025</span
+                >
+              </div>
+              <p class="text-gray-700 mb-4">
+                20% Off on Toys & Games for Prime Members
+              </p>
+              <div class="flex items-center text-xs text-gray-500 mb-4">
+                <div class="w-4 h-4 flex items-center justify-center mr-1">
+                  <i class="ri-checkbox-circle-line text-green-500"></i>
+                </div>
+                <span>94% Success Rate</span>
+              </div>
+              <button
+                class="show-coupon-btn w-full bg-primary text-white py-3 rounded-button font-medium hover:bg-primary/90 whitespace-nowrap"
+                data-code="TOYS20PRIME"
+              >
+                Show Coupon Code
+              </button>
+            </div>
+          </div>
+
+          <!-- Coupon Card 7 -->
+          <div
+            class="coupon-card bg-white rounded-lg shadow-sm overflow-hidden transition duration-300"
+            data-category="books"
+          >
+            <div class="bg-blue-50 p-4 flex items-center">
+              <div
+                class="w-12 h-12 flex items-center justify-center bg-white rounded-full shadow-sm"
+              >
+                <i class="ri-amazon-fill text-xl text-blue-600"></i>
+              </div>
+              <div class="ml-3">
+                <h3 class="font-medium text-gray-800">Amazon</h3>
+                <div class="flex items-center mt-1">
+                  <div class="w-4 h-4 flex items-center justify-center">
+                    <i class="ri-check-line text-xs text-green-500"></i>
+                  </div>
+                  <span class="text-xs text-green-500 ml-1">Verified</span>
+                  <span class="mx-2 text-gray-300">|</span>
+                  <span class="text-xs text-gray-500">Used 1.1K times</span>
+                </div>
+              </div>
+            </div>
+            <div class="p-5">
+              <div class="flex items-center mb-3">
+                <span
+                  class="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded"
+                  >Buy 2 Get 1</span
+                >
+                <span class="ml-2 text-xs text-gray-500"
+                  >Ends May 28, 2025</span
+                >
+              </div>
+              <p class="text-gray-700 mb-4">
+                Buy 2 Books, Get 1 Free - Selected Titles
+              </p>
+              <div class="flex items-center text-xs text-gray-500 mb-4">
+                <div class="w-4 h-4 flex items-center justify-center mr-1">
+                  <i class="ri-checkbox-circle-line text-green-500"></i>
+                </div>
+                <span>96% Success Rate</span>
+              </div>
+              <button
+                class="show-coupon-btn w-full bg-primary text-white py-3 rounded-button font-medium hover:bg-primary/90 whitespace-nowrap"
+                data-code="B2G1FREE"
+              >
+                Show Coupon Code
+              </button>
+            </div>
+          </div>
+
+          <!-- Coupon Card 8 -->
+          <div
+            class="coupon-card bg-white rounded-lg shadow-sm overflow-hidden transition duration-300"
+            data-category="home"
+          >
+            <div class="bg-blue-50 p-4 flex items-center">
+              <div
+                class="w-12 h-12 flex items-center justify-center bg-white rounded-full shadow-sm"
+              >
+                <i class="ri-amazon-fill text-xl text-blue-600"></i>
+              </div>
+              <div class="ml-3">
+                <h3 class="font-medium text-gray-800">Amazon</h3>
+                <div class="flex items-center mt-1">
+                  <div class="w-4 h-4 flex items-center justify-center">
+                    <i class="ri-check-line text-xs text-green-500"></i>
+                  </div>
+                  <span class="text-xs text-green-500 ml-1">Verified</span>
+                  <span class="mx-2 text-gray-300">|</span>
+                  <span class="text-xs text-gray-500">Used 1.8K times</span>
+                </div>
+              </div>
+            </div>
+            <div class="p-5">
+              <div class="flex items-center mb-3">
+                <span
+                  class="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded"
+                  >40% OFF</span
+                >
+                <span class="ml-2 text-xs text-gray-500"
+                  >Ends May 10, 2025</span
+                >
+              </div>
+              <p class="text-gray-700 mb-4">
+                40% Off on Bedding & Bath Products
+              </p>
+              <div class="flex items-center text-xs text-gray-500 mb-4">
+                <div class="w-4 h-4 flex items-center justify-center mr-1">
+                  <i class="ri-checkbox-circle-line text-green-500"></i>
+                </div>
+                <span>92% Success Rate</span>
+              </div>
+              <button
+                class="show-coupon-btn w-full bg-primary text-white py-3 rounded-button font-medium hover:bg-primary/90 whitespace-nowrap"
+                data-code="BATH40"
+              >
+                Show Coupon Code
+              </button>
+            </div>
+          </div>
+
+          <!-- Coupon Card 9 -->
+          <div
+            class="coupon-card bg-white rounded-lg shadow-sm overflow-hidden transition duration-300"
+            data-category="electronics"
+          >
+            <div class="bg-blue-50 p-4 flex items-center">
+              <div
+                class="w-12 h-12 flex items-center justify-center bg-white rounded-full shadow-sm"
+              >
+                <i class="ri-amazon-fill text-xl text-blue-600"></i>
+              </div>
+              <div class="ml-3">
+                <h3 class="font-medium text-gray-800">Amazon</h3>
+                <div class="flex items-center mt-1">
+                  <div class="w-4 h-4 flex items-center justify-center">
+                    <i class="ri-check-line text-xs text-green-500"></i>
+                  </div>
+                  <span class="text-xs text-green-500 ml-1">Verified</span>
+                  <span class="mx-2 text-gray-300">|</span>
+                  <span class="text-xs text-gray-500">Used 2.4K times</span>
+                </div>
+              </div>
+            </div>
+            <div class="p-5">
+              <div class="flex items-center mb-3">
+                <span
+                  class="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded"
+                  >$100 OFF</span
+                >
+                <span class="ml-2 text-xs text-gray-500">Ends May 8, 2025</span>
+              </div>
+              <p class="text-gray-700 mb-4">
+                $100 Off on Select Laptops & Computers
+              </p>
+              <div class="flex items-center text-xs text-gray-500 mb-4">
+                <div class="w-4 h-4 flex items-center justify-center mr-1">
+                  <i class="ri-checkbox-circle-line text-green-500"></i>
+                </div>
+                <span>99% Success Rate</span>
+              </div>
+              <button
+                class="show-coupon-btn w-full bg-primary text-white py-3 rounded-button font-medium hover:bg-primary/90 whitespace-nowrap"
+                data-code="LAPTOP100"
+              >
+                Show Coupon Code
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State (Hidden by default) -->
+        <div id="emptyState" class="hidden py-16 text-center">
+          <div
+            class="w-24 h-24 mx-auto flex items-center justify-center bg-gray-100 rounded-full mb-6"
+          >
+            <i class="ri-search-line text-4xl text-gray-400"></i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-800 mb-2">No Coupons Found</h3>
+          <p class="text-gray-600 mb-6 max-w-md mx-auto">
+            We couldn't find any coupons matching your current filters. Try
+            adjusting your filters or check back later.
+          </p>
+          <button
+            id="resetFilters"
+            class="bg-primary text-white px-6 py-3 rounded-button font-medium hover:bg-primary/90 whitespace-nowrap"
+          >
+            Reset Filters
+          </button>
+        </div>
+
+        <!-- Loading State (Hidden by default) -->
+        <div
+          id="loadingState"
+          class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="bg-gray-100 p-4 flex items-center">
+              <div class="w-12 h-12 rounded-full skeleton bg-gray-200"></div>
+              <div class="ml-3 flex-1">
+                <div class="h-5 w-24 skeleton bg-gray-200 rounded mb-2"></div>
+                <div class="h-4 w-32 skeleton bg-gray-200 rounded"></div>
+              </div>
+            </div>
+            <div class="p-5">
+              <div class="flex items-center mb-3">
+                <div class="h-6 w-20 skeleton bg-gray-200 rounded mr-2"></div>
+                <div class="h-4 w-32 skeleton bg-gray-200 rounded"></div>
+              </div>
+              <div class="h-4 w-full skeleton bg-gray-200 rounded mb-2"></div>
+              <div class="h-4 w-3/4 skeleton bg-gray-200 rounded mb-4"></div>
+              <div class="h-10 w-full skeleton bg-gray-200 rounded"></div>
+            </div>
+          </div>
+          <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="bg-gray-100 p-4 flex items-center">
+              <div class="w-12 h-12 rounded-full skeleton bg-gray-200"></div>
+              <div class="ml-3 flex-1">
+                <div class="h-5 w-24 skeleton bg-gray-200 rounded mb-2"></div>
+                <div class="h-4 w-32 skeleton bg-gray-200 rounded"></div>
+              </div>
+            </div>
+            <div class="p-5">
+              <div class="flex items-center mb-3">
+                <div class="h-6 w-20 skeleton bg-gray-200 rounded mr-2"></div>
+                <div class="h-4 w-32 skeleton bg-gray-200 rounded"></div>
+              </div>
+              <div class="h-4 w-full skeleton bg-gray-200 rounded mb-2"></div>
+              <div class="h-4 w-3/4 skeleton bg-gray-200 rounded mb-4"></div>
+              <div class="h-10 w-full skeleton bg-gray-200 rounded"></div>
+            </div>
+          </div>
+          <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="bg-gray-100 p-4 flex items-center">
+              <div class="w-12 h-12 rounded-full skeleton bg-gray-200"></div>
+              <div class="ml-3 flex-1">
+                <div class="h-5 w-24 skeleton bg-gray-200 rounded mb-2"></div>
+                <div class="h-4 w-32 skeleton bg-gray-200 rounded"></div>
+              </div>
+            </div>
+            <div class="p-5">
+              <div class="flex items-center mb-3">
+                <div class="h-6 w-20 skeleton bg-gray-200 rounded mr-2"></div>
+                <div class="h-4 w-32 skeleton bg-gray-200 rounded"></div>
+              </div>
+              <div class="h-4 w-full skeleton bg-gray-200 rounded mb-2"></div>
+              <div class="h-4 w-3/4 skeleton bg-gray-200 rounded mb-4"></div>
+              <div class="h-10 w-full skeleton bg-gray-200 rounded"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Load More Button -->
+        <div class="mt-8 text-center">
+          <button
+            id="loadMoreBtn"
+            class="bg-white border border-gray-200 text-gray-700 px-6 py-3 rounded-button font-medium hover:bg-gray-50 whitespace-nowrap"
+          >
+            Load More Coupons
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white pt-12 pb-6">
+      <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+          <div>
+            <h3 class="text-xl font-['Pacifico'] mb-4">CouponHunt</h3>
+            <p class="text-gray-400 mb-4">
+              Your ultimate destination for verified coupons and promo codes to
+              save money on your online shopping.
+            </p>
+            <div class="flex space-x-4">
+              <a href="#" class="text-gray-400 hover:text-white">
+                <div class="w-8 h-8 flex items-center justify-center">
+                  <i class="ri-facebook-fill"></i>
+                </div>
+              </a>
+              <a href="#" class="text-gray-400 hover:text-white">
+                <div class="w-8 h-8 flex items-center justify-center">
+                  <i class="ri-twitter-x-fill"></i>
+                </div>
+              </a>
+              <a href="#" class="text-gray-400 hover:text-white">
+                <div class="w-8 h-8 flex items-center justify-center">
+                  <i class="ri-instagram-fill"></i>
+                </div>
+              </a>
+              <a href="#" class="text-gray-400 hover:text-white">
+                <div class="w-8 h-8 flex items-center justify-center">
+                  <i class="ri-pinterest-fill"></i>
+                </div>
+              </a>
+            </div>
+          </div>
+          <div>
+            <h4 class="text-lg font-semibold mb-4">Popular Stores</h4>
+            <ul class="space-y-2">
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Amazon Coupons</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Walmart Coupons</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Target Coupons</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Temu Coupons</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Shein Coupons</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >DoorDash Promo Codes</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="text-lg font-semibold mb-4">Categories</h4>
+            <ul class="space-y-2">
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Fashion Coupons</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Electronics Deals</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Food & Dining Offers</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Travel Discounts</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Health & Beauty Coupons</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Home & Garden Deals</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="text-lg font-semibold mb-4">Company</h4>
+            <ul class="space-y-2">
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white">About Us</a>
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Contact Us</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >How It Works</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Privacy Policy</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Terms of Service</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white">Sitemap</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="pt-8 border-t border-gray-700 text-center">
+          <div class="flex justify-center space-x-6 mb-4">
+            <div class="w-10 h-6 flex items-center justify-center">
+              <i class="ri-visa-fill text-2xl text-gray-400"></i>
+            </div>
+            <div class="w-10 h-6 flex items-center justify-center">
+              <i class="ri-mastercard-fill text-2xl text-gray-400"></i>
+            </div>
+            <div class="w-10 h-6 flex items-center justify-center">
+              <i class="ri-paypal-fill text-2xl text-gray-400"></i>
+            </div>
+            <div class="w-10 h-6 flex items-center justify-center">
+              <i class="ri-apple-fill text-2xl text-gray-400"></i>
+            </div>
+            <div class="w-10 h-6 flex items-center justify-center">
+              <i class="ri-google-fill text-2xl text-gray-400"></i>
+            </div>
+          </div>
+          <p class="text-gray-500 text-sm">
+            © 2025 CouponHunt. All rights reserved.
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Coupon Modal -->
+    <div id="couponModal" class="coupon-modal">
+      <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">
+        <button
+          id="closeModal"
+          class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+        >
+          <div class="w-6 h-6 flex items-center justify-center">
+            <i class="ri-close-line text-xl"></i>
+          </div>
+        </button>
+        <div class="text-center mb-6">
+          <div
+            class="w-16 h-16 mx-auto flex items-center justify-center bg-blue-100 rounded-full mb-4"
+          >
+            <i class="ri-amazon-fill text-3xl text-blue-600"></i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-800 mb-2">
+            Amazon Coupon Code
+          </h3>
+          <p class="text-gray-600 mb-4">
+            Copy this code and paste it at checkout
+          </p>
+        </div>
+        <div class="coupon-code-container mb-6">
+          <span
+            id="couponCode"
+            class="font-mono text-lg font-semibold flex-1 text-center"
+          ></span>
+          <button id="copyCode" class="ml-3 text-primary hover:text-primary/80">
+            <div class="w-6 h-6 flex items-center justify-center">
+              <i class="ri-file-copy-line"></i>
+            </div>
+          </button>
+          <span class="copied-message">Copied!</span>
+        </div>
+        <div class="text-center">
+          <a
+            href="https://www.amazon.com"
+            target="_blank"
+            id="goToStore"
+            class="block w-full bg-primary text-white py-3 rounded-button font-medium hover:bg-primary/90 whitespace-nowrap mb-3"
+            >Shop at Amazon</a
+          >
+          <p class="text-xs text-gray-500">
+            This coupon was verified on May 2, 2025
+          </p>
+          <p class="text-xs text-gray-500 mt-2">Terms & Conditions may apply</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Modal -->
+    <div id="filterModal" class="filter-modal">
+      <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">
+        <button
+          id="closeFilterModal"
+          class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+        >
+          <div class="w-6 h-6 flex items-center justify-center">
+            <i class="ri-close-line text-xl"></i>
+          </div>
+        </button>
+        <h3 class="text-xl font-bold text-gray-800 mb-6">Filter Coupons</h3>
+
+        <div class="mb-6">
+          <h4 class="font-medium text-gray-700 mb-3">Discount Type</h4>
+          <div class="space-y-2">
+            <label class="flex items-center">
+              <div class="custom-checkbox">
+                <input type="checkbox" checked />
+                <span class="checkmark"></span>
+              </div>
+              <span>Percentage Off</span>
+            </label>
+            <label class="flex items-center">
+              <div class="custom-checkbox">
+                <input type="checkbox" checked />
+                <span class="checkmark"></span>
+              </div>
+              <span>Dollar Off</span>
+            </label>
+            <label class="flex items-center">
+              <div class="custom-checkbox">
+                <input type="checkbox" checked />
+                <span class="checkmark"></span>
+              </div>
+              <span>Buy X Get Y</span>
+            </label>
+            <label class="flex items-center">
+              <div class="custom-checkbox">
+                <input type="checkbox" checked />
+                <span class="checkmark"></span>
+              </div>
+              <span>Free Shipping</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="mb-6">
+          <h4 class="font-medium text-gray-700 mb-3">Expiration</h4>
+          <div class="space-y-2">
+            <label class="flex items-center">
+              <div class="custom-checkbox">
+                <input type="checkbox" checked />
+                <span class="checkmark"></span>
+              </div>
+              <span>Expiring Today</span>
+            </label>
+            <label class="flex items-center">
+              <div class="custom-checkbox">
+                <input type="checkbox" checked />
+                <span class="checkmark"></span>
+              </div>
+              <span>Expiring This Week</span>
+            </label>
+            <label class="flex items-center">
+              <div class="custom-checkbox">
+                <input type="checkbox" checked />
+                <span class="checkmark"></span>
+              </div>
+              <span>Expiring This Month</span>
+            </label>
+            <label class="flex items-center">
+              <div class="custom-checkbox">
+                <input type="checkbox" checked />
+                <span class="checkmark"></span>
+              </div>
+              <span>No Expiration</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="mb-6">
+          <h4 class="font-medium text-gray-700 mb-3">Verification Status</h4>
+          <div class="space-y-2">
+            <label class="flex items-center">
+              <div class="custom-checkbox">
+                <input type="checkbox" checked />
+                <span class="checkmark"></span>
+              </div>
+              <span>Verified Only</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="flex space-x-3">
+          <button
+            id="applyFilters"
+            class="flex-1 bg-primary text-white py-3 rounded-button font-medium hover:bg-primary/90 whitespace-nowrap"
+          >
+            Apply Filters
+          </button>
+          <button
+            id="clearFilters"
+            class="flex-1 bg-gray-100 text-gray-700 py-3 rounded-button font-medium hover:bg-gray-200 whitespace-nowrap"
+          >
+            Clear All
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Filter tabs functionality
+        const filterTabs = document.querySelectorAll(".filter-tab");
+        filterTabs.forEach((tab) => {
+          tab.addEventListener("click", function () {
+            // Remove active class from all tabs
+            filterTabs.forEach((t) => t.classList.remove("active"));
+            filterTabs.forEach((t) =>
+              t.classList.add("bg-gray-100", "text-gray-700"),
+            );
+            filterTabs.forEach((t) => t.classList.remove("bg-primary", "text-white"));
+
+            // Add active class to clicked tab
+            this.classList.add("active");
+            this.classList.remove("bg-gray-100", "text-gray-700");
+            this.classList.add("bg-primary", "text-white");
+
+            // Filter coupons based on category
+            const category = this.getAttribute("data-category");
+            const couponCards = document.querySelectorAll(".coupon-card");
+
+            let visibleCount = 0;
+
+            couponCards.forEach((card) => {
+              if (
+                category === "all" ||
+                card.getAttribute("data-category") === category
+              ) {
+                card.style.display = "block";
+                visibleCount++;
+              } else {
+                card.style.display = "none";
+              }
+            });
+
+            // Show/hide empty state
+            const emptyState = document.getElementById("emptyState");
+            const couponsGrid = document.getElementById("couponsGrid");
+
+            if (visibleCount === 0) {
+              emptyState.classList.remove("hidden");
+              couponsGrid.classList.add("hidden");
+            } else {
+              emptyState.classList.add("hidden");
+              couponsGrid.classList.remove("hidden");
+            }
+          });
+        });
+
+        // Coupon modal functionality
+        const showCouponBtns = document.querySelectorAll(".show-coupon-btn");
+        const couponModal = document.getElementById("couponModal");
+        const closeModal = document.getElementById("closeModal");
+        const couponCode = document.getElementById("couponCode");
+        const copyCode = document.getElementById("copyCode");
+        const copiedMessage = document.querySelector(".copied-message");
+
+        showCouponBtns.forEach((btn) => {
+          btn.addEventListener("click", function () {
+            const code = this.getAttribute("data-code");
+            couponCode.textContent = code;
+            couponModal.style.display = "flex";
+          });
+        });
+
+        closeModal.addEventListener("click", function () {
+          couponModal.style.display = "none";
+        });
+
+        copyCode.addEventListener("click", function () {
+          const textToCopy = couponCode.textContent;
+          navigator.clipboard.writeText(textToCopy).then(function () {
+            copiedMessage.classList.add("show");
+            setTimeout(function () {
+              copiedMessage.classList.remove("show");
+            }, 2000);
+          });
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener("click", function (event) {
+          if (event.target === couponModal) {
+            couponModal.style.display = "none";
+          }
+        });
+
+        // Filter modal functionality
+        const filterButton = document.getElementById("filterButton");
+        const filterModal = document.getElementById("filterModal");
+        const closeFilterModal = document.getElementById("closeFilterModal");
+        const applyFilters = document.getElementById("applyFilters");
+        const clearFilters = document.getElementById("clearFilters");
+
+        filterButton.addEventListener("click", function () {
+          filterModal.style.display = "flex";
+        });
+
+        closeFilterModal.addEventListener("click", function () {
+          filterModal.style.display = "none";
+        });
+
+        applyFilters.addEventListener("click", function () {
+          filterModal.style.display = "none";
+          // Simulate loading state
+          showLoadingState();
+
+          setTimeout(() => {
+            hideLoadingState();
+          }, 1000);
+        });
+
+        clearFilters.addEventListener("click", function () {
+          const checkboxes = filterModal.querySelectorAll('input[type="checkbox"]');
+          checkboxes.forEach((checkbox) => {
+            checkbox.checked = true;
+          });
+        });
+
+        // Close filter modal when clicking outside
+        window.addEventListener("click", function (event) {
+          if (event.target === filterModal) {
+            filterModal.style.display = "none";
+          }
+        });
+
+        // Reset filters button
+        const resetFilters = document.getElementById("resetFilters");
+        resetFilters.addEventListener("click", function () {
+          const allTab = document.querySelector('.filter-tab[data-category="all"]');
+          allTab.click();
+        });
+
+        // Load more button
+        const loadMoreBtn = document.getElementById("loadMoreBtn");
+        loadMoreBtn.addEventListener("click", function () {
+          showLoadingState();
+
+          setTimeout(() => {
+            hideLoadingState();
+            loadMoreBtn.textContent = "No More Coupons";
+            loadMoreBtn.disabled = true;
+            loadMoreBtn.classList.add("opacity-50", "cursor-not-allowed");
+          }, 1500);
+        });
+
+        // Loading state functions
+        function showLoadingState() {
+          document.getElementById("loadingState").classList.remove("hidden");
+          document.getElementById("couponsGrid").classList.add("hidden");
+          document.getElementById("emptyState").classList.add("hidden");
+        }
+
+        function hideLoadingState() {
+          document.getElementById("loadingState").classList.add("hidden");
+          document.getElementById("couponsGrid").classList.remove("hidden");
+        }
+      });
+    </script>
+  </body>
+</html>

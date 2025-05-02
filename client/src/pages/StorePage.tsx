@@ -1,19 +1,34 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Store, CouponWithRelations } from "@shared/schema";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft } from "lucide-react";
+import { CouponWithRelations, Store, Category } from "@shared/schema";
 import CouponCard from "@/components/coupon/CouponCard";
 import CouponDetailModal from "@/components/coupon/CouponDetailModal";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+
+// Icons
+import { 
+  ArrowLeft, 
+  Search,
+  Filter,
+  Star,
+  CheckCircle2,
+} from "lucide-react";
+
+const StoreLogoPlaceholder = ({ name }: { name: string }) => (
+  <div className="w-20 h-20 flex items-center justify-center rounded-xl bg-blue-50 text-primary text-2xl font-bold">
+    {name.charAt(0).toUpperCase()}
+  </div>
+);
 
 const StorePage = () => {
   const [match, params] = useRoute("/store/:slug");
   const [, navigate] = useLocation();
+  const [selectedSort, setSelectedSort] = useState<string>("newest");
   const [selectedCoupon, setSelectedCoupon] = useState<CouponWithRelations | null>(null);
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState<string>("all");
 
   // Redirect if no match
   useEffect(() => {
@@ -40,18 +55,32 @@ const StorePage = () => {
     enabled: !!params?.slug
   });
 
-  // Fetch coupons for this store
+  // Fetch coupons for this store with sorting
   const { data: coupons, isLoading: isLoadingCoupons } = useQuery<CouponWithRelations[]>({
-    queryKey: ["/api/coupons", { storeId: store?.id }],
+    queryKey: ["/api/coupons", { storeId: store?.id, sortBy: selectedSort }],
     queryFn: async () => {
       if (!store?.id) throw new Error("Store ID is required");
-      const response = await fetch(`/api/coupons?storeId=${store.id}`);
+      const params = new URLSearchParams();
+      params.append("storeId", store.id.toString());
+      if (selectedSort) params.append("sortBy", selectedSort);
+      
+      const response = await fetch(`/api/coupons?${params.toString()}`);
       if (!response.ok) {
         throw new Error("Failed to fetch coupons");
       }
       return response.json();
     },
     enabled: !!store?.id
+  });
+
+  // Fetch categories for filtering
+  const { data: categories } = useQuery<Category[]>({
+    queryKey: ["/api/categories"],
+    queryFn: async () => {
+      const response = await fetch("/api/categories");
+      if (!response.ok) throw new Error("Failed to fetch categories");
+      return response.json();
+    },
   });
 
   const handleShowCode = (coupon: CouponWithRelations) => {
@@ -62,139 +91,221 @@ const StorePage = () => {
     setSelectedCoupon(null);
   };
 
+  // Filter coupons by category
   const filteredCoupons = coupons?.filter(coupon => {
     if (activeTab === "all") return true;
-    if (activeTab === "codes" && coupon.code) return true;
-    if (activeTab === "deals" && !coupon.code) return true;
-    return false;
+    return coupon.category.slug === activeTab;
   });
 
-  if (isLoadingStore) {
-    return (
-      <div className="container mx-auto px-4 py-6">
-        <div className="max-w-5xl mx-auto">
-          <div className="flex items-center mb-4">
-            <Skeleton className="h-6 w-20" />
-          </div>
-          <div className="flex flex-col md:flex-row items-start gap-6 mb-8">
-            <Skeleton className="w-24 h-24 rounded-lg" />
-            <div className="flex-1">
-              <Skeleton className="h-8 w-48 mb-2" />
-              <Skeleton className="h-5 w-full max-w-md mb-3" />
-              <Skeleton className="h-10 w-32" />
-            </div>
-          </div>
-          <Skeleton className="h-12 w-full mb-6" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Skeleton key={i} className="h-64 w-full rounded-lg" />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+  // Count coupons by category for the filter tabs
+  const couponCountByCategory: Record<string, number> = { all: 0 };
+  if (coupons) {
+    couponCountByCategory.all = coupons.length;
+    coupons.forEach(coupon => {
+      const categorySlug = coupon.category.slug;
+      couponCountByCategory[categorySlug] = (couponCountByCategory[categorySlug] || 0) + 1;
+    });
   }
 
-  if (!store) return null;
-
   return (
-    <>
-      <div className="container mx-auto px-4 py-6">
-        <div className="max-w-5xl mx-auto">
+    <main className="bg-gray-50">
+      {/* Store Header */}
+      <section className="bg-white border-b">
+        <div className="container mx-auto px-4 py-6">
           <div className="flex items-center mb-4">
             <Button 
               variant="ghost" 
-              className="pl-0" 
-              onClick={() => navigate("/")}
+              size="sm" 
+              onClick={() => navigate('/stores')}
+              className="text-primary hover:text-primary/80 px-0"
             >
-              <ArrowLeft className="mr-2 h-4 w-4" /> Back to Stores
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              <span>Back to Stores</span>
             </Button>
           </div>
-          
-          <div className="flex flex-col md:flex-row items-start gap-6 mb-8">
-            <div className="w-24 h-24 bg-white rounded-lg border border-gray-200 flex items-center justify-center p-2">
-              <img 
-                src={store.logo} 
-                alt={store.name} 
-                className="max-w-full max-h-full object-contain"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(store.name)}&background=random&size=64`;
-                }}
-              />
+
+          {isLoadingStore ? (
+            <div className="flex items-start gap-6">
+              <Skeleton className="w-20 h-20 rounded-xl" />
+              <div className="flex-1">
+                <Skeleton className="h-7 w-48 mb-2" />
+                <Skeleton className="h-4 w-72 mb-2" />
+                <Skeleton className="h-4 w-full max-w-md" />
+              </div>
             </div>
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">{store.name} Coupons & Promo Codes</h1>
-              <p className="text-gray-600 mb-3">
-                Find the latest {store.name} discount codes, vouchers, and promotions to save on your next purchase.
-              </p>
-              <a 
-                href={store.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center bg-primary text-white px-4 py-2 rounded-md font-medium hover:bg-primary/90 transition-colors"
-              >
-                Visit {store.name} Website
-              </a>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow-sm mb-6 overflow-x-auto">
-            <div className="flex border-b">
-              <button 
-                className={`px-6 py-3 text-sm font-medium ${activeTab === 'all' ? 'text-primary border-b-2 border-primary' : 'text-gray-600 hover:text-gray-900'}`}
-                onClick={() => setActiveTab('all')}
-              >
-                All ({coupons?.length || 0})
-              </button>
-              <button 
-                className={`px-6 py-3 text-sm font-medium ${activeTab === 'codes' ? 'text-primary border-b-2 border-primary' : 'text-gray-600 hover:text-gray-900'}`}
-                onClick={() => setActiveTab('codes')}
-              >
-                Codes
-              </button>
-              <button 
-                className={`px-6 py-3 text-sm font-medium ${activeTab === 'deals' ? 'text-primary border-b-2 border-primary' : 'text-gray-600 hover:text-gray-900'}`}
-                onClick={() => setActiveTab('deals')}
-              >
-                Deals
-              </button>
-            </div>
-          </div>
-          
-          {isLoadingCoupons ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Skeleton key={i} className="h-64 w-full rounded-lg" />
-              ))}
-            </div>
-          ) : filteredCoupons && filteredCoupons.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredCoupons.map(coupon => (
-                <CouponCard 
-                  key={coupon.id} 
-                  coupon={coupon} 
-                  onShowCode={() => handleShowCode(coupon)}
-                />
-              ))}
+          ) : store ? (
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+              {store.logo ? (
+                <div className="w-20 h-20 flex items-center justify-center bg-white rounded-xl shadow-sm p-2">
+                  <img 
+                    src={store.logo} 
+                    alt={store.name} 
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.onerror = null;
+                      target.style.display = 'none';
+                      const parent = target.parentNode as HTMLElement;
+                      parent.innerHTML = store.name.charAt(0).toUpperCase();
+                      parent.style.display = 'flex';
+                      parent.style.alignItems = 'center';
+                      parent.style.justifyContent = 'center';
+                      parent.style.backgroundColor = '#EFF6FF';
+                      parent.style.color = '#2563EB';
+                      parent.style.fontSize = '2rem';
+                      parent.style.fontWeight = 'bold';
+                    }}
+                  />
+                </div>
+              ) : (
+                <StoreLogoPlaceholder name={store.name} />
+              )}
+              <div className="flex-1">
+                <div className="flex items-center mb-1">
+                  <h1 className="text-2xl font-bold text-gray-800 mr-2">{store.name}</h1>
+                  <div className="w-5 h-5 flex items-center justify-center bg-green-100 rounded-full">
+                    <CheckCircle2 className="h-3 w-3 text-green-600" />
+                  </div>
+                  <span className="text-sm text-green-600 ml-1">Verified Store</span>
+                </div>
+                <div className="flex flex-wrap items-center text-sm text-gray-500 mb-2 gap-x-4 gap-y-1">
+                  <div className="flex items-center">
+                    <Star className="h-4 w-4 text-yellow-400 mr-1" fill="currentColor" />
+                    <span>4.8/5</span>
+                  </div>
+                  <span>{coupons?.length || 0} Active Coupons</span>
+                  <span>Last Updated: {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                </div>
+                <p className="text-gray-600">
+                  Find the best {store.name} coupons, promo codes, and deals to save on your next purchase.
+                </p>
+              </div>
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow-sm p-6 text-center">
-              <h3 className="text-lg font-medium text-gray-800 mb-2">No {activeTab !== 'all' ? activeTab : ''} coupons available</h3>
-              <p className="text-gray-600">
-                We couldn't find any {activeTab !== 'all' ? activeTab : ''} coupons for {store.name} at the moment. Please check back later.
-              </p>
+            <div className="py-8 text-center">
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Store not found</h2>
+              <p className="text-gray-600 mb-4">The store you're looking for doesn't exist or has been removed.</p>
+              <Button onClick={() => navigate('/stores')}>
+                Browse All Stores
+              </Button>
             </div>
           )}
         </div>
-      </div>
-      
+      </section>
+
+      {/* Filters */}
+      {store && (
+        <section className="bg-white shadow-sm sticky top-16 z-40">
+          <div className="container mx-auto px-4 py-3">
+            <div className="flex flex-col md:flex-row justify-between gap-4">
+              <div className="overflow-x-auto pb-1 -mx-1">
+                <div className="flex space-x-2 px-1 min-w-max">
+                  <Button
+                    variant={activeTab === "all" ? "default" : "outline"}
+                    size="sm"
+                    className="rounded-full"
+                    onClick={() => setActiveTab("all")}
+                  >
+                    All Coupons ({couponCountByCategory["all"] || 0})
+                  </Button>
+                  {categories?.map(category => (
+                    <Button
+                      key={category.slug}
+                      variant={activeTab === category.slug ? "default" : "outline"}
+                      size="sm"
+                      className="rounded-full"
+                      onClick={() => setActiveTab(category.slug)}
+                    >
+                      {category.name} ({couponCountByCategory[category.slug] || 0})
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <Select value={selectedSort} onValueChange={setSelectedSort}>
+                  <SelectTrigger className="w-[140px] h-9 rounded-lg bg-gray-100 border-none text-sm">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest</SelectItem>
+                    <SelectItem value="popular">Most Popular</SelectItem>
+                    <SelectItem value="expiring">Expiring Soon</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button variant="outline" size="sm" className="h-9 rounded-lg bg-gray-100 border-none gap-1">
+                  <Filter className="h-4 w-4" />
+                  <span>Filter</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Coupons Grid */}
+      <section className="py-8">
+        <div className="container mx-auto px-4">
+          {isLoadingStore || isLoadingCoupons ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array(6).fill(0).map((_, index) => (
+                <div key={index} className="bg-white rounded-lg shadow-sm border border-neutral-200 p-4">
+                  <div className="flex items-center justify-between border-b border-neutral-100 pb-4 mb-4">
+                    <div className="flex items-center">
+                      <Skeleton className="w-12 h-12 rounded-md" />
+                      <div className="ml-3">
+                        <Skeleton className="h-5 w-24" />
+                        <Skeleton className="h-4 w-16 mt-1" />
+                      </div>
+                    </div>
+                  </div>
+                  <Skeleton className="h-5 w-full mb-2" />
+                  <Skeleton className="h-4 w-full mb-3" />
+                  <Skeleton className="h-4 w-3/4 mb-4" />
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-10 w-2/3" />
+                    <Skeleton className="h-10 w-1/4" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            filteredCoupons && filteredCoupons.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredCoupons.map((coupon) => (
+                  <CouponCard
+                    key={coupon.id}
+                    coupon={coupon}
+                    onShowCode={() => handleShowCode(coupon)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white p-8 rounded-lg shadow-sm text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-neutral-100 text-neutral-500 rounded-full mb-4">
+                  <Search className="h-6 w-6" />
+                </div>
+                <h3 className="text-lg font-semibold text-neutral-800 mb-2">No Coupons Found</h3>
+                <p className="text-neutral-600 mb-4">
+                  We couldn't find any coupons for this store {activeTab !== "all" ? `in the ${activeTab} category` : ""}.
+                </p>
+                {activeTab !== "all" && (
+                  <Button variant="outline" onClick={() => setActiveTab("all")}>
+                    View All Coupons
+                  </Button>
+                )}
+              </div>
+            )
+          )}
+        </div>
+      </section>
+
       {selectedCoupon && (
-        <CouponDetailModal 
-          coupon={selectedCoupon} 
-          onClose={handleCloseModal} 
+        <CouponDetailModal
+          coupon={selectedCoupon}
+          onClose={handleCloseModal}
         />
       )}
-    </>
+    </main>
   );
 };
 
