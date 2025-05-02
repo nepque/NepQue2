@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CouponHunt - Search Results</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#2563eb",
+              secondary: "#f97316",
+            },
+            borderRadius: {
+              none: "0px",
+              sm: "4px",
+              DEFAULT: "8px",
+              md: "12px",
+              lg: "16px",
+              xl: "20px",
+              "2xl": "24px",
+              "3xl": "32px",
+              full: "9999px",
+              button: "8px",
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css"
+    />
+    <style>
+      :where([class^="ri-"])::before { content: "\f3c2"; }
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+      .store-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      }
+      .coupon-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      }
+      input[type="number"]::-webkit-inner-spin-button,
+      input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      .custom-checkbox {
+        position: relative;
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        margin-right: 8px;
+      }
+      .custom-checkbox input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .checkmark {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 20px;
+        width: 20px;
+        background-color: #fff;
+        border: 2px solid #e5e7eb;
+        border-radius: 4px;
+      }
+      .custom-checkbox input:checked ~ .checkmark {
+        background-color: #2563eb;
+        border-color: #2563eb;
+      }
+      .checkmark:after {
+        content: "";
+        position: absolute;
+        display: none;
+      }
+      .custom-checkbox input:checked ~ .checkmark:after {
+        display: block;
+      }
+      .custom-checkbox .checkmark:after {
+        left: 6px;
+        top: 2px;
+        width: 6px;
+        height: 12px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+      }
+      .coupon-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+      }
+      .coupon-code-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+        border: 2px dashed #e5e7eb;
+        border-radius: 8px;
+        padding: 12px 16px;
+        background-color: #f9fafb;
+      }
+      .copied-message {
+        position: absolute;
+        top: -40px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #10b981;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 14px;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      .copied-message.show {
+        opacity: 1;
+      }
+      .custom-select {
+        position: relative;
+        display: inline-block;
+      }
+      .select-selected {
+        background-color: white;
+      }
+      .select-items {
+        position: absolute;
+        background-color: white;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 99;
+        border-radius: 8px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        display: none;
+      }
+      .select-items div {
+        padding: 10px 16px;
+        cursor: pointer;
+      }
+      .select-items div:hover {
+        background-color: #f3f4f6;
+      }
+      .select-hide {
+        display: none;
+      }
+      .select-show {
+        display: block;
+      }
+      .custom-switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+      }
+      .custom-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .switch-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #e5e7eb;
+        transition: .4s;
+        border-radius: 34px;
+      }
+      .switch-slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+      }
+      input:checked + .switch-slider {
+        background-color: #2563eb;
+      }
+      input:checked + .switch-slider:before {
+        transform: translateX(20px);
+      }
+      .filter-dropdown {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 10;
+        min-width: 240px;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      }
+      .filter-dropdown.show {
+        display: block;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+      <div class="container mx-auto px-4 py-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <a
+              href="https://readdy.ai/home/6b9d40db-3602-4728-a556-650b41f0b6e7/d8dfa15f-31da-4332-9f39-79bb81b80ebb"
+              data-readdy="true"
+              class="text-2xl font-['Pacifico'] text-primary mr-8"
+              >CouponHunt</a
+            >
+            <nav class="hidden md:flex space-x-6">
+              <a href="#" class="text-gray-700 hover:text-primary font-medium"
+                >Stores</a
+              >
+              <a href="#" class="text-gray-700 hover:text-primary font-medium"
+                >Categories</a
+              >
+              <a href="#" class="text-gray-700 hover:text-primary font-medium"
+                >Today's Deals</a
+              >
+              <a href="#" class="text-gray-700 hover:text-primary font-medium"
+                >Blog</a
+              >
+            </nav>
+          </div>
+          <div class="flex items-center space-x-4">
+            <a
+              href="#"
+              class="hidden md:flex items-center text-gray-700 hover:text-primary"
+            >
+              <div class="w-8 h-8 flex items-center justify-center">
+                <i class="ri-user-line"></i>
+              </div>
+              <span class="ml-1 font-medium">Sign In</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Search Bar Section -->
+    <section class="bg-white border-b border-gray-200 sticky top-[61px] z-40">
+      <div class="container mx-auto px-4 py-4">
+        <div class="flex flex-col md:flex-row gap-4">
+          <div class="relative flex-1">
+            <input
+              type="text"
+              value="Electronics"
+              placeholder="Search for stores or coupons"
+              class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
+            />
+            <div
+              class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 flex items-center justify-center text-gray-400"
+            >
+              <i class="ri-search-line"></i>
+            </div>
+          </div>
+          <button
+            class="bg-primary text-white px-6 py-3 rounded-button font-medium hover:bg-primary/90 whitespace-nowrap"
+          >
+            Search
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filter Bar -->
+    <section class="bg-white border-b border-gray-200">
+      <div class="container mx-auto px-4 py-3">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="relative">
+              <button
+                id="categoryFilter"
+                class="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-full text-sm font-medium hover:border-primary"
+              >
+                Category
+                <div class="w-4 h-4 flex items-center justify-center">
+                  <i class="ri-arrow-down-s-line"></i>
+                </div>
+              </button>
+              <div id="categoryDropdown" class="filter-dropdown p-4 w-64">
+                <h4 class="font-medium text-gray-800 mb-3">
+                  Select Categories
+                </h4>
+                <div class="space-y-2">
+                  <div class="flex items-center">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" checked />
+                      <span class="checkmark"></span>
+                    </label>
+                    <span class="text-sm">Electronics (124)</span>
+                  </div>
+                  <div class="flex items-center">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" />
+                      <span class="checkmark"></span>
+                    </label>
+                    <span class="text-sm">Fashion (98)</span>
+                  </div>
+                  <div class="flex items-center">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" />
+                      <span class="checkmark"></span>
+                    </label>
+                    <span class="text-sm">Home & Garden (67)</span>
+                  </div>
+                  <div class="flex items-center">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" />
+                      <span class="checkmark"></span>
+                    </label>
+                    <span class="text-sm">Travel (45)</span>
+                  </div>
+                  <div class="flex items-center">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" />
+                      <span class="checkmark"></span>
+                    </label>
+                    <span class="text-sm">Food & Dining (38)</span>
+                  </div>
+                </div>
+                <div class="mt-3 pt-3 border-t border-gray-100">
+                  <button
+                    class="text-primary hover:underline text-sm font-medium"
+                  >
+                    See all categories
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="relative">
+              <button
+                id="discountFilter"
+                class="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-full text-sm font-medium hover:border-primary"
+              >
+                Discount Type
+                <div class="w-4 h-4 flex items-center justify-center">
+                  <i class="ri-arrow-down-s-line"></i>
+                </div>
+              </button>
+              <div id="discountDropdown" class="filter-dropdown p-4">
+                <h4 class="font-medium text-gray-800 mb-3">Discount Type</h4>
+                <div class="space-y-2">
+                  <div class="flex items-center">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" checked />
+                      <span class="checkmark"></span>
+                    </label>
+                    <span class="text-sm">Percentage Off (86)</span>
+                  </div>
+                  <div class="flex items-center">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" checked />
+                      <span class="checkmark"></span>
+                    </label>
+                    <span class="text-sm">Dollar Amount Off (52)</span>
+                  </div>
+                  <div class="flex items-center">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" />
+                      <span class="checkmark"></span>
+                    </label>
+                    <span class="text-sm">Free Shipping (34)</span>
+                  </div>
+                  <div class="flex items-center">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" />
+                      <span class="checkmark"></span>
+                    </label>
+                    <span class="text-sm">BOGO Deals (12)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="relative">
+              <button
+                id="storeFilter"
+                class="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-full text-sm font-medium hover:border-primary"
+              >
+                Store
+                <div class="w-4 h-4 flex items-center justify-center">
+                  <i class="ri-arrow-down-s-line"></i>
+                </div>
+              </button>
+              <div id="storeDropdown" class="filter-dropdown p-4">
+                <h4 class="font-medium text-gray-800 mb-3">Select Stores</h4>
+                <div class="space-y-2">
+                  <div class="flex items-center">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" checked />
+                      <span class="checkmark"></span>
+                    </label>
+                    <span class="text-sm">Amazon (42)</span>
+                  </div>
+                  <div class="flex items-center">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" checked />
+                      <span class="checkmark"></span>
+                    </label>
+                    <span class="text-sm">Best Buy (28)</span>
+                  </div>
+                  <div class="flex items-center">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" />
+                      <span class="checkmark"></span>
+                    </label>
+                    <span class="text-sm">Walmart (23)</span>
+                  </div>
+                  <div class="flex items-center">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" />
+                      <span class="checkmark"></span>
+                    </label>
+                    <span class="text-sm">Target (19)</span>
+                  </div>
+                  <div class="flex items-center">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" />
+                      <span class="checkmark"></span>
+                    </label>
+                    <span class="text-sm">Newegg (14)</span>
+                  </div>
+                </div>
+                <div class="mt-3 pt-3 border-t border-gray-100">
+                  <button
+                    class="text-primary hover:underline text-sm font-medium"
+                  >
+                    See all stores
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="relative">
+              <button
+                id="expiryFilter"
+                class="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-full text-sm font-medium hover:border-primary"
+              >
+                Expiration
+                <div class="w-4 h-4 flex items-center justify-center">
+                  <i class="ri-arrow-down-s-line"></i>
+                </div>
+              </button>
+              <div id="expiryDropdown" class="filter-dropdown p-4">
+                <h4 class="font-medium text-gray-800 mb-3">Expiration Date</h4>
+                <div class="space-y-2">
+                  <div class="flex items-center">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" checked />
+                      <span class="checkmark"></span>
+                    </label>
+                    <span class="text-sm">Today (15)</span>
+                  </div>
+                  <div class="flex items-center">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" checked />
+                      <span class="checkmark"></span>
+                    </label>
+                    <span class="text-sm">This Week (48)</span>
+                  </div>
+                  <div class="flex items-center">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" checked />
+                      <span class="checkmark"></span>
+                    </label>
+                    <span class="text-sm">This Month (92)</span>
+                  </div>
+                  <div class="flex items-center">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" />
+                      <span class="checkmark"></span>
+                    </label>
+                    <span class="text-sm">Next Month (37)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 px-4 py-2 text-sm">
+              <span class="font-medium">Active Only</span>
+              <label class="custom-switch">
+                <input type="checkbox" checked />
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="relative">
+              <button
+                id="sortFilter"
+                class="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-full text-sm font-medium hover:border-primary"
+              >
+                <div class="w-4 h-4 flex items-center justify-center">
+                  <i class="ri-sort-desc"></i>
+                </div>
+                Sort: Newest
+                <div class="w-4 h-4 flex items-center justify-center">
+                  <i class="ri-arrow-down-s-line"></i>
+                </div>
+              </button>
+              <div
+                id="sortDropdown"
+                class="filter-dropdown right-0 left-auto p-4 w-48"
+              >
+                <div class="space-y-2">
+                  <div
+                    class="px-2 py-1 hover:bg-gray-50 rounded cursor-pointer text-primary font-medium"
+                  >
+                    Newest
+                  </div>
+                  <div
+                    class="px-2 py-1 hover:bg-gray-50 rounded cursor-pointer"
+                  >
+                    Most Popular
+                  </div>
+                  <div
+                    class="px-2 py-1 hover:bg-gray-50 rounded cursor-pointer"
+                  >
+                    Highest Discount
+                  </div>
+                  <div
+                    class="px-2 py-1 hover:bg-gray-50 rounded cursor-pointer"
+                  >
+                    Expiring Soon
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button
+              class="flex items-center gap-1 text-primary hover:text-primary/80 text-sm font-medium"
+            >
+              <div class="w-4 h-4 flex items-center justify-center">
+                <i class="ri-refresh-line"></i>
+              </div>
+              Clear Filters
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Results Summary -->
+    <section class="bg-gray-50 py-4">
+      <div class="container mx-auto px-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 class="text-xl font-bold text-gray-800">
+              Electronics Coupons & Promo Codes
+            </h1>
+            <p class="text-gray-600 text-sm mt-1">138 verified coupons found</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <span
+              class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1"
+            >
+              Electronics
+              <button class="w-4 h-4 flex items-center justify-center">
+                <i class="ri-close-line"></i>
+              </button>
+            </span>
+            <span
+              class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1"
+            >
+              Amazon
+              <button class="w-4 h-4 flex items-center justify-center">
+                <i class="ri-close-line"></i>
+              </button>
+            </span>
+            <span
+              class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1"
+            >
+              Best Buy
+              <button class="w-4 h-4 flex items-center justify-center">
+                <i class="ri-close-line"></i>
+              </button>
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Search Results -->
+    <section class="py-8 bg-gray-50">
+      <div class="container mx-auto px-4">
+        <!-- Amazon Store Section -->
+        <div class="mb-10">
+          <div class="flex items-center gap-4 mb-4">
+            <div
+              class="w-12 h-12 flex items-center justify-center bg-blue-50 rounded-full"
+            >
+              <i class="ri-amazon-fill text-xl text-blue-600"></i>
+            </div>
+            <div>
+              <h2 class="text-lg font-bold text-gray-800">Amazon</h2>
+              <p class="text-sm text-gray-600">
+                42 electronics coupons available
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div
+              class="coupon-card bg-white rounded-lg shadow-sm overflow-hidden transition duration-300"
+            >
+              <div class="p-5">
+                <div class="flex items-center justify-between mb-3">
+                  <span
+                    class="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded"
+                    >30% OFF</span
+                  >
+                  <div class="flex items-center">
+                    <div class="w-4 h-4 flex items-center justify-center">
+                      <i class="ri-check-line text-xs text-green-500"></i>
+                    </div>
+                    <span class="text-xs text-green-500 ml-1">Verified</span>
+                  </div>
+                </div>
+                <h3 class="text-gray-800 font-medium mb-2">
+                  30% Off on Electronics & Smart Home Devices
+                </h3>
+                <p class="text-gray-600 text-sm mb-4">
+                  Get 30% off on select electronics and smart home devices with
+                  Prime membership. Limited time offer.
+                </p>
+                <div class="flex items-center justify-between mb-4">
+                  <span class="text-xs text-gray-500"
+                    >Used 3.2K times today</span
+                  >
+                  <span class="text-xs text-gray-500">Ends May 15, 2025</span>
+                </div>
+                <button
+                  class="show-coupon-btn w-full bg-primary text-white py-3 rounded-button font-medium hover:bg-primary/90 whitespace-nowrap"
+                  data-code="PRIME30TECH"
+                >
+                  Show Coupon Code
+                </button>
+              </div>
+            </div>
+
+            <div
+              class="coupon-card bg-white rounded-lg shadow-sm overflow-hidden transition duration-300"
+            >
+              <div class="p-5">
+                <div class="flex items-center justify-between mb-3">
+                  <span
+                    class="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded"
+                    >$50 OFF</span
+                  >
+                  <div class="flex items-center">
+                    <div class="w-4 h-4 flex items-center justify-center">
+                      <i class="ri-check-line text-xs text-green-500"></i>
+                    </div>
+                    <span class="text-xs text-green-500 ml-1">Verified</span>
+                  </div>
+                </div>
+                <h3 class="text-gray-800 font-medium mb-2">
+                  $50 Off on Laptops & Tablets Over $300
+                </h3>
+                <p class="text-gray-600 text-sm mb-4">
+                  Save $50 on laptops and tablets priced $300 or more. Includes
+                  all major brands like Apple, Samsung, and Microsoft.
+                </p>
+                <div class="flex items-center justify-between mb-4">
+                  <span class="text-xs text-gray-500"
+                    >Used 1.8K times today</span
+                  >
+                  <span class="text-xs text-gray-500">Ends May 20, 2025</span>
+                </div>
+                <button
+                  class="show-coupon-btn w-full bg-primary text-white py-3 rounded-button font-medium hover:bg-primary/90 whitespace-nowrap"
+                  data-code="LAPTOP50"
+                >
+                  Show Coupon Code
+                </button>
+              </div>
+            </div>
+
+            <div
+              class="coupon-card bg-white rounded-lg shadow-sm overflow-hidden transition duration-300"
+            >
+              <div class="p-5">
+                <div class="flex items-center justify-between mb-3">
+                  <span
+                    class="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded"
+                    >15% OFF</span
+                  >
+                  <div class="flex items-center">
+                    <div class="w-4 h-4 flex items-center justify-center">
+                      <i class="ri-check-line text-xs text-green-500"></i>
+                    </div>
+                    <span class="text-xs text-green-500 ml-1">Verified</span>
+                  </div>
+                </div>
+                <h3 class="text-gray-800 font-medium mb-2">
+                  15% Off on Headphones & Audio Equipment
+                </h3>
+                <p class="text-gray-600 text-sm mb-4">
+                  Enjoy 15% discount on all headphones, speakers, and audio
+                  accessories. No minimum purchase required.
+                </p>
+                <div class="flex items-center justify-between mb-4">
+                  <span class="text-xs text-gray-500"
+                    >Used 945 times today</span
+                  >
+                  <span class="text-xs text-gray-500">Ends May 31, 2025</span>
+                </div>
+                <button
+                  class="show-coupon-btn w-full bg-primary text-white py-3 rounded-button font-medium hover:bg-primary/90 whitespace-nowrap"
+                  data-code="AUDIO15"
+                >
+                  Show Coupon Code
+                </button>
+              </div>
+            </div>
+
+            <div
+              class="coupon-card bg-white rounded-lg shadow-sm overflow-hidden transition duration-300"
+            >
+              <div class="p-5">
+                <div class="flex items-center justify-between mb-3">
+                  <span
+                    class="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded"
+                    >FREE SHIPPING</span
+                  >
+                  <div class="flex items-center">
+                    <div class="w-4 h-4 flex items-center justify-center">
+                      <i class="ri-check-line text-xs text-green-500"></i>
+                    </div>
+                    <span class="text-xs text-green-500 ml-1">Verified</span>
+                  </div>
+                </div>
+                <h3 class="text-gray-800 font-medium mb-2">
+                  Free One-Day Shipping on Electronics
+                </h3>
+                <p class="text-gray-600 text-sm mb-4">
+                  Get free one-day shipping on all electronics purchases over
+                  $25. No Prime membership required.
+                </p>
+                <div class="flex items-center justify-between mb-4">
+                  <span class="text-xs text-gray-500"
+                    >Used 2.4K times today</span
+                  >
+                  <span class="text-xs text-gray-500">Ends June 1, 2025</span>
+                </div>
+                <button
+                  class="show-coupon-btn w-full bg-primary text-white py-3 rounded-button font-medium hover:bg-primary/90 whitespace-nowrap"
+                  data-code="FASTTECH"
+                >
+                  Show Coupon Code
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 text-center">
+            <button
+              class="text-primary hover:underline font-medium flex items-center gap-1 mx-auto"
+            >
+              View all Amazon electronics coupons
+              <div class="w-4 h-4 flex items-center justify-center">
+                <i class="ri-arrow-right-line"></i>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Best Buy Store Section -->
+        <div class="mb-10">
+          <div class="flex items-center gap-4 mb-4">
+            <div
+              class="w-12 h-12 flex items-center justify-center bg-yellow-50 rounded-full"
+            >
+              <i class="ri-price-tag-3-fill text-xl text-yellow-600"></i>
+            </div>
+            <div>
+              <h2 class="text-lg font-bold text-gray-800">Best Buy</h2>
+              <p class="text-sm text-gray-600">
+                28 electronics coupons available
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div
+              class="coupon-card bg-white rounded-lg shadow-sm overflow-hidden transition duration-300"
+            >
+              <div class="p-5">
+                <div class="flex items-center justify-between mb-3">
+                  <span
+                    class="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded"
+                    >$100 OFF</span
+                  >
+                  <div class="flex items-center">
+                    <div class="w-4 h-4 flex items-center justify-center">
+                      <i class="ri-check-line text-xs text-green-500"></i>
+                    </div>
+                    <span class="text-xs text-green-500 ml-1">Verified</span>
+                  </div>
+                </div>
+                <h3 class="text-gray-800 font-medium mb-2">
+                  $100 Off on TVs & Monitors Over $500
+                </h3>
+                <p class="text-gray-600 text-sm mb-4">
+                  Save $100 on select TVs and monitors priced $500 or more.
+                  Includes 4K, OLED, and gaming monitors.
+                </p>
+                <div class="flex items-center justify-between mb-4">
+                  <span class="text-xs text-gray-500"
+                    >Used 1.5K times today</span
+                  >
+                  <span class="text-xs text-gray-500">Ends May 12, 2025</span>
+                </div>
+                <button
+                  class="show-coupon-btn w-full bg-primary text-white py-3 rounded-button font-medium hover:bg-primary/90 whitespace-nowrap"
+                  data-code="SCREEN100"
+                >
+                  Show Coupon Code
+                </button>
+              </div>
+            </div>
+
+            <div
+              class="coupon-card bg-white rounded-lg shadow-sm overflow-hidden transition duration-300"
+            >
+              <div class="p-5">
+                <div class="flex items-center justify-between mb-3">
+                  <span
+                    class="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded"
+                    >25% OFF</span
+                  >
+                  <div class="flex items-center">
+                    <div class="w-4 h-4 flex items-center justify-center">
+                      <i class="ri-check-line text-xs text-green-500"></i>
+                    </div>
+                    <span class="text-xs text-green-500 ml-1">Verified</span>
+                  </div>
+                </div>
+                <h3 class="text-gray-800 font-medium mb-2">
+                  25% Off on Smart Home Security Devices
+                </h3>
+                <p class="text-gray-600 text-sm mb-4">
+                  Get 25% discount on all smart home security devices including
+                  cameras, doorbells, and alarm systems.
+                </p>
+                <div class="flex items-center justify-between mb-4">
+                  <span class="text-xs text-gray-500"
+                    >Used 876 times today</span
+                  >
+                  <span class="text-xs text-gray-500">Ends May 25, 2025</span>
+                </div>
+                <button
+                  class="show-coupon-btn w-full bg-primary text-white py-3 rounded-button font-medium hover:bg-primary/90 whitespace-nowrap"
+                  data-code="SECURE25"
+                >
+                  Show Coupon Code
+                </button>
+              </div>
+            </div>
+
+            <div
+              class="coupon-card bg-white rounded-lg shadow-sm overflow-hidden transition duration-300"
+            >
+              <div class="p-5">
+                <div class="flex items-center justify-between mb-3">
+                  <span
+                    class="bg-orange-100 text-orange-800 text-sm font-medium px-3 py-1 rounded"
+                    >BOGO 50% OFF</span
+                  >
+                  <div class="flex items-center">
+                    <div class="w-4 h-4 flex items-center justify-center">
+                      <i class="ri-check-line text-xs text-green-500"></i>
+                    </div>
+                    <span class="text-xs text-green-500 ml-1">Verified</span>
+                  </div>
+                </div>
+                <h3 class="text-gray-800 font-medium mb-2">
+                  Buy One Get One 50% Off on Gaming Accessories
+                </h3>
+                <p class="text-gray-600 text-sm mb-4">
+                  Buy any gaming accessory and get the second one 50% off.
+                  Includes controllers, headsets, and more.
+                </p>
+                <div class="flex items-center justify-between mb-4">
+                  <span class="text-xs text-gray-500"
+                    >Used 1.2K times today</span
+                  >
+                  <span class="text-xs text-gray-500">Ends May 18, 2025</span>
+                </div>
+                <button
+                  class="show-coupon-btn w-full bg-primary text-white py-3 rounded-button font-medium hover:bg-primary/90 whitespace-nowrap"
+                  data-code="GAMEBOGO"
+                >
+                  Show Coupon Code
+                </button>
+              </div>
+            </div>
+
+            <div
+              class="coupon-card bg-white rounded-lg shadow-sm overflow-hidden transition duration-300"
+            >
+              <div class="p-5">
+                <div class="flex items-center justify-between mb-3">
+                  <span
+                    class="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded"
+                    >$20 OFF</span
+                  >
+                  <div class="flex items-center">
+                    <div class="w-4 h-4 flex items-center justify-center">
+                      <i class="ri-check-line text-xs text-green-500"></i>
+                    </div>
+                    <span class="text-xs text-green-500 ml-1">Verified</span>
+                  </div>
+                </div>
+                <h3 class="text-gray-800 font-medium mb-2">
+                  $20 Off on Smart Watches & Fitness Trackers
+                </h3>
+                <p class="text-gray-600 text-sm mb-4">
+                  Save $20 on all smart watches and fitness trackers. Includes
+                  Apple Watch, Fitbit, Garmin, and more.
+                </p>
+                <div class="flex items-center justify-between mb-4">
+                  <span class="text-xs text-gray-500"
+                    >Used 932 times today</span
+                  >
+                  <span class="text-xs text-gray-500">Ends June 5, 2025</span>
+                </div>
+                <button
+                  class="show-coupon-btn w-full bg-primary text-white py-3 rounded-button font-medium hover:bg-primary/90 whitespace-nowrap"
+                  data-code="WATCH20"
+                >
+                  Show Coupon Code
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 text-center">
+            <button
+              class="text-primary hover:underline font-medium flex items-center gap-1 mx-auto"
+            >
+              View all Best Buy electronics coupons
+              <div class="w-4 h-4 flex items-center justify-center">
+                <i class="ri-arrow-right-line"></i>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Walmart Store Section -->
+        <div class="mb-10">
+          <div class="flex items-center gap-4 mb-4">
+            <div
+              class="w-12 h-12 flex items-center justify-center bg-blue-50 rounded-full"
+            >
+              <i class="ri-walmart-fill text-xl text-blue-600"></i>
+            </div>
+            <div>
+              <h2 class="text-lg font-bold text-gray-800">Walmart</h2>
+              <p class="text-sm text-gray-600">
+                23 electronics coupons available
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div
+              class="coupon-card bg-white rounded-lg shadow-sm overflow-hidden transition duration-300"
+            >
+              <div class="p-5">
+                <div class="flex items-center justify-between mb-3">
+                  <span
+                    class="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded"
+                    >$10 OFF</span
+                  >
+                  <div class="flex items-center">
+                    <div class="w-4 h-4 flex items-center justify-center">
+                      <i class="ri-check-line text-xs text-green-500"></i>
+                    </div>
+                    <span class="text-xs text-green-500 ml-1">Verified</span>
+                  </div>
+                </div>
+                <h3 class="text-gray-800 font-medium mb-2">
+                  $10 Off on Electronics Orders Over $50
+                </h3>
+                <p class="text-gray-600 text-sm mb-4">
+                  Get $10 off when you spend $50 or more on electronics. Valid
+                  for online purchases only.
+                </p>
+                <div class="flex items-center justify-between mb-4">
+                  <span class="text-xs text-gray-500"
+                    >Used 1.1K times today</span
+                  >
+                  <span class="text-xs text-gray-500">Ends May 22, 2025</span>
+                </div>
+                <button
+                  class="show-coupon-btn w-full bg-primary text-white py-3 rounded-button font-medium hover:bg-primary/90 whitespace-nowrap"
+                  data-code="TECH10OFF"
+                >
+                  Show Coupon Code
+                </button>
+              </div>
+            </div>
+
+            <div
+              class="coupon-card bg-white rounded-lg shadow-sm overflow-hidden transition duration-300"
+            >
+              <div class="p-5">
+                <div class="flex items-center justify-between mb-3">
+                  <span
+                    class="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded"
+                    >20% OFF</span
+                  >
+                  <div class="flex items-center">
+                    <div class="w-4 h-4 flex items-center justify-center">
+                      <i class="ri-check-line text-xs text-green-500"></i>
+                    </div>
+                    <span class="text-xs text-green-500 ml-1">Verified</span>
+                  </div>
+                </div>
+                <h3 class="text-gray-800 font-medium mb-2">
+                  20% Off on Computer Accessories
+                </h3>
+                <p class="text-gray-600 text-sm mb-4">
+                  Save 20% on computer accessories including keyboards, mice,
+                  webcams, and USB hubs.
+                </p>
+                <div class="flex items-center justify-between mb-4">
+                  <span class="text-xs text-gray-500"
+                    >Used 785 times today</span
+                  >
+                  <span class="text-xs text-gray-500">Ends May 28, 2025</span>
+                </div>
+                <button
+                  class="show-coupon-btn w-full bg-primary text-white py-3 rounded-button font-medium hover:bg-primary/90 whitespace-nowrap"
+                  data-code="PCACC20"
+                >
+                  Show Coupon Code
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 text-center">
+            <button
+              class="text-primary hover:underline font-medium flex items-center gap-1 mx-auto"
+            >
+              View all Walmart electronics coupons
+              <div class="w-4 h-4 flex items-center justify-center">
+                <i class="ri-arrow-right-line"></i>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Load More -->
+        <div class="text-center mt-8">
+          <button
+            class="bg-white border border-gray-200 text-gray-700 px-6 py-3 rounded-button font-medium hover:bg-gray-50 whitespace-nowrap"
+          >
+            Load More Results
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Newsletter -->
+    <section class="py-12 bg-white border-t border-gray-100">
+      <div class="container mx-auto px-4">
+        <div class="max-w-3xl mx-auto text-center">
+          <h2 class="text-2xl font-bold text-gray-800 mb-4">
+            Never Miss a Deal
+          </h2>
+          <p class="text-gray-600 mb-8">
+            Subscribe to our newsletter and get the latest coupons and deals
+            delivered straight to your inbox.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-3">
+            <input
+              type="email"
+              placeholder="Enter your email address"
+              class="flex-1 px-4 py-3 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            />
+            <button
+              class="bg-primary text-white px-6 py-3 rounded-button font-medium hover:bg-primary/90 whitespace-nowrap"
+            >
+              Subscribe Now
+            </button>
+          </div>
+          <p class="text-xs text-gray-500 mt-4">
+            By subscribing, you agree to our
+            <a href="#" class="text-primary hover:underline"
+              >Terms of Service</a
+            >
+            and
+            <a href="#" class="text-primary hover:underline">Privacy Policy</a>.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white pt-12 pb-6">
+      <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+          <div>
+            <h3 class="text-xl font-['Pacifico'] mb-4">CouponHunt</h3>
+            <p class="text-gray-400 mb-4">
+              Your ultimate destination for verified coupons and promo codes to
+              save money on your online shopping.
+            </p>
+            <div class="flex space-x-4">
+              <a href="#" class="text-gray-400 hover:text-white">
+                <div class="w-8 h-8 flex items-center justify-center">
+                  <i class="ri-facebook-fill"></i>
+                </div>
+              </a>
+              <a href="#" class="text-gray-400 hover:text-white">
+                <div class="w-8 h-8 flex items-center justify-center">
+                  <i class="ri-twitter-x-fill"></i>
+                </div>
+              </a>
+              <a href="#" class="text-gray-400 hover:text-white">
+                <div class="w-8 h-8 flex items-center justify-center">
+                  <i class="ri-instagram-fill"></i>
+                </div>
+              </a>
+              <a href="#" class="text-gray-400 hover:text-white">
+                <div class="w-8 h-8 flex items-center justify-center">
+                  <i class="ri-pinterest-fill"></i>
+                </div>
+              </a>
+            </div>
+          </div>
+          <div>
+            <h4 class="text-lg font-semibold mb-4">Popular Stores</h4>
+            <ul class="space-y-2">
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Amazon Coupons</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Walmart Coupons</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Target Coupons</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Temu Coupons</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Shein Coupons</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >DoorDash Promo Codes</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="text-lg font-semibold mb-4">Categories</h4>
+            <ul class="space-y-2">
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Fashion Coupons</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Electronics Deals</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Food & Dining Offers</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Travel Discounts</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Health & Beauty Coupons</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Home & Garden Deals</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="text-lg font-semibold mb-4">Company</h4>
+            <ul class="space-y-2">
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white">About Us</a>
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Contact Us</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >How It Works</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Privacy Policy</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white"
+                  >Terms of Service</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white">Sitemap</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="pt-8 border-t border-gray-700 text-center">
+          <div class="flex justify-center space-x-6 mb-4">
+            <div class="w-10 h-6 flex items-center justify-center">
+              <i class="ri-visa-fill text-2xl text-gray-400"></i>
+            </div>
+            <div class="w-10 h-6 flex items-center justify-center">
+              <i class="ri-mastercard-fill text-2xl text-gray-400"></i>
+            </div>
+            <div class="w-10 h-6 flex items-center justify-center">
+              <i class="ri-paypal-fill text-2xl text-gray-400"></i>
+            </div>
+            <div class="w-10 h-6 flex items-center justify-center">
+              <i class="ri-apple-fill text-2xl text-gray-400"></i>
+            </div>
+            <div class="w-10 h-6 flex items-center justify-center">
+              <i class="ri-google-fill text-2xl text-gray-400"></i>
+            </div>
+          </div>
+          <p class="text-gray-500 text-sm">
+            © 2025 CouponHunt. All rights reserved.
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Coupon Modal -->
+    <div id="couponModal" class="coupon-modal">
+      <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">
+        <button
+          id="closeModal"
+          class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+        >
+          <div class="w-6 h-6 flex items-center justify-center">
+            <i class="ri-close-line text-xl"></i>
+          </div>
+        </button>
+        <div class="text-center mb-6">
+          <div
+            class="w-16 h-16 mx-auto flex items-center justify-center bg-blue-100 rounded-full mb-4"
+          >
+            <i class="ri-coupon-3-line text-3xl text-blue-600"></i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-800 mb-2">Your Coupon Code</h3>
+          <p class="text-gray-600 mb-4">
+            Copy this code and paste it at checkout
+          </p>
+        </div>
+        <div class="coupon-code-container mb-6">
+          <span
+            id="couponCode"
+            class="font-mono text-lg font-semibold flex-1 text-center"
+          ></span>
+          <button id="copyCode" class="ml-3 text-primary hover:text-primary/80">
+            <div class="w-6 h-6 flex items-center justify-center">
+              <i class="ri-file-copy-line"></i>
+            </div>
+          </button>
+          <span class="copied-message">Copied!</span>
+        </div>
+        <div class="text-center">
+          <a
+            href="#"
+            id="goToStore"
+            class="block w-full bg-primary text-white py-3 rounded-button font-medium hover:bg-primary/90 whitespace-nowrap mb-3"
+            >Go to Store</a
+          >
+          <p class="text-xs text-gray-500">
+            This coupon was verified on May 2, 2025
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Filter dropdowns
+        const filterButtons = document.querySelectorAll(
+          "#categoryFilter, #discountFilter, #storeFilter, #expiryFilter, #sortFilter",
+        );
+        const filterDropdowns = document.querySelectorAll(
+          "#categoryDropdown, #discountDropdown, #storeDropdown, #expiryDropdown, #sortDropdown",
+        );
+
+        filterButtons.forEach((button, index) => {
+          button.addEventListener("click", function () {
+            filterDropdowns[index].classList.toggle("show");
+
+            // Close other dropdowns
+            filterDropdowns.forEach((dropdown, dropdownIndex) => {
+              if (dropdownIndex !== index && dropdown.classList.contains("show")) {
+                dropdown.classList.remove("show");
+              }
+            });
+          });
+        });
+
+        // Close dropdowns when clicking outside
+        window.addEventListener("click", function (event) {
+          filterButtons.forEach((button, index) => {
+            if (
+              !button.contains(event.target) &&
+              !filterDropdowns[index].contains(event.target)
+            ) {
+              filterDropdowns[index].classList.remove("show");
+            }
+          });
+        });
+
+        // Coupon modal functionality
+        const showCouponBtns = document.querySelectorAll(".show-coupon-btn");
+        const couponModal = document.getElementById("couponModal");
+        const closeModal = document.getElementById("closeModal");
+        const couponCode = document.getElementById("couponCode");
+        const copyCode = document.getElementById("copyCode");
+        const goToStore = document.getElementById("goToStore");
+        const copiedMessage = document.querySelector(".copied-message");
+
+        showCouponBtns.forEach((btn) => {
+          btn.addEventListener("click", function () {
+            const code = this.getAttribute("data-code");
+            couponCode.textContent = code;
+            couponModal.style.display = "flex";
+
+            // Set the store URL based on the closest store section
+            const storeSection = this.closest(".coupon-card")
+              .closest("div")
+              .closest("div").previousElementSibling;
+            if (storeSection) {
+              const storeName = storeSection
+                .querySelector("h2")
+                .textContent.trim()
+                .toLowerCase();
+              goToStore.href = `https://www.${storeName}.com`;
+            }
+          });
+        });
+
+        closeModal.addEventListener("click", function () {
+          couponModal.style.display = "none";
+        });
+
+        copyCode.addEventListener("click", function () {
+          const textToCopy = couponCode.textContent;
+          navigator.clipboard.writeText(textToCopy).then(function () {
+            copiedMessage.classList.add("show");
+            setTimeout(function () {
+              copiedMessage.classList.remove("show");
+            }, 2000);
+          });
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener("click", function (event) {
+          if (event.target === couponModal) {
+            couponModal.style.display = "none";
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

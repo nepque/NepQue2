@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard</title>
+<script src="https://cdn.tailwindcss.com/3.4.16">
+</script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: { primary: "#1E40AF", secondary: "#6B7280" },
+      borderRadius: {
+        none: "0px",
+        sm: "4px",
+        DEFAULT: "8px",
+        md: "12px",
+        lg: "16px",
+        xl: "20px",
+        "2xl": "24px",
+        "3xl": "32px",
+        full: "9999px",
+        button: "8px",
+      },
+    },
+  },
+};
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+<style>
+:where([class^="ri-"])::before { content: "\f3c2"; }
+body {
+font-family: 'Inter', sans-serif;
+background-color: #f9fafb;
+}
+.sidebar {
+width: 280px;
+transition: all 0.3s;
+}
+.main-content {
+width: calc(100% - 280px);
+transition: all 0.3s;
+}
+.nav-item {
+transition: all 0.2s;
+}
+.nav-item:hover {
+background-color: rgba(255, 255, 255, 0.1);
+}
+.nav-item.active {
+background-color: rgba(255, 255, 255, 0.15);
+border-left: 4px solid #fff;
+}
+table th {
+position: relative;
+}
+table th.sortable:after {
+content: "↕";
+position: absolute;
+right: 8px;
+opacity: 0.3;
+}
+table th.sortable:hover:after {
+opacity: 0.7;
+}
+.toggle-switch {
+position: relative;
+display: inline-block;
+width: 44px;
+height: 22px;
+}
+.toggle-switch input {
+opacity: 0;
+width: 0;
+height: 0;
+}
+.toggle-slider {
+position: absolute;
+cursor: pointer;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background-color: #ccc;
+transition: .4s;
+border-radius: 34px;
+}
+.toggle-slider:before {
+position: absolute;
+content: "";
+height: 18px;
+width: 18px;
+left: 2px;
+bottom: 2px;
+background-color: white;
+transition: .4s;
+border-radius: 50%;
+}
+input:checked + .toggle-slider {
+background-color: #1E40AF;
+}
+input:checked + .toggle-slider:before {
+transform: translateX(22px);
+}
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration {
+display: none;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+-webkit-appearance: none;
+margin: 0;
+}
+.custom-checkbox {
+display: inline-block;
+position: relative;
+padding-left: 24px;
+cursor: pointer;
+user-select: none;
+}
+.custom-checkbox input {
+position: absolute;
+opacity: 0;
+cursor: pointer;
+height: 0;
+width: 0;
+}
+.checkmark {
+position: absolute;
+top: 0;
+left: 0;
+height: 18px;
+width: 18px;
+background-color: #fff;
+border: 1px solid #d1d5db;
+border-radius: 4px;
+}
+.custom-checkbox:hover input ~ .checkmark {
+background-color: #f3f4f6;
+}
+.custom-checkbox input:checked ~ .checkmark {
+background-color: #1E40AF;
+border-color: #1E40AF;
+}
+.checkmark:after {
+content: "";
+position: absolute;
+display: none;
+}
+.custom-checkbox input:checked ~ .checkmark:after {
+display: block;
+}
+.custom-checkbox .checkmark:after {
+left: 6px;
+top: 2px;
+width: 5px;
+height: 10px;
+border: solid white;
+border-width: 0 2px 2px 0;
+transform: rotate(45deg);
+}
+</style>
+</head>
+<body class="min-h-screen flex">
+<!-- Sidebar -->
+<aside class="sidebar bg-gray-800 text-white h-screen fixed left-0 top-0 overflow-y-auto">
+<!-- Logo -->
+<div class="h-16 flex items-center px-6 border-b border-gray-700">
+<h1 class="text-2xl font-['Pacifico'] text-white">logo</h1>
+</div>
+<!-- Navigation -->
+<nav class="py-4">
+<ul>
+<li>
+<a href="#" class="nav-item active flex items-center py-3 px-6 text-gray-100">
+<div class="w-6 h-6 flex items-center justify-center mr-3">
+<i class="ri-dashboard-line"></i>
+</div>
+<span>Dashboard</span>
+</a>
+</li>
+<li>
+<a href="#" class="nav-item flex items-center py-3 px-6 text-gray-300 hover:text-white">
+<div class="w-6 h-6 flex items-center justify-center mr-3">
+<i class="ri-coupon-line"></i>
+</div>
+<span>Coupons</span>
+</a>
+</li>
+<li>
+<a href="https://readdy.ai/home/b6d26466-ac22-40b0-a1cf-a428553ebde9/f567a0c8-02e0-4476-9aaf-d29f2e64f505" data-readdy="true" class="nav-item flex items-center py-3 px-6 text-gray-300 hover:text-white">
+<div class="w-6 h-6 flex items-center justify-center mr-3">
+<i class="ri-store-line"></i>
+</div>
+<span>Stores</span>
+</a>
+</li>
+<li>
+<a href="#" class="nav-item flex items-center py-3 px-6 text-gray-300 hover:text-white">
+<div class="w-6 h-6 flex items-center justify-center mr-3">
+<i class="ri-price-tag-3-line"></i>
+</div>
+<span>Categories</span>
+</a>
+</li>
+<li>
+<a href="#" class="nav-item flex items-center py-3 px-6 text-gray-300 hover:text-white">
+<div class="w-6 h-6 flex items-center justify-center mr-3">
+<i class="ri-settings-line"></i>
+</div>
+<span>Settings</span>
+</a>
+</li>
+</ul>
+</nav>
+</aside>
+<!-- Main Content -->
+<main class="main-content ml-[280px] flex-1">
+<!-- Top Header -->
+<header class="bg-white h-16 px-6 flex items-center justify-between border-b border-gray-200 sticky top-0 z-10">
+<!-- Search Bar -->
+<div class="relative w-96">
+<div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+<div class="w-5 h-5 flex items-center justify-center text-gray-400">
+<i class="ri-search-line"></i>
+</div>
+</div>
+<input type="search" class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm" placeholder="Search...">
+</div>
+<!-- User Navigation -->
+<div class="flex items-center space-x-4">
+<!-- Notification Bell -->
+<div class="relative">
+<button class="p-2 rounded-full hover:bg-gray-100 relative">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-notification-3-line"></i>
+</div>
+<span class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
+</button>
+</div>
+<!-- User Profile -->
+<div class="flex items-center">
+<button class="flex items-center space-x-2">
+<img src="https://readdy.ai/api/search-image?query=professional%20headshot%20of%20a%20business%20person%20with%20neutral%20expression%2C%20high%20quality%2C%20professional%20lighting%2C%20studio%20background&width=40&height=40&seq=1&orientation=squarish" alt="Admin" class="w-10 h-10 rounded-full object-cover">
+<span class="text-sm font-medium">John Anderson</span>
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-arrow-down-s-line"></i>
+</div>
+</button>
+</div>
+</div>
+</header>
+<!-- Page Content -->
+<div class="p-6">
+<!-- Breadcrumbs -->
+<div class="mb-4 flex items-center text-sm text-gray-500">
+<a href="#" class="hover:text-primary">Home</a>
+<span class="mx-2">/</span>
+<span class="text-gray-700">Dashboard</span>
+</div>
+<!-- Page Title and Actions -->
+<div class="flex justify-between items-center mb-6">
+<h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
+<div class="flex space-x-3">
+<button class="bg-white border border-gray-300 text-gray-700 py-2 px-4 flex items-center space-x-2 !rounded-button hover:bg-gray-50 whitespace-nowrap">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-download-line"></i>
+</div>
+<span>Export</span>
+</button>
+<a href="https://readdy.ai/home/b6d26466-ac22-40b0-a1cf-a428553ebde9/dff1cd6a-1941-4531-89cd-c4aac54d1757" data-readdy="true" class="bg-primary text-white py-2 px-4 flex items-center space-x-2 !rounded-button hover:bg-primary/90 whitespace-nowrap">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-add-line"></i>
+</div>
+<span>Add New</span>
+</a>
+</div>
+</div>
+<!-- Stats Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+<!-- Total Coupons -->
+<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-gray-500 text-sm mb-1">Total Coupons</p>
+<h3 class="text-2xl font-bold text-gray-900">248</h3>
+<p class="text-green-500 text-sm mt-2 flex items-center">
+<div class="w-4 h-4 flex items-center justify-center mr-1">
+<i class="ri-arrow-up-line"></i>
+</div>
+<span>12% from last month</span>
+</p>
+</div>
+<div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-primary">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-coupon-line"></i>
+</div>
+</div>
+</div>
+</div>
+<!-- Active Stores -->
+<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-gray-500 text-sm mb-1">Active Stores</p>
+<h3 class="text-2xl font-bold text-gray-900">64</h3>
+<p class="text-green-500 text-sm mt-2 flex items-center">
+<div class="w-4 h-4 flex items-center justify-center mr-1">
+<i class="ri-arrow-up-line"></i>
+</div>
+<span>8% from last month</span>
+</p>
+</div>
+<div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-600">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-store-line"></i>
+</div>
+</div>
+</div>
+</div>
+<!-- Categories -->
+<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-gray-500 text-sm mb-1">Categories</p>
+<h3 class="text-2xl font-bold text-gray-900">32</h3>
+<p class="text-gray-500 text-sm mt-2 flex items-center">
+<div class="w-4 h-4 flex items-center justify-center mr-1">
+<i class="ri-arrow-right-line"></i>
+</div>
+<span>Same as last month</span>
+</p>
+</div>
+<div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center text-amber-600">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-price-tag-3-line"></i>
+</div>
+</div>
+</div>
+</div>
+<!-- Redemptions -->
+<div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-gray-500 text-sm mb-1">Redemptions</p>
+<h3 class="text-2xl font-bold text-gray-900">1,842</h3>
+<p class="text-red-500 text-sm mt-2 flex items-center">
+<div class="w-4 h-4 flex items-center justify-center mr-1">
+<i class="ri-arrow-down-line"></i>
+</div>
+<span>3% from last month</span>
+</p>
+</div>
+<div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-check-double-line"></i>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Recent Coupons -->
+<div class="bg-white rounded-lg shadow-sm border border-gray-100 mb-6">
+<div class="p-6 border-b border-gray-100">
+<div class="flex justify-between items-center">
+<h2 class="text-lg font-semibold text-gray-900">Recent Coupons</h2>
+<a href="#" class="text-primary text-sm hover:underline">View All</a>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-sm text-left">
+<thead class="bg-gray-50 text-gray-600 uppercase">
+<tr>
+<th class="px-6 py-3 w-10">
+<label class="custom-checkbox">
+<input type="checkbox">
+<span class="checkmark"></span>
+</label>
+</th>
+<th class="px-6 py-3 sortable">Coupon Code</th>
+<th class="px-6 py-3 sortable">Description</th>
+<th class="px-6 py-3 sortable">Store</th>
+<th class="px-6 py-3 sortable">Category</th>
+<th class="px-6 py-3 sortable">Valid Until</th>
+<th class="px-6 py-3 sortable">Status</th>
+<th class="px-6 py-3 text-right">Actions</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-gray-100 hover:bg-gray-50">
+<td class="px-6 py-4">
+<label class="custom-checkbox">
+<input type="checkbox">
+<span class="checkmark"></span>
+</label>
+</td>
+<td class="px-6 py-4 font-medium">SUMMER25</td>
+<td class="px-6 py-4">25% off summer collection</td>
+<td class="px-6 py-4">
+<div class="flex items-center">
+<div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mr-2">
+<div class="w-4 h-4 flex items-center justify-center">
+<i class="ri-t-shirt-line"></i>
+</div>
+</div>
+<span>Fashion Plus</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">Clothing</span>
+</td>
+<td class="px-6 py-4">Aug 31, 2025</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+Active
+</span>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex justify-end space-x-2">
+<button class="text-gray-500 hover:text-primary">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-edit-line"></i>
+</div>
+</button>
+<button class="text-gray-500 hover:text-red-500">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-delete-bin-line"></i>
+</div>
+</button>
+</div>
+</td>
+</tr>
+<tr class="border-b border-gray-100 hover:bg-gray-50">
+<td class="px-6 py-4">
+<label class="custom-checkbox">
+<input type="checkbox">
+<span class="checkmark"></span>
+</label>
+</td>
+<td class="px-6 py-4 font-medium">TECH15OFF</td>
+<td class="px-6 py-4">15% discount on electronics</td>
+<td class="px-6 py-4">
+<div class="flex items-center">
+<div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 mr-2">
+<div class="w-4 h-4 flex items-center justify-center">
+<i class="ri-computer-line"></i>
+</div>
+</div>
+<span>TechWorld</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-0.5 rounded">Electronics</span>
+</td>
+<td class="px-6 py-4">Sep 15, 2025</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+Active
+</span>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex justify-end space-x-2">
+<button class="text-gray-500 hover:text-primary">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-edit-line"></i>
+</div>
+</button>
+<button class="text-gray-500 hover:text-red-500">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-delete-bin-line"></i>
+</div>
+</button>
+</div>
+</td>
+</tr>
+<tr class="border-b border-gray-100 hover:bg-gray-50">
+<td class="px-6 py-4">
+<label class="custom-checkbox">
+<input type="checkbox">
+<span class="checkmark"></span>
+</label>
+</td>
+<td class="px-6 py-4 font-medium">FOOD10</td>
+<td class="px-6 py-4">$10 off on orders above $50</td>
+<td class="px-6 py-4">
+<div class="flex items-center">
+<div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center text-red-600 mr-2">
+<div class="w-4 h-4 flex items-center justify-center">
+<i class="ri-restaurant-line"></i>
+</div>
+</div>
+<span>FoodExpress</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">Food & Dining</span>
+</td>
+<td class="px-6 py-4">Jul 20, 2025</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+Expiring Soon
+</span>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex justify-end space-x-2">
+<button class="text-gray-500 hover:text-primary">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-edit-line"></i>
+</div>
+</button>
+<button class="text-gray-500 hover:text-red-500">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-delete-bin-line"></i>
+</div>
+</button>
+</div>
+</td>
+</tr>
+<tr class="border-b border-gray-100 hover:bg-gray-50">
+<td class="px-6 py-4">
+<label class="custom-checkbox">
+<input type="checkbox">
+<span class="checkmark"></span>
+</label>
+</td>
+<td class="px-6 py-4 font-medium">BEAUTY20</td>
+<td class="px-6 py-4">20% off beauty products</td>
+<td class="px-6 py-4">
+<div class="flex items-center">
+<div class="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center text-pink-600 mr-2">
+<div class="w-4 h-4 flex items-center justify-center">
+<i class="ri-palette-line"></i>
+</div>
+</div>
+<span>GlamBeauty</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="bg-pink-100 text-pink-800 text-xs font-medium px-2.5 py-0.5 rounded">Beauty</span>
+</td>
+<td class="px-6 py-4">Oct 10, 2025</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+Active
+</span>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex justify-end space-x-2">
+<button class="text-gray-500 hover:text-primary">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-edit-line"></i>
+</div>
+</button>
+<button class="text-gray-500 hover:text-red-500">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-delete-bin-line"></i>
+</div>
+</button>
+</div>
+</td>
+</tr>
+<tr class="border-b border-gray-100 hover:bg-gray-50">
+<td class="px-6 py-4">
+<label class="custom-checkbox">
+<input type="checkbox">
+<span class="checkmark"></span>
+</label>
+</td>
+<td class="px-6 py-4 font-medium">TRAVEL50</td>
+<td class="px-6 py-4">$50 off on travel packages</td>
+<td class="px-6 py-4">
+<div class="flex items-center">
+<div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 mr-2">
+<div class="w-4 h-4 flex items-center justify-center">
+<i class="ri-plane-line"></i>
+</div>
+</div>
+<span>TravelEasy</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">Travel</span>
+</td>
+<td class="px-6 py-4">Dec 31, 2025</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+Inactive
+</span>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex justify-end space-x-2">
+<button class="text-gray-500 hover:text-primary">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-edit-line"></i>
+</div>
+</button>
+<button class="text-gray-500 hover:text-red-500">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-delete-bin-line"></i>
+</div>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="p-4 border-t border-gray-100 flex items-center justify-between">
+<div class="text-sm text-gray-500">
+Showing <span class="font-medium">1</span> to <span class="font-medium">5</span> of <span class="font-medium">24</span> entries
+</div>
+<div class="flex space-x-1">
+<button class="px-3 py-1 rounded border border-gray-300 text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+Previous
+</button>
+<button class="px-3 py-1 rounded border border-primary bg-primary text-white">
+1
+</button>
+<button class="px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50">
+2
+</button>
+<button class="px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50">
+3
+</button>
+<button class="px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50">
+Next
+</button>
+</div>
+</div>
+</div>
+<!-- Bottom Section - Two Column Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<!-- Top Stores -->
+<div class="bg-white rounded-lg shadow-sm border border-gray-100">
+<div class="p-6 border-b border-gray-100">
+<h2 class="text-lg font-semibold text-gray-900">Top Stores</h2>
+</div>
+<div class="p-6">
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mr-3">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-t-shirt-line"></i>
+</div>
+</div>
+<div>
+<h4 class="font-medium text-gray-900">Fashion Plus</h4>
+<p class="text-sm text-gray-500">42 active coupons</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-sm font-medium text-gray-900">1,245</p>
+<p class="text-xs text-gray-500">Redemptions</p>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 mr-3">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-computer-line"></i>
+</div>
+</div>
+<div>
+<h4 class="font-medium text-gray-900">TechWorld</h4>
+<p class="text-sm text-gray-500">28 active coupons</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-sm font-medium text-gray-900">987</p>
+<p class="text-xs text-gray-500">Redemptions</p>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600 mr-3">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-plane-line"></i>
+</div>
+</div>
+<div>
+<h4 class="font-medium text-gray-900">TravelEasy</h4>
+<p class="text-sm text-gray-500">18 active coupons</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-sm font-medium text-gray-900">764</p>
+<p class="text-xs text-gray-500">Redemptions</p>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center text-red-600 mr-3">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-restaurant-line"></i>
+</div>
+</div>
+<div>
+<h4 class="font-medium text-gray-900">FoodExpress</h4>
+<p class="text-sm text-gray-500">24 active coupons</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-sm font-medium text-gray-900">652</p>
+<p class="text-xs text-gray-500">Redemptions</p>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<div class="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center text-pink-600 mr-3">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-palette-line"></i>
+</div>
+</div>
+<div>
+<h4 class="font-medium text-gray-900">GlamBeauty</h4>
+<p class="text-sm text-gray-500">16 active coupons</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-sm font-medium text-gray-900">438</p>
+<p class="text-xs text-gray-500">Redemptions</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Redemption Analytics -->
+<div class="bg-white rounded-lg shadow-sm border border-gray-100">
+<div class="p-6 border-b border-gray-100">
+<div class="flex justify-between items-center">
+<h2 class="text-lg font-semibold text-gray-900">Redemption Analytics</h2>
+<div class="relative">
+<button class="text-gray-500 flex items-center space-x-1 text-sm">
+<span>Last 30 Days</span>
+<div class="w-4 h-4 flex items-center justify-center">
+<i class="ri-arrow-down-s-line"></i>
+</div>
+</button>
+</div>
+</div>
+</div>
+<div class="p-6">
+<div id="redemption-chart" style="width: 100%; height: 300px;"></div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js">
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  // Initialize Charts
+  const redemptionChart = echarts.init(
+    document.getElementById("redemption-chart"),
+  );
+  const redemptionOption = {
+    animation: false,
+    tooltip: {
+      trigger: "axis",
+      backgroundColor: "rgba(255, 255, 255, 0.9)",
+      borderWidth: 1,
+      borderColor: "#e2e8f0",
+      padding: 10,
+      textStyle: {
+        color: "#1f2937",
+      },
+    },
+    grid: {
+      left: "3%",
+      right: "4%",
+      bottom: "3%",
+      top: "3%",
+      containLabel: true,
+    },
+    xAxis: {
+      type: "category",
+      boundaryGap: false,
+      data: [
+        "May 3",
+        "May 10",
+        "May 17",
+        "May 24",
+        "May 31",
+        "Jun 7",
+        "Jun 14",
+        "Jun 21",
+        "Jun 28",
+        "Jul 5",
+        "Jul 12",
+        "Jul 19",
+        "Jul 26",
+        "Aug 2",
+        "Aug 9",
+        "Aug 16",
+        "Aug 23",
+        "Aug 30",
+        "Sep 6",
+        "Sep 13",
+        "Sep 20",
+        "Sep 27",
+        "Oct 4",
+        "Oct 11",
+        "Oct 18",
+        "Oct 25",
+        "Nov 1",
+        "Nov 8",
+        "Nov 15",
+        "Nov 22",
+      ],
+      axisLine: {
+        lineStyle: {
+          color: "#e2e8f0",
+        },
+      },
+      axisLabel: {
+        color: "#64748b",
+        interval: 6,
+      },
+    },
+    yAxis: {
+      type: "value",
+      axisLine: {
+        show: false,
+      },
+      axisLabel: {
+        color: "#64748b",
+      },
+      splitLine: {
+        lineStyle: {
+          color: "#e2e8f0",
+        },
+      },
+    },
+    series: [
+      {
+        name: "Redemptions",
+        type: "line",
+        smooth: true,
+        lineStyle: {
+          width: 3,
+          color: "rgba(87, 181, 231, 1)",
+        },
+        symbol: "none",
+        areaStyle: {
+          color: {
+            type: "linear",
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              {
+                offset: 0,
+                color: "rgba(87, 181, 231, 0.2)",
+              },
+              {
+                offset: 1,
+                color: "rgba(87, 181, 231, 0)",
+              },
+            ],
+          },
+        },
+        data: [
+          120, 132, 101, 134, 90, 230, 210, 182, 191, 234, 290, 330, 310, 302,
+          341, 374, 390, 450, 420, 432, 401, 454, 490, 530, 510, 542, 580, 553,
+          582, 563,
+        ],
+      },
+    ],
+  };
+  redemptionChart.setOption(redemptionOption);
+  // Handle window resize
+  window.addEventListener("resize", function () {
+    redemptionChart.resize();
+  });
+});
+</script>
+</body>
+</html>

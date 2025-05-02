@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add Store</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: { primary: "#1E40AF", secondary: "#6B7280" },
+            borderRadius: {
+              none: "0px",
+              sm: "4px",
+              DEFAULT: "8px",
+              md: "12px",
+              lg: "16px",
+              xl: "20px",
+              "2xl": "24px",
+              "3xl": "32px",
+              full: "9999px",
+              button: "8px",
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      :where([class^="ri-"])::before { content: "\f3c2"; }
+      body {
+          font-family: 'Inter', sans-serif;
+          background-color: #f9fafb;
+      }
+      .sidebar {
+          width: 280px;
+          transition: all 0.3s;
+      }
+      .main-content {
+          width: calc(100% - 280px);
+          transition: all 0.3s;
+      }
+      .nav-item {
+          transition: all 0.2s;
+      }
+      .nav-item:hover {
+          background-color: rgba(255, 255, 255, 0.1);
+      }
+      .nav-item.active {
+          background-color: rgba(255, 255, 255, 0.15);
+          border-left: 4px solid #fff;
+      }
+      .toggle-switch {
+          position: relative;
+          display: inline-block;
+          width: 44px;
+          height: 22px;
+      }
+      .toggle-switch input {
+          opacity: 0;
+          width: 0;
+          height: 0;
+      }
+      .toggle-slider {
+          position: absolute;
+          cursor: pointer;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: #ccc;
+          transition: .4s;
+          border-radius: 34px;
+      }
+      .toggle-slider:before {
+          position: absolute;
+          content: "";
+          height: 18px;
+          width: 18px;
+          left: 2px;
+          bottom: 2px;
+          background-color: white;
+          transition: .4s;
+          border-radius: 50%;
+      }
+      input:checked + .toggle-slider {
+          background-color: #1E40AF;
+      }
+      input:checked + .toggle-slider:before {
+          transform: translateX(22px);
+      }
+      input[type="search"]::-webkit-search-decoration,
+      input[type="search"]::-webkit-search-cancel-button,
+      input[type="search"]::-webkit-search-results-button,
+      input[type="search"]::-webkit-search-results-decoration {
+          display: none;
+      }
+      input[type="number"]::-webkit-inner-spin-button,
+      input[type="number"]::-webkit-outer-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+      }
+      .file-drop-area {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          max-width: 100%;
+          padding: 2rem 1rem;
+          border: 2px dashed #d1d5db;
+          border-radius: 8px;
+          transition: 0.2s;
+          background-color: #f9fafb;
+      }
+      .file-drop-area.is-active {
+          background-color: rgba(30, 64, 175, 0.05);
+          border-color: #1E40AF;
+      }
+      .file-input {
+          position: absolute;
+          left: 0;
+          top: 0;
+          height: 100%;
+          width: 100%;
+          cursor: pointer;
+          opacity: 0;
+      }
+      .file-msg {
+          font-size: 0.875rem;
+          color: #6b7280;
+          font-weight: 500;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+      }
+      .custom-select {
+          position: relative;
+          display: inline-block;
+          width: 100%;
+      }
+      .custom-select-selected {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0.625rem 1rem;
+          border: 1px solid #d1d5db;
+          border-radius: 8px;
+          background-color: white;
+          cursor: pointer;
+          font-size: 0.875rem;
+          color: #374151;
+      }
+      .custom-select-dropdown {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          z-index: 10;
+          margin-top: 0.25rem;
+          background-color: white;
+          border: 1px solid #d1d5db;
+          border-radius: 8px;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+          max-height: 200px;
+          overflow-y: auto;
+          display: none;
+      }
+      .custom-select-option {
+          padding: 0.625rem 1rem;
+          cursor: pointer;
+          font-size: 0.875rem;
+          color: #374151;
+      }
+      .custom-select-option:hover {
+          background-color: #f3f4f6;
+      }
+      .custom-select-option.selected {
+          background-color: rgba(30, 64, 175, 0.1);
+          color: #1E40AF;
+      }
+      .custom-select.open .custom-select-dropdown {
+          display: block;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen flex">
+    <!-- Sidebar -->
+    <aside
+      class="sidebar bg-gray-800 text-white h-screen fixed left-0 top-0 overflow-y-auto"
+    >
+      <!-- Logo -->
+      <div class="h-16 flex items-center px-6 border-b border-gray-700">
+        <h1 class="text-2xl font-['Pacifico'] text-white">logo</h1>
+      </div>
+      <!-- Navigation -->
+      <nav class="py-4">
+        <ul>
+          <li>
+            <a
+              href="https://readdy.ai/home/b6d26466-ac22-40b0-a1cf-a428553ebde9/b3f54757-8cf0-4e01-9f6a-1ae4af9baf8d"
+              data-readdy="true"
+              class="nav-item flex items-center py-3 px-6 text-gray-300 hover:text-white"
+            >
+              <div class="w-6 h-6 flex items-center justify-center mr-3">
+                <i class="ri-dashboard-line"></i>
+              </div>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="#"
+              class="nav-item flex items-center py-3 px-6 text-gray-300 hover:text-white"
+            >
+              <div class="w-6 h-6 flex items-center justify-center mr-3">
+                <i class="ri-coupon-line"></i>
+              </div>
+              <span>Coupons</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="https://readdy.ai/home/b6d26466-ac22-40b0-a1cf-a428553ebde9/f567a0c8-02e0-4476-9aaf-d29f2e64f505"
+              data-readdy="true"
+              class="nav-item active flex items-center py-3 px-6 text-gray-100"
+            >
+              <div class="w-6 h-6 flex items-center justify-center mr-3">
+                <i class="ri-store-line"></i>
+              </div>
+              <span>Stores</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="#"
+              class="nav-item flex items-center py-3 px-6 text-gray-300 hover:text-white"
+            >
+              <div class="w-6 h-6 flex items-center justify-center mr-3">
+                <i class="ri-price-tag-3-line"></i>
+              </div>
+              <span>Categories</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="#"
+              class="nav-item flex items-center py-3 px-6 text-gray-300 hover:text-white"
+            >
+              <div class="w-6 h-6 flex items-center justify-center mr-3">
+                <i class="ri-settings-line"></i>
+              </div>
+              <span>Settings</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+    <!-- Main Content -->
+    <main class="main-content ml-[280px] flex-1">
+      <!-- Top Header -->
+      <header
+        class="bg-white h-16 px-6 flex items-center justify-between border-b border-gray-200 sticky top-0 z-10"
+      >
+        <!-- Search Bar -->
+        <div class="relative w-96">
+          <div
+            class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+          >
+            <div class="w-5 h-5 flex items-center justify-center text-gray-400">
+              <i class="ri-search-line"></i>
+            </div>
+          </div>
+          <input
+            type="search"
+            class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+            placeholder="Search stores..."
+          />
+        </div>
+        <!-- User Navigation -->
+        <div class="flex items-center space-x-4">
+          <!-- Notification Bell -->
+          <div class="relative">
+            <button class="p-2 rounded-full hover:bg-gray-100 relative">
+              <div class="w-6 h-6 flex items-center justify-center">
+                <i class="ri-notification-3-line"></i>
+              </div>
+              <span
+                class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"
+                >3</span
+              >
+            </button>
+          </div>
+          <!-- User Profile -->
+          <div class="flex items-center">
+            <button class="flex items-center space-x-2">
+              <img
+                src="https://readdy.ai/api/search-image?query=professional%252520headshot%252520of%252520a%252520business%252520person%252520with%252520neutral%252520expression%25252C%252520high%252520quality%25252C%252520professional%252520lighting%25252C%252520studio%252520background&width=40&height=40&seq=1&orientation=squarish"
+                alt="Admin"
+                class="w-10 h-10 rounded-full object-cover"
+              />
+              <span class="text-sm font-medium">John Anderson</span>
+              <div class="w-5 h-5 flex items-center justify-center">
+                <i class="ri-arrow-down-s-line"></i>
+              </div>
+            </button>
+          </div>
+        </div>
+      </header>
+      <!-- Page Content -->
+      <div class="p-6">
+        <!-- Breadcrumbs -->
+        <div class="mb-4 flex items-center text-sm text-gray-500">
+          <a
+            href="https://readdy.ai/home/b6d26466-ac22-40b0-a1cf-a428553ebde9/b3f54757-8cf0-4e01-9f6a-1ae4af9baf8d"
+            data-readdy="true"
+            class="hover:text-primary"
+            >Home</a
+          >
+          <span class="mx-2">/</span>
+          <a
+            href="https://readdy.ai/home/b6d26466-ac22-40b0-a1cf-a428553ebde9/f567a0c8-02e0-4476-9aaf-d29f2e64f505"
+            data-readdy="true"
+            class="hover:text-primary"
+            >Stores</a
+          >
+          <span class="mx-2">/</span>
+          <span class="text-gray-700">Add Store</span>
+        </div>
+
+        <!-- Page Title and Actions -->
+        <div class="flex justify-between items-center mb-6">
+          <div class="flex items-center">
+            <a
+              href="https://readdy.ai/home/b6d26466-ac22-40b0-a1cf-a428553ebde9/f567a0c8-02e0-4476-9aaf-d29f2e64f505"
+              data-readdy="true"
+              class="mr-3 bg-white border border-gray-300 text-gray-700 p-2 !rounded-button hover:bg-gray-50 whitespace-nowrap"
+            >
+              <div class="w-5 h-5 flex items-center justify-center">
+                <i class="ri-arrow-left-line"></i>
+              </div>
+            </a>
+            <h1 class="text-2xl font-bold text-gray-900">Add Store</h1>
+          </div>
+          <a
+            href="https://readdy.ai/home/b6d26466-ac22-40b0-a1cf-a428553ebde9/f567a0c8-02e0-4476-9aaf-d29f2e64f505"
+            data-readdy="true"
+            class="text-gray-500 hover:text-gray-700"
+          >
+            <div class="w-6 h-6 flex items-center justify-center">
+              <i class="ri-close-line"></i>
+            </div>
+          </a>
+        </div>
+
+        <!-- Form Container -->
+        <div
+          class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-6"
+        >
+          <form id="add-store-form">
+            <!-- Basic Information Section -->
+            <div class="mb-8">
+              <h2 class="text-lg font-semibold text-gray-900 mb-4">
+                Basic Information
+              </h2>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Store Name -->
+                <div>
+                  <label
+                    for="store-name"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                    >Store Name <span class="text-red-500">*</span></label
+                  >
+                  <input
+                    type="text"
+                    id="store-name"
+                    name="store-name"
+                    required
+                    class="w-full px-4 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                  <div
+                    class="text-red-500 text-xs mt-1 hidden"
+                    id="store-name-error"
+                  >
+                    Store name is required
+                  </div>
+                </div>
+
+                <!-- Category -->
+                <div>
+                  <label
+                    for="category"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                    >Category <span class="text-red-500">*</span></label
+                  >
+                  <div class="custom-select" id="category-select">
+                    <div class="custom-select-selected">
+                      <span>Select a category</span>
+                      <div class="w-4 h-4 flex items-center justify-center">
+                        <i class="ri-arrow-down-s-line"></i>
+                      </div>
+                    </div>
+                    <div class="custom-select-dropdown">
+                      <div class="custom-select-option" data-value="clothing">
+                        Clothing
+                      </div>
+                      <div
+                        class="custom-select-option"
+                        data-value="electronics"
+                      >
+                        Electronics
+                      </div>
+                      <div
+                        class="custom-select-option"
+                        data-value="food-dining"
+                      >
+                        Food & Dining
+                      </div>
+                      <div class="custom-select-option" data-value="beauty">
+                        Beauty
+                      </div>
+                      <div class="custom-select-option" data-value="travel">
+                        Travel
+                      </div>
+                      <div
+                        class="custom-select-option"
+                        data-value="books-media"
+                      >
+                        Books & Media
+                      </div>
+                      <div
+                        class="custom-select-option"
+                        data-value="home-garden"
+                      >
+                        Home & Garden
+                      </div>
+                      <div class="custom-select-option" data-value="gaming">
+                        Gaming
+                      </div>
+                      <div class="custom-select-option" data-value="grocery">
+                        Grocery
+                      </div>
+                      <div
+                        class="custom-select-option"
+                        data-value="sports-fitness"
+                      >
+                        Sports & Fitness
+                      </div>
+                    </div>
+                  </div>
+                  <input type="hidden" id="category" name="category" required />
+                  <div
+                    class="text-red-500 text-xs mt-1 hidden"
+                    id="category-error"
+                  >
+                    Category is required
+                  </div>
+                </div>
+              </div>
+
+              <!-- Store Logo/Icon -->
+              <div class="mt-6">
+                <label class="block text-sm font-medium text-gray-700 mb-1"
+                  >Store Logo/Icon</label
+                >
+                <div class="file-drop-area" id="logo-drop-area">
+                  <input
+                    type="file"
+                    id="store-logo"
+                    name="store-logo"
+                    class="file-input"
+                    accept="image/*"
+                  />
+                  <div class="file-msg">
+                    <div
+                      class="w-12 h-12 flex items-center justify-center text-gray-400 mb-2"
+                    >
+                      <i class="ri-upload-cloud-line ri-2x"></i>
+                    </div>
+                    <span>Drag & drop your logo here or click to browse</span>
+                    <span class="text-xs text-gray-500 mt-1"
+                      >PNG, JPG or SVG (max. 2MB)</span
+                    >
+                  </div>
+                  <div
+                    class="preview-container hidden flex items-center justify-center"
+                  >
+                    <img
+                      id="logo-preview"
+                      class="max-h-32 max-w-full"
+                      alt="Logo preview"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Status -->
+              <div class="mt-6">
+                <label class="block text-sm font-medium text-gray-700 mb-1"
+                  >Status</label
+                >
+                <div class="flex items-center">
+                  <label class="toggle-switch">
+                    <input
+                      type="checkbox"
+                      id="store-status"
+                      name="store-status"
+                      checked
+                    />
+                    <span class="toggle-slider"></span>
+                  </label>
+                  <span class="ml-2 text-sm text-gray-700" id="status-text"
+                    >Active</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- Additional Details Section -->
+            <div class="mb-8">
+              <h2 class="text-lg font-semibold text-gray-900 mb-4">
+                Additional Details
+              </h2>
+
+              <!-- Description -->
+              <div class="mb-6">
+                <label
+                  for="store-description"
+                  class="block text-sm font-medium text-gray-700 mb-1"
+                  >Description</label
+                >
+                <textarea
+                  id="store-description"
+                  name="store-description"
+                  rows="4"
+                  class="w-full px-4 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  placeholder="Enter store description..."
+                ></textarea>
+              </div>
+
+              <!-- Website URL -->
+              <div class="mb-6">
+                <label
+                  for="website-url"
+                  class="block text-sm font-medium text-gray-700 mb-1"
+                  >Website URL</label
+                >
+                <div class="relative">
+                  <div
+                    class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+                  >
+                    <div
+                      class="w-5 h-5 flex items-center justify-center text-gray-400"
+                    >
+                      <i class="ri-global-line"></i>
+                    </div>
+                  </div>
+                  <input
+                    type="url"
+                    id="website-url"
+                    name="website-url"
+                    class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="https://example.com"
+                  />
+                  <div
+                    class="text-red-500 text-xs mt-1 hidden"
+                    id="website-url-error"
+                  >
+                    Please enter a valid URL
+                  </div>
+                </div>
+              </div>
+
+              <!-- Contact Information -->
+              <h3 class="text-md font-medium text-gray-800 mb-3">
+                Contact Information
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Email -->
+                <div>
+                  <label
+                    for="email"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                    >Email Address</label
+                  >
+                  <div class="relative">
+                    <div
+                      class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+                    >
+                      <div
+                        class="w-5 h-5 flex items-center justify-center text-gray-400"
+                      >
+                        <i class="ri-mail-line"></i>
+                      </div>
+                    </div>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      placeholder="contact@example.com"
+                    />
+                    <div
+                      class="text-red-500 text-xs mt-1 hidden"
+                      id="email-error"
+                    >
+                      Please enter a valid email address
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Phone -->
+                <div>
+                  <label
+                    for="phone"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                    >Phone Number</label
+                  >
+                  <div class="relative">
+                    <div
+                      class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+                    >
+                      <div
+                        class="w-5 h-5 flex items-center justify-center text-gray-400"
+                      >
+                        <i class="ri-phone-line"></i>
+                      </div>
+                    </div>
+                    <input
+                      type="tel"
+                      id="phone"
+                      name="phone"
+                      class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      placeholder="+1 (555) 123-4567"
+                    />
+                    <div
+                      class="text-red-500 text-xs mt-1 hidden"
+                      id="phone-error"
+                    >
+                      Please enter a valid phone number
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Address -->
+              <div class="mt-6">
+                <label
+                  for="address"
+                  class="block text-sm font-medium text-gray-700 mb-1"
+                  >Physical Address</label
+                >
+                <div class="relative">
+                  <div
+                    class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+                  >
+                    <div
+                      class="w-5 h-5 flex items-center justify-center text-gray-400"
+                    >
+                      <i class="ri-map-pin-line"></i>
+                    </div>
+                  </div>
+                  <input
+                    type="text"
+                    id="address"
+                    name="address"
+                    class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="123 Main Street, City, State, Zip"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex justify-between pt-4 border-t border-gray-100">
+              <a
+                href="https://readdy.ai/home/b6d26466-ac22-40b0-a1cf-a428553ebde9/f567a0c8-02e0-4476-9aaf-d29f2e64f505"
+                data-readdy="true"
+                class="bg-white border border-gray-300 text-gray-700 py-2 px-6 !rounded-button hover:bg-gray-50 whitespace-nowrap"
+                >Cancel</a
+              >
+              <button
+                type="submit"
+                class="bg-primary text-white py-2 px-6 !rounded-button hover:bg-primary/90 whitespace-nowrap"
+              >
+                Save Store
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Custom Select Functionality
+        const customSelect = document.getElementById("category-select");
+        const selectedText = customSelect.querySelector(
+          ".custom-select-selected span",
+        );
+        const options = customSelect.querySelectorAll(".custom-select-option");
+        const hiddenInput = document.getElementById("category");
+
+        customSelect.addEventListener("click", function () {
+          this.classList.toggle("open");
+        });
+
+        options.forEach((option) => {
+          option.addEventListener("click", function (e) {
+            e.stopPropagation();
+            const value = this.getAttribute("data-value");
+            const text = this.textContent;
+
+            selectedText.textContent = text;
+            hiddenInput.value = value;
+
+            options.forEach((opt) => opt.classList.remove("selected"));
+            this.classList.add("selected");
+
+            customSelect.classList.remove("open");
+            document.getElementById("category-error").classList.add("hidden");
+          });
+        });
+
+        // Close custom select when clicking outside
+        document.addEventListener("click", function (e) {
+          if (!customSelect.contains(e.target)) {
+            customSelect.classList.remove("open");
+          }
+        });
+
+        // File Upload Functionality
+        const dropArea = document.getElementById("logo-drop-area");
+        const fileInput = document.getElementById("store-logo");
+        const previewContainer = dropArea.querySelector(".preview-container");
+        const logoPreview = document.getElementById("logo-preview");
+        const fileMsg = dropArea.querySelector(".file-msg");
+
+        ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+          dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+
+        ["dragenter", "dragover"].forEach((eventName) => {
+          dropArea.addEventListener(eventName, highlight, false);
+        });
+
+        ["dragleave", "drop"].forEach((eventName) => {
+          dropArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight() {
+          dropArea.classList.add("is-active");
+        }
+
+        function unhighlight() {
+          dropArea.classList.remove("is-active");
+        }
+
+        dropArea.addEventListener("drop", handleDrop, false);
+
+        function handleDrop(e) {
+          const dt = e.dataTransfer;
+          const files = dt.files;
+
+          if (files.length) {
+            handleFiles(files);
+          }
+        }
+
+        fileInput.addEventListener("change", function () {
+          if (this.files.length) {
+            handleFiles(this.files);
+          }
+        });
+
+        function handleFiles(files) {
+          const file = files[0];
+
+          if (file.type.match("image.*")) {
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+              logoPreview.src = e.target.result;
+              previewContainer.classList.remove("hidden");
+              fileMsg.classList.add("hidden");
+            };
+
+            reader.readAsDataURL(file);
+          } else {
+            alert("Please select an image file (PNG, JPG, SVG)");
+          }
+        }
+
+        // Status Toggle
+        const statusToggle = document.getElementById("store-status");
+        const statusText = document.getElementById("status-text");
+
+        statusToggle.addEventListener("change", function () {
+          statusText.textContent = this.checked ? "Active" : "Inactive";
+        });
+
+        // Form Validation
+        const form = document.getElementById("add-store-form");
+
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          let isValid = true;
+
+          // Validate Store Name
+          const storeName = document.getElementById("store-name");
+          const storeNameError = document.getElementById("store-name-error");
+
+          if (!storeName.value.trim()) {
+            storeNameError.classList.remove("hidden");
+            isValid = false;
+          } else {
+            storeNameError.classList.add("hidden");
+          }
+
+          // Validate Category
+          const categoryError = document.getElementById("category-error");
+
+          if (!hiddenInput.value) {
+            categoryError.classList.remove("hidden");
+            isValid = false;
+          } else {
+            categoryError.classList.add("hidden");
+          }
+
+          // Validate Website URL (if provided)
+          const websiteUrl = document.getElementById("website-url");
+          const websiteUrlError = document.getElementById("website-url-error");
+
+          if (websiteUrl.value && !isValidUrl(websiteUrl.value)) {
+            websiteUrlError.classList.remove("hidden");
+            isValid = false;
+          } else {
+            websiteUrlError.classList.add("hidden");
+          }
+
+          // Validate Email (if provided)
+          const email = document.getElementById("email");
+          const emailError = document.getElementById("email-error");
+
+          if (email.value && !isValidEmail(email.value)) {
+            emailError.classList.remove("hidden");
+            isValid = false;
+          } else {
+            emailError.classList.add("hidden");
+          }
+
+          // Validate Phone (if provided)
+          const phone = document.getElementById("phone");
+          const phoneError = document.getElementById("phone-error");
+
+          if (phone.value && !isValidPhone(phone.value)) {
+            phoneError.classList.remove("hidden");
+            isValid = false;
+          } else {
+            phoneError.classList.add("hidden");
+          }
+
+          if (isValid) {
+            // Form is valid, redirect to stores page
+            window.location.href =
+              "https://readdy.ai/home/b6d26466-ac22-40b0-a1cf-a428553ebde9/f567a0c8-02e0-4476-9aaf-d29f2e64f505";
+          }
+        });
+
+        function isValidUrl(url) {
+          try {
+            new URL(url);
+            return true;
+          } catch (e) {
+            return false;
+          }
+        }
+
+        function isValidEmail(email) {
+          const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          return re.test(email);
+        }
+
+        function isValidPhone(phone) {
+          const re = /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,4}[-\s.]?[0-9]{1,9}$/;
+          return re.test(phone);
+        }
+      });
+    </script>
+  </body>
+</html>

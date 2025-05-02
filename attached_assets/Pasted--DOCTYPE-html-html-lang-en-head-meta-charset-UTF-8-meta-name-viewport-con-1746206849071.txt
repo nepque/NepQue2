@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stores Management</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: { primary: "#1E40AF", secondary: "#6B7280" },
+            borderRadius: {
+              none: "0px",
+              sm: "4px",
+              DEFAULT: "8px",
+              md: "12px",
+              lg: "16px",
+              xl: "20px",
+              "2xl": "24px",
+              "3xl": "32px",
+              full: "9999px",
+              button: "8px",
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      :where([class^="ri-"])::before { content: "\f3c2"; }
+      body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f9fafb;
+      }
+      .sidebar {
+      width: 280px;
+      transition: all 0.3s;
+      }
+      .main-content {
+      width: calc(100% - 280px);
+      transition: all 0.3s;
+      }
+      .nav-item {
+      transition: all 0.2s;
+      }
+      .nav-item:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      }
+      .nav-item.active {
+      background-color: rgba(255, 255, 255, 0.15);
+      border-left: 4px solid #fff;
+      }
+      table th {
+      position: relative;
+      }
+      table th.sortable:after {
+      content: "↕";
+      position: absolute;
+      right: 8px;
+      opacity: 0.3;
+      }
+      table th.sortable:hover:after {
+      opacity: 0.7;
+      }
+      .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 22px;
+      }
+      .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      }
+      .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 34px;
+      }
+      .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+      }
+      input:checked + .toggle-slider {
+      background-color: #1E40AF;
+      }
+      input:checked + .toggle-slider:before {
+      transform: translateX(22px);
+      }
+      input[type="search"]::-webkit-search-decoration,
+      input[type="search"]::-webkit-search-cancel-button,
+      input[type="search"]::-webkit-search-results-button,
+      input[type="search"]::-webkit-search-results-decoration {
+      display: none;
+      }
+      input[type="number"]::-webkit-inner-spin-button,
+      input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+      }
+      .custom-checkbox {
+      display: inline-block;
+      position: relative;
+      padding-left: 24px;
+      cursor: pointer;
+      user-select: none;
+      }
+      .custom-checkbox input {
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+      height: 0;
+      width: 0;
+      }
+      .checkmark {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 18px;
+      width: 18px;
+      background-color: #fff;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      }
+      .custom-checkbox:hover input ~ .checkmark {
+      background-color: #f3f4f6;
+      }
+      .custom-checkbox input:checked ~ .checkmark {
+      background-color: #1E40AF;
+      border-color: #1E40AF;
+      }
+      .checkmark:after {
+      content: "";
+      position: absolute;
+      display: none;
+      }
+      .custom-checkbox input:checked ~ .checkmark:after {
+      display: block;
+      }
+      .custom-checkbox .checkmark:after {
+      left: 6px;
+      top: 2px;
+      width: 5px;
+      height: 10px;
+      border: solid white;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+      }
+      .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: white;
+      min-width: 200px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      z-index: 50;
+      border-radius: 8px;
+      overflow: hidden;
+      }
+      .dropdown:hover .dropdown-content {
+      display: block;
+      }
+      .date-range-picker {
+      position: relative;
+      }
+      .date-range-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      z-index: 50;
+      width: 280px;
+      }
+      .date-range-picker:hover .date-range-menu {
+      display: block;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen flex">
+    <!-- Sidebar -->
+    <aside
+      class="sidebar bg-gray-800 text-white h-screen fixed left-0 top-0 overflow-y-auto"
+    >
+      <!-- Logo -->
+      <div class="h-16 flex items-center px-6 border-b border-gray-700">
+        <h1 class="text-2xl font-['Pacifico'] text-white">logo</h1>
+      </div>
+      <!-- Navigation -->
+      <nav class="py-4">
+        <ul>
+          <li>
+            <a
+              href="https://readdy.ai/home/b6d26466-ac22-40b0-a1cf-a428553ebde9/b3f54757-8cf0-4e01-9f6a-1ae4af9baf8d"
+              data-readdy="true"
+              class="nav-item flex items-center py-3 px-6 text-gray-300 hover:text-white"
+            >
+              <div class="w-6 h-6 flex items-center justify-center mr-3">
+                <i class="ri-dashboard-line"></i>
+              </div>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="#"
+              class="nav-item flex items-center py-3 px-6 text-gray-300 hover:text-white"
+            >
+              <div class="w-6 h-6 flex items-center justify-center mr-3">
+                <i class="ri-coupon-line"></i>
+              </div>
+              <span>Coupons</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="#"
+              class="nav-item active flex items-center py-3 px-6 text-gray-100"
+            >
+              <div class="w-6 h-6 flex items-center justify-center mr-3">
+                <i class="ri-store-line"></i>
+              </div>
+              <span>Stores</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="https://readdy.ai/home/b6d26466-ac22-40b0-a1cf-a428553ebde9/d6fcffce-0200-4bec-a075-8d8657899ed3"
+              data-readdy="true"
+              class="nav-item flex items-center py-3 px-6 text-gray-300 hover:text-white"
+            >
+              <div class="w-6 h-6 flex items-center justify-center mr-3">
+                <i class="ri-price-tag-3-line"></i>
+              </div>
+              <span>Categories</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="#"
+              class="nav-item flex items-center py-3 px-6 text-gray-300 hover:text-white"
+            >
+              <div class="w-6 h-6 flex items-center justify-center mr-3">
+                <i class="ri-settings-line"></i>
+              </div>
+              <span>Settings</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+    <!-- Main Content -->
+    <main class="main-content ml-[280px] flex-1">
+      <!-- Top Header -->
+      <header
+        class="bg-white h-16 px-6 flex items-center justify-between border-b border-gray-200 sticky top-0 z-10"
+      >
+        <!-- Search Bar -->
+        <div class="relative w-96">
+          <div
+            class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+          >
+            <div class="w-5 h-5 flex items-center justify-center text-gray-400">
+              <i class="ri-search-line"></i>
+            </div>
+          </div>
+          <input
+            type="search"
+            class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+            placeholder="Search stores..."
+          />
+        </div>
+        <!-- User Navigation -->
+        <div class="flex items-center space-x-4">
+          <!-- Notification Bell -->
+          <div class="relative">
+            <button class="p-2 rounded-full hover:bg-gray-100 relative">
+              <div class="w-6 h-6 flex items-center justify-center">
+                <i class="ri-notification-3-line"></i>
+              </div>
+              <span
+                class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"
+                >3</span
+              >
+            </button>
+          </div>
+          <!-- User Profile -->
+          <div class="flex items-center">
+            <button class="flex items-center space-x-2">
+              <img
+                src="https://readdy.ai/api/search-image?query=professional%2520headshot%2520of%2520a%2520business%2520person%2520with%2520neutral%2520expression%252C%2520high%2520quality%252C%2520professional%2520lighting%252C%2520studio%2520background&width=40&height=40&seq=1&orientation=squarish"
+                alt="Admin"
+                class="w-10 h-10 rounded-full object-cover"
+              />
+              <span class="text-sm font-medium">John Anderson</span>
+              <div class="w-5 h-5 flex items-center justify-center">
+                <i class="ri-arrow-down-s-line"></i>
+              </div>
+            </button>
+          </div>
+        </div>
+      </header>
+      <!-- Page Content -->
+      <div class="p-6">
+        <!-- Breadcrumbs -->
+        <div class="mb-4 flex items-center text-sm text-gray-500">
+          <a
+            href="https://readdy.ai/home/b6d26466-ac22-40b0-a1cf-a428553ebde9/b3f54757-8cf0-4e01-9f6a-1ae4af9baf8d"
+            data-readdy="true"
+            class="hover:text-primary"
+            >Home</a
+          >
+          <span class="mx-2">/</span>
+          <span class="text-gray-700">Stores</span>
+        </div>
+        <!-- Page Title and Actions -->
+        <div class="flex justify-between items-center mb-6">
+          <h1 class="text-2xl font-bold text-gray-900">Stores</h1>
+          <div class="flex space-x-3">
+            <button
+              class="bg-white border border-gray-300 text-gray-700 py-2 px-4 flex items-center space-x-2 !rounded-button hover:bg-gray-50 whitespace-nowrap"
+            >
+              <div class="w-5 h-5 flex items-center justify-center">
+                <i class="ri-download-line"></i>
+              </div>
+              <span>Export</span>
+            </button>
+            <a
+              href="https://readdy.ai/home/b6d26466-ac22-40b0-a1cf-a428553ebde9/4fdd8ab6-3260-43dc-b84b-b91a4c0e41a4"
+              data-readdy="true"
+              class="bg-primary text-white py-2 px-4 flex items-center space-x-2 !rounded-button hover:bg-primary/90 whitespace-nowrap"
+            >
+              <div class="w-5 h-5 flex items-center justify-center">
+                <i class="ri-add-line"></i>
+              </div>
+              <span>Add Store</span>
+            </a>
+          </div>
+        </div>
+        <!-- Filter Section -->
+        <div
+          class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-6"
+        >
+          <div class="flex flex-wrap items-center gap-4">
+            <!-- Category Filter -->
+            <div class="dropdown relative">
+              <button
+                class="flex items-center space-x-2 bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                <span>Category</span>
+                <div class="w-4 h-4 flex items-center justify-center">
+                  <i class="ri-arrow-down-s-line"></i>
+                </div>
+              </button>
+              <div class="dropdown-content mt-1">
+                <div class="p-2">
+                  <label
+                    class="custom-checkbox block py-2 px-3 hover:bg-gray-50 cursor-pointer"
+                  >
+                    <input type="checkbox" />
+                    <span class="checkmark"></span>
+                    <span class="ml-2">All Categories</span>
+                  </label>
+                  <label
+                    class="custom-checkbox block py-2 px-3 hover:bg-gray-50 cursor-pointer"
+                  >
+                    <input type="checkbox" />
+                    <span class="checkmark"></span>
+                    <span class="ml-2">Clothing</span>
+                  </label>
+                  <label
+                    class="custom-checkbox block py-2 px-3 hover:bg-gray-50 cursor-pointer"
+                  >
+                    <input type="checkbox" />
+                    <span class="checkmark"></span>
+                    <span class="ml-2">Electronics</span>
+                  </label>
+                  <label
+                    class="custom-checkbox block py-2 px-3 hover:bg-gray-50 cursor-pointer"
+                  >
+                    <input type="checkbox" />
+                    <span class="checkmark"></span>
+                    <span class="ml-2">Food & Dining</span>
+                  </label>
+                  <label
+                    class="custom-checkbox block py-2 px-3 hover:bg-gray-50 cursor-pointer"
+                  >
+                    <input type="checkbox" />
+                    <span class="checkmark"></span>
+                    <span class="ml-2">Beauty</span>
+                  </label>
+                  <label
+                    class="custom-checkbox block py-2 px-3 hover:bg-gray-50 cursor-pointer"
+                  >
+                    <input type="checkbox" />
+                    <span class="checkmark"></span>
+                    <span class="ml-2">Travel</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <!-- Status Filter -->
+            <div class="dropdown relative">
+              <button
+                class="flex items-center space-x-2 bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                <span>Status</span>
+                <div class="w-4 h-4 flex items-center justify-center">
+                  <i class="ri-arrow-down-s-line"></i>
+                </div>
+              </button>
+              <div class="dropdown-content mt-1">
+                <div class="p-2">
+                  <label
+                    class="custom-checkbox block py-2 px-3 hover:bg-gray-50 cursor-pointer"
+                  >
+                    <input type="checkbox" />
+                    <span class="checkmark"></span>
+                    <span class="ml-2">All Statuses</span>
+                  </label>
+                  <label
+                    class="custom-checkbox block py-2 px-3 hover:bg-gray-50 cursor-pointer"
+                  >
+                    <input type="checkbox" />
+                    <span class="checkmark"></span>
+                    <span class="ml-2">Active</span>
+                  </label>
+                  <label
+                    class="custom-checkbox block py-2 px-3 hover:bg-gray-50 cursor-pointer"
+                  >
+                    <input type="checkbox" />
+                    <span class="checkmark"></span>
+                    <span class="ml-2">Inactive</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <!-- Date Range Filter -->
+            <div class="date-range-picker">
+              <button
+                class="flex items-center space-x-2 bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                <div class="w-4 h-4 flex items-center justify-center mr-1">
+                  <i class="ri-calendar-line"></i>
+                </div>
+                <span>Date Range</span>
+                <div class="w-4 h-4 flex items-center justify-center">
+                  <i class="ri-arrow-down-s-line"></i>
+                </div>
+              </button>
+              <div class="date-range-menu p-4">
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                  <div>
+                    <label class="block text-sm text-gray-600 mb-1"
+                      >Start Date</label
+                    >
+                    <input
+                      type="date"
+                      class="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm text-gray-600 mb-1"
+                      >End Date</label
+                    >
+                    <input
+                      type="date"
+                      class="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                    />
+                  </div>
+                </div>
+                <div class="flex justify-between">
+                  <button class="text-sm text-gray-600 hover:text-gray-900">
+                    Reset
+                  </button>
+                  <button class="text-sm text-primary hover:text-primary/80">
+                    Apply
+                  </button>
+                </div>
+              </div>
+            </div>
+            <!-- Reset Filters -->
+            <button
+              class="text-primary text-sm hover:text-primary/80 flex items-center"
+            >
+              <div class="w-4 h-4 flex items-center justify-center mr-1">
+                <i class="ri-refresh-line"></i>
+              </div>
+              <span>Reset Filters</span>
+            </button>
+            <!-- Active Filters -->
+            <div class="flex items-center space-x-2 ml-auto">
+              <span class="text-sm text-gray-500">Active filters:</span>
+              <div
+                class="bg-gray-100 text-gray-700 text-xs rounded-full py-1 px-3 flex items-center"
+              >
+                Category: Clothing
+                <button class="ml-1 text-gray-500 hover:text-gray-700">
+                  <div class="w-3 h-3 flex items-center justify-center">
+                    <i class="ri-close-line"></i>
+                  </div>
+                </button>
+              </div>
+              <div
+                class="bg-gray-100 text-gray-700 text-xs rounded-full py-1 px-3 flex items-center"
+              >
+                Status: Active
+                <button class="ml-1 text-gray-500 hover:text-gray-700">
+                  <div class="w-3 h-3 flex items-center justify-center">
+                    <i class="ri-close-line"></i>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Stores Table -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-100 mb-6">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+              <thead class="bg-gray-50 text-gray-600 uppercase">
+                <tr>
+                  <th class="px-6 py-3 w-10">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" id="select-all" />
+                      <span class="checkmark"></span>
+                    </label>
+                  </th>
+                  <th class="px-6 py-3 w-16"></th>
+                  <th class="px-6 py-3 sortable">Store Name</th>
+                  <th class="px-6 py-3 sortable">Category</th>
+                  <th class="px-6 py-3 sortable">Active Coupons</th>
+                  <th class="px-6 py-3 sortable">Total Redemptions</th>
+                  <th class="px-6 py-3 sortable">Status</th>
+                  <th class="px-6 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="border-b border-gray-100 hover:bg-gray-50">
+                  <td class="px-6 py-4">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" class="store-checkbox" />
+                      <span class="checkmark"></span>
+                    </label>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div
+                      class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600"
+                    >
+                      <div class="w-5 h-5 flex items-center justify-center">
+                        <i class="ri-t-shirt-line"></i>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 font-medium">Fashion Plus</td>
+                  <td class="px-6 py-4">
+                    <span
+                      class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded"
+                      >Clothing</span
+                    >
+                  </td>
+                  <td class="px-6 py-4">42</td>
+                  <td class="px-6 py-4">1,245</td>
+                  <td class="px-6 py-4">
+                    <span
+                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                    >
+                      Active
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    <div class="flex justify-end space-x-2">
+                      <button class="text-gray-500 hover:text-primary">
+                        <div class="w-5 h-5 flex items-center justify-center">
+                          <i class="ri-edit-line"></i>
+                        </div>
+                      </button>
+                      <button class="text-gray-500 hover:text-red-500">
+                        <div class="w-5 h-5 flex items-center justify-center">
+                          <i class="ri-delete-bin-line"></i>
+                        </div>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="border-b border-gray-100 hover:bg-gray-50">
+                  <td class="px-6 py-4">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" class="store-checkbox" />
+                      <span class="checkmark"></span>
+                    </label>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div
+                      class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600"
+                    >
+                      <div class="w-5 h-5 flex items-center justify-center">
+                        <i class="ri-computer-line"></i>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 font-medium">TechWorld</td>
+                  <td class="px-6 py-4">
+                    <span
+                      class="bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-0.5 rounded"
+                      >Electronics</span
+                    >
+                  </td>
+                  <td class="px-6 py-4">28</td>
+                  <td class="px-6 py-4">987</td>
+                  <td class="px-6 py-4">
+                    <span
+                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                    >
+                      Active
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    <div class="flex justify-end space-x-2">
+                      <button class="text-gray-500 hover:text-primary">
+                        <div class="w-5 h-5 flex items-center justify-center">
+                          <i class="ri-edit-line"></i>
+                        </div>
+                      </button>
+                      <button class="text-gray-500 hover:text-red-500">
+                        <div class="w-5 h-5 flex items-center justify-center">
+                          <i class="ri-delete-bin-line"></i>
+                        </div>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="border-b border-gray-100 hover:bg-gray-50">
+                  <td class="px-6 py-4">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" class="store-checkbox" />
+                      <span class="checkmark"></span>
+                    </label>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div
+                      class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600"
+                    >
+                      <div class="w-5 h-5 flex items-center justify-center">
+                        <i class="ri-plane-line"></i>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 font-medium">TravelEasy</td>
+                  <td class="px-6 py-4">
+                    <span
+                      class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded"
+                      >Travel</span
+                    >
+                  </td>
+                  <td class="px-6 py-4">18</td>
+                  <td class="px-6 py-4">764</td>
+                  <td class="px-6 py-4">
+                    <span
+                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                    >
+                      Active
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    <div class="flex justify-end space-x-2">
+                      <button class="text-gray-500 hover:text-primary">
+                        <div class="w-5 h-5 flex items-center justify-center">
+                          <i class="ri-edit-line"></i>
+                        </div>
+                      </button>
+                      <button class="text-gray-500 hover:text-red-500">
+                        <div class="w-5 h-5 flex items-center justify-center">
+                          <i class="ri-delete-bin-line"></i>
+                        </div>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="border-b border-gray-100 hover:bg-gray-50">
+                  <td class="px-6 py-4">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" class="store-checkbox" />
+                      <span class="checkmark"></span>
+                    </label>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div
+                      class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center text-red-600"
+                    >
+                      <div class="w-5 h-5 flex items-center justify-center">
+                        <i class="ri-restaurant-line"></i>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 font-medium">FoodExpress</td>
+                  <td class="px-6 py-4">
+                    <span
+                      class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded"
+                      >Food & Dining</span
+                    >
+                  </td>
+                  <td class="px-6 py-4">24</td>
+                  <td class="px-6 py-4">652</td>
+                  <td class="px-6 py-4">
+                    <span
+                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                    >
+                      Active
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    <div class="flex justify-end space-x-2">
+                      <button class="text-gray-500 hover:text-primary">
+                        <div class="w-5 h-5 flex items-center justify-center">
+                          <i class="ri-edit-line"></i>
+                        </div>
+                      </button>
+                      <button class="text-gray-500 hover:text-red-500">
+                        <div class="w-5 h-5 flex items-center justify-center">
+                          <i class="ri-delete-bin-line"></i>
+                        </div>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="border-b border-gray-100 hover:bg-gray-50">
+                  <td class="px-6 py-4">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" class="store-checkbox" />
+                      <span class="checkmark"></span>
+                    </label>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div
+                      class="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center text-pink-600"
+                    >
+                      <div class="w-5 h-5 flex items-center justify-center">
+                        <i class="ri-palette-line"></i>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 font-medium">GlamBeauty</td>
+                  <td class="px-6 py-4">
+                    <span
+                      class="bg-pink-100 text-pink-800 text-xs font-medium px-2.5 py-0.5 rounded"
+                      >Beauty</span
+                    >
+                  </td>
+                  <td class="px-6 py-4">16</td>
+                  <td class="px-6 py-4">438</td>
+                  <td class="px-6 py-4">
+                    <span
+                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                    >
+                      Active
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    <div class="flex justify-end space-x-2">
+                      <button class="text-gray-500 hover:text-primary">
+                        <div class="w-5 h-5 flex items-center justify-center">
+                          <i class="ri-edit-line"></i>
+                        </div>
+                      </button>
+                      <button class="text-gray-500 hover:text-red-500">
+                        <div class="w-5 h-5 flex items-center justify-center">
+                          <i class="ri-delete-bin-line"></i>
+                        </div>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="border-b border-gray-100 hover:bg-gray-50">
+                  <td class="px-6 py-4">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" class="store-checkbox" />
+                      <span class="checkmark"></span>
+                    </label>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div
+                      class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-purple-600"
+                    >
+                      <div class="w-5 h-5 flex items-center justify-center">
+                        <i class="ri-book-line"></i>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 font-medium">BookHaven</td>
+                  <td class="px-6 py-4">
+                    <span
+                      class="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded"
+                      >Books & Media</span
+                    >
+                  </td>
+                  <td class="px-6 py-4">12</td>
+                  <td class="px-6 py-4">325</td>
+                  <td class="px-6 py-4">
+                    <span
+                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                    >
+                      Active
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    <div class="flex justify-end space-x-2">
+                      <button class="text-gray-500 hover:text-primary">
+                        <div class="w-5 h-5 flex items-center justify-center">
+                          <i class="ri-edit-line"></i>
+                        </div>
+                      </button>
+                      <button class="text-gray-500 hover:text-red-500">
+                        <div class="w-5 h-5 flex items-center justify-center">
+                          <i class="ri-delete-bin-line"></i>
+                        </div>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="border-b border-gray-100 hover:bg-gray-50">
+                  <td class="px-6 py-4">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" class="store-checkbox" />
+                      <span class="checkmark"></span>
+                    </label>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div
+                      class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-600"
+                    >
+                      <div class="w-5 h-5 flex items-center justify-center">
+                        <i class="ri-home-line"></i>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 font-medium">HomeDecor</td>
+                  <td class="px-6 py-4">
+                    <span
+                      class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded"
+                      >Home & Garden</span
+                    >
+                  </td>
+                  <td class="px-6 py-4">9</td>
+                  <td class="px-6 py-4">218</td>
+                  <td class="px-6 py-4">
+                    <span
+                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                    >
+                      Inactive
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    <div class="flex justify-end space-x-2">
+                      <button class="text-gray-500 hover:text-primary">
+                        <div class="w-5 h-5 flex items-center justify-center">
+                          <i class="ri-edit-line"></i>
+                        </div>
+                      </button>
+                      <button class="text-gray-500 hover:text-red-500">
+                        <div class="w-5 h-5 flex items-center justify-center">
+                          <i class="ri-delete-bin-line"></i>
+                        </div>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="border-b border-gray-100 hover:bg-gray-50">
+                  <td class="px-6 py-4">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" class="store-checkbox" />
+                      <span class="checkmark"></span>
+                    </label>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div
+                      class="w-10 h-10 bg-cyan-100 rounded-full flex items-center justify-center text-cyan-600"
+                    >
+                      <div class="w-5 h-5 flex items-center justify-center">
+                        <i class="ri-gamepad-line"></i>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 font-medium">GameZone</td>
+                  <td class="px-6 py-4">
+                    <span
+                      class="bg-cyan-100 text-cyan-800 text-xs font-medium px-2.5 py-0.5 rounded"
+                      >Gaming</span
+                    >
+                  </td>
+                  <td class="px-6 py-4">15</td>
+                  <td class="px-6 py-4">487</td>
+                  <td class="px-6 py-4">
+                    <span
+                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                    >
+                      Active
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    <div class="flex justify-end space-x-2">
+                      <button class="text-gray-500 hover:text-primary">
+                        <div class="w-5 h-5 flex items-center justify-center">
+                          <i class="ri-edit-line"></i>
+                        </div>
+                      </button>
+                      <button class="text-gray-500 hover:text-red-500">
+                        <div class="w-5 h-5 flex items-center justify-center">
+                          <i class="ri-delete-bin-line"></i>
+                        </div>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="border-b border-gray-100 hover:bg-gray-50">
+                  <td class="px-6 py-4">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" class="store-checkbox" />
+                      <span class="checkmark"></span>
+                    </label>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div
+                      class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-600"
+                    >
+                      <div class="w-5 h-5 flex items-center justify-center">
+                        <i class="ri-shopping-basket-line"></i>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 font-medium">GroceryPlus</td>
+                  <td class="px-6 py-4">
+                    <span
+                      class="bg-orange-100 text-orange-800 text-xs font-medium px-2.5 py-0.5 rounded"
+                      >Grocery</span
+                    >
+                  </td>
+                  <td class="px-6 py-4">21</td>
+                  <td class="px-6 py-4">563</td>
+                  <td class="px-6 py-4">
+                    <span
+                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                    >
+                      Active
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    <div class="flex justify-end space-x-2">
+                      <button class="text-gray-500 hover:text-primary">
+                        <div class="w-5 h-5 flex items-center justify-center">
+                          <i class="ri-edit-line"></i>
+                        </div>
+                      </button>
+                      <button class="text-gray-500 hover:text-red-500">
+                        <div class="w-5 h-5 flex items-center justify-center">
+                          <i class="ri-delete-bin-line"></i>
+                        </div>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="border-b border-gray-100 hover:bg-gray-50">
+                  <td class="px-6 py-4">
+                    <label class="custom-checkbox">
+                      <input type="checkbox" class="store-checkbox" />
+                      <span class="checkmark"></span>
+                    </label>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div
+                      class="w-10 h-10 bg-lime-100 rounded-full flex items-center justify-center text-lime-600"
+                    >
+                      <div class="w-5 h-5 flex items-center justify-center">
+                        <i class="ri-basketball-line"></i>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 font-medium">SportsFit</td>
+                  <td class="px-6 py-4">
+                    <span
+                      class="bg-lime-100 text-lime-800 text-xs font-medium px-2.5 py-0.5 rounded"
+                      >Sports & Fitness</span
+                    >
+                  </td>
+                  <td class="px-6 py-4">14</td>
+                  <td class="px-6 py-4">392</td>
+                  <td class="px-6 py-4">
+                    <span
+                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                    >
+                      Inactive
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    <div class="flex justify-end space-x-2">
+                      <button class="text-gray-500 hover:text-primary">
+                        <div class="w-5 h-5 flex items-center justify-center">
+                          <i class="ri-edit-line"></i>
+                        </div>
+                      </button>
+                      <button class="text-gray-500 hover:text-red-500">
+                        <div class="w-5 h-5 flex items-center justify-center">
+                          <i class="ri-delete-bin-line"></i>
+                        </div>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- Bulk Actions (Hidden by default, shown when items are selected) -->
+          <div
+            id="bulk-actions"
+            class="hidden bg-gray-50 p-4 border-t border-gray-100 flex items-center"
+          >
+            <span class="text-sm text-gray-600 mr-4">3 items selected</span>
+            <button
+              class="text-sm text-gray-700 hover:text-primary mr-4 flex items-center"
+            >
+              <div class="w-4 h-4 flex items-center justify-center mr-1">
+                <i class="ri-edit-line"></i>
+              </div>
+              <span>Edit</span>
+            </button>
+            <button
+              class="text-sm text-red-600 hover:text-red-700 flex items-center"
+            >
+              <div class="w-4 h-4 flex items-center justify-center mr-1">
+                <i class="ri-delete-bin-line"></i>
+              </div>
+              <span>Delete</span>
+            </button>
+          </div>
+          <!-- Pagination -->
+          <div
+            class="p-4 border-t border-gray-100 flex items-center justify-between"
+          >
+            <div class="text-sm text-gray-500">
+              Showing <span class="font-medium">1</span> to
+              <span class="font-medium">10</span> of
+              <span class="font-medium">64</span> stores
+            </div>
+            <div class="flex items-center">
+              <span class="text-sm text-gray-500 mr-3">Items per page:</span>
+              <div class="dropdown relative">
+                <button
+                  class="flex items-center space-x-1 bg-white border border-gray-300 rounded px-3 py-1 text-sm text-gray-700"
+                >
+                  <span>10</span>
+                  <div class="w-4 h-4 flex items-center justify-center">
+                    <i class="ri-arrow-down-s-line"></i>
+                  </div>
+                </button>
+                <div class="dropdown-content mt-1 right-0">
+                  <div class="py-1">
+                    <button
+                      class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      10
+                    </button>
+                    <button
+                      class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      25
+                    </button>
+                    <button
+                      class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      50
+                    </button>
+                    <button
+                      class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      100
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="flex space-x-1">
+              <button
+                class="px-3 py-1 rounded border border-gray-300 text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled
+              >
+                Previous
+              </button>
+              <button
+                class="px-3 py-1 rounded border border-primary bg-primary text-white"
+              >
+                1
+              </button>
+              <button
+                class="px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                2
+              </button>
+              <button
+                class="px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                3
+              </button>
+              <button
+                class="px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                4
+              </button>
+              <button
+                class="px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                5
+              </button>
+              <button
+                class="px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Select All Checkbox Functionality
+        const selectAll = document.getElementById("select-all");
+        const storeCheckboxes = document.querySelectorAll(".store-checkbox");
+        const bulkActions = document.getElementById("bulk-actions");
+        if (selectAll) {
+          selectAll.addEventListener("change", function () {
+            const isChecked = this.checked;
+            storeCheckboxes.forEach((checkbox) => {
+              checkbox.checked = isChecked;
+            });
+            updateBulkActions();
+          });
+        }
+        storeCheckboxes.forEach((checkbox) => {
+          checkbox.addEventListener("change", updateBulkActions);
+        });
+        function updateBulkActions() {
+          const checkedCount = document.querySelectorAll(
+            ".store-checkbox:checked",
+          ).length;
+          if (checkedCount > 0) {
+            bulkActions.classList.remove("hidden");
+            bulkActions.querySelector("span").textContent =
+              `${checkedCount} items selected`;
+          } else {
+            bulkActions.classList.add("hidden");
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

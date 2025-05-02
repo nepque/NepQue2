@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add Category</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: { primary: "#1E40AF", secondary: "#6B7280" },
+            borderRadius: {
+              none: "0px",
+              sm: "4px",
+              DEFAULT: "8px",
+              md: "12px",
+              lg: "16px",
+              xl: "20px",
+              "2xl": "24px",
+              "3xl": "32px",
+              full: "9999px",
+              button: "8px",
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      :where([class^="ri-"])::before { content: "\f3c2"; }
+      body {
+          font-family: 'Inter', sans-serif;
+          background-color: #f9fafb;
+      }
+      .sidebar {
+          width: 280px;
+          transition: all 0.3s;
+      }
+      .main-content {
+          width: calc(100% - 280px);
+          transition: all 0.3s;
+      }
+      .nav-item {
+          transition: all 0.2s;
+      }
+      .nav-item:hover {
+          background-color: rgba(255, 255, 255, 0.1);
+      }
+      .nav-item.active {
+          background-color: rgba(255, 255, 255, 0.15);
+          border-left: 4px solid #fff;
+      }
+      .toggle-switch {
+          position: relative;
+          display: inline-block;
+          width: 44px;
+          height: 22px;
+      }
+      .toggle-switch input {
+          opacity: 0;
+          width: 0;
+          height: 0;
+      }
+      .toggle-slider {
+          position: absolute;
+          cursor: pointer;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: #ccc;
+          transition: .4s;
+          border-radius: 34px;
+      }
+      .toggle-slider:before {
+          position: absolute;
+          content: "";
+          height: 18px;
+          width: 18px;
+          left: 2px;
+          bottom: 2px;
+          background-color: white;
+          transition: .4s;
+          border-radius: 50%;
+      }
+      input:checked + .toggle-slider {
+          background-color: #1E40AF;
+      }
+      input:checked + .toggle-slider:before {
+          transform: translateX(22px);
+      }
+      input[type="search"]::-webkit-search-decoration,
+      input[type="search"]::-webkit-search-cancel-button,
+      input[type="search"]::-webkit-search-results-button,
+      input[type="search"]::-webkit-search-results-decoration {
+          display: none;
+      }
+      input[type="number"]::-webkit-inner-spin-button,
+      input[type="number"]::-webkit-outer-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+      }
+      .color-picker {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          gap: 8px;
+      }
+      .color-option {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          cursor: pointer;
+          border: 2px solid transparent;
+          transition: all 0.2s;
+      }
+      .color-option.selected {
+          border-color: #1E40AF;
+          transform: scale(1.1);
+      }
+      .icon-grid {
+          display: grid;
+          grid-template-columns: repeat(6, 1fr);
+          gap: 12px;
+      }
+      .icon-option {
+          width: 48px;
+          height: 48px;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s;
+          background-color: #f3f4f6;
+      }
+      .icon-option:hover {
+          background-color: #e5e7eb;
+      }
+      .icon-option.selected {
+          background-color: #dbeafe;
+          border: 2px solid #1E40AF;
+      }
+      .store-option {
+          padding: 8px 12px;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.2s;
+      }
+      .store-option:hover {
+          background-color: #f3f4f6;
+      }
+      .store-option.selected {
+          background-color: #dbeafe;
+      }
+      .store-tag {
+          display: inline-flex;
+          align-items: center;
+          background-color: #e5e7eb;
+          padding: 4px 8px;
+          border-radius: 16px;
+          margin-right: 8px;
+          margin-bottom: 8px;
+          font-size: 0.875rem;
+      }
+      .store-tag button {
+          margin-left: 4px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen flex">
+    <!-- Sidebar -->
+    <aside
+      class="sidebar bg-gray-800 text-white h-screen fixed left-0 top-0 overflow-y-auto"
+    >
+      <!-- Logo -->
+      <div class="h-16 flex items-center px-6 border-b border-gray-700">
+        <h1 class="text-2xl font-['Pacifico'] text-white">logo</h1>
+      </div>
+      <!-- Navigation -->
+      <nav class="py-4">
+        <ul>
+          <li>
+            <a
+              href="https://readdy.ai/home/b6d26466-ac22-40b0-a1cf-a428553ebde9/b3f54757-8cf0-4e01-9f6a-1ae4af9baf8d"
+              data-readdy="true"
+              class="nav-item flex items-center py-3 px-6 text-gray-300 hover:text-white"
+            >
+              <div class="w-6 h-6 flex items-center justify-center mr-3">
+                <i class="ri-dashboard-line"></i>
+              </div>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="#"
+              class="nav-item flex items-center py-3 px-6 text-gray-300 hover:text-white"
+            >
+              <div class="w-6 h-6 flex items-center justify-center mr-3">
+                <i class="ri-coupon-line"></i>
+              </div>
+              <span>Coupons</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="https://readdy.ai/home/b6d26466-ac22-40b0-a1cf-a428553ebde9/f567a0c8-02e0-4476-9aaf-d29f2e64f505"
+              data-readdy="true"
+              class="nav-item flex items-center py-3 px-6 text-gray-300 hover:text-white"
+            >
+              <div class="w-6 h-6 flex items-center justify-center mr-3">
+                <i class="ri-store-line"></i>
+              </div>
+              <span>Stores</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="https://readdy.ai/home/b6d26466-ac22-40b0-a1cf-a428553ebde9/d6fcffce-0200-4bec-a075-8d8657899ed3"
+              data-readdy="true"
+              class="nav-item active flex items-center py-3 px-6 text-gray-100"
+            >
+              <div class="w-6 h-6 flex items-center justify-center mr-3">
+                <i class="ri-price-tag-3-line"></i>
+              </div>
+              <span>Categories</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="#"
+              class="nav-item flex items-center py-3 px-6 text-gray-300 hover:text-white"
+            >
+              <div class="w-6 h-6 flex items-center justify-center mr-3">
+                <i class="ri-settings-line"></i>
+              </div>
+              <span>Settings</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+    <!-- Main Content -->
+    <main class="main-content ml-[280px] flex-1">
+      <!-- Top Header -->
+      <header
+        class="bg-white h-16 px-6 flex items-center justify-between border-b border-gray-200 sticky top-0 z-10"
+      >
+        <!-- Search Bar -->
+        <div class="relative w-96">
+          <div
+            class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+          >
+            <div class="w-5 h-5 flex items-center justify-center text-gray-400">
+              <i class="ri-search-line"></i>
+            </div>
+          </div>
+          <input
+            type="search"
+            class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+            placeholder="Search categories..."
+          />
+        </div>
+        <!-- User Navigation -->
+        <div class="flex items-center space-x-4">
+          <!-- Notification Bell -->
+          <div class="relative">
+            <button class="p-2 rounded-full hover:bg-gray-100 relative">
+              <div class="w-6 h-6 flex items-center justify-center">
+                <i class="ri-notification-3-line"></i>
+              </div>
+              <span
+                class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"
+                >3</span
+              >
+            </button>
+          </div>
+          <!-- User Profile -->
+          <div class="flex items-center">
+            <button class="flex items-center space-x-2">
+              <img
+                src="https://readdy.ai/api/search-image?query=professional%25252520headshot%25252520of%25252520a%25252520business%25252520person%25252520with%25252520neutral%25252520expression%2525252C%25252520high%25252520quality%2525252C%25252520professional%25252520lighting%2525252C%25252520studio%25252520background&width=40&height=40&seq=1&orientation=squarish"
+                alt="Admin"
+                class="w-10 h-10 rounded-full object-cover"
+              />
+              <span class="text-sm font-medium">John Anderson</span>
+              <div class="w-5 h-5 flex items-center justify-center">
+                <i class="ri-arrow-down-s-line"></i>
+              </div>
+            </button>
+          </div>
+        </div>
+      </header>
+      <!-- Page Content -->
+      <div class="p-6">
+        <!-- Breadcrumbs -->
+        <div class="mb-4 flex items-center text-sm text-gray-500">
+          <a
+            href="https://readdy.ai/home/b6d26466-ac22-40b0-a1cf-a428553ebde9/b3f54757-8cf0-4e01-9f6a-1ae4af9baf8d"
+            data-readdy="true"
+            class="hover:text-primary"
+            >Home</a
+          >
+          <span class="mx-2">/</span>
+          <a
+            href="https://readdy.ai/home/b6d26466-ac22-40b0-a1cf-a428553ebde9/d6fcffce-0200-4bec-a075-8d8657899ed3"
+            data-readdy="true"
+            class="hover:text-primary"
+            >Categories</a
+          >
+          <span class="mx-2">/</span>
+          <span class="text-gray-700">Add Category</span>
+        </div>
+        <!-- Page Title and Actions -->
+        <div class="flex justify-between items-center mb-6">
+          <h1 class="text-2xl font-bold text-gray-900">Add Category</h1>
+          <a
+            href="https://readdy.ai/home/b6d26466-ac22-40b0-a1cf-a428553ebde9/d6fcffce-0200-4bec-a075-8d8657899ed3"
+            data-readdy="true"
+            class="bg-white border border-gray-300 text-gray-700 py-2 px-4 flex items-center space-x-2 !rounded-button hover:bg-gray-50 whitespace-nowrap"
+          >
+            <div class="w-5 h-5 flex items-center justify-center">
+              <i class="ri-arrow-left-line"></i>
+            </div>
+            <span>Back to Categories</span>
+          </a>
+        </div>
+
+        <!-- Form Container -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-100 mb-6">
+          <form id="category-form">
+            <!-- Form Sections -->
+            <div class="p-6 border-b border-gray-100">
+              <h2 class="text-lg font-medium text-gray-900 mb-4">
+                Basic Information
+              </h2>
+
+              <!-- Category Name -->
+              <div class="mb-6">
+                <label
+                  for="category-name"
+                  class="block text-sm font-medium text-gray-700 mb-1"
+                  >Category Name <span class="text-red-500">*</span></label
+                >
+                <input
+                  type="text"
+                  id="category-name"
+                  name="category-name"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  required
+                />
+                <p class="text-sm text-gray-500 mt-1">
+                  This name will be displayed to users
+                </p>
+              </div>
+
+              <!-- Category Description -->
+              <div class="mb-6">
+                <label
+                  for="category-description"
+                  class="block text-sm font-medium text-gray-700 mb-1"
+                  >Description</label
+                >
+                <textarea
+                  id="category-description"
+                  name="category-description"
+                  rows="3"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                ></textarea>
+                <p class="text-sm text-gray-500 mt-1">
+                  Brief description of this category (optional)
+                </p>
+              </div>
+
+              <!-- Status Toggle -->
+              <div>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                      >Status</label
+                    >
+                    <p class="text-sm text-gray-500">
+                      Enable or disable this category
+                    </p>
+                  </div>
+                  <label class="toggle-switch">
+                    <input
+                      type="checkbox"
+                      id="category-status"
+                      name="category-status"
+                      checked
+                    />
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Icon Selection -->
+            <div class="p-6 border-b border-gray-100">
+              <h2 class="text-lg font-medium text-gray-900 mb-4">
+                Icon Settings
+              </h2>
+
+              <!-- Icon Preview -->
+              <div class="mb-6 flex items-center">
+                <div
+                  id="icon-preview"
+                  class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-4"
+                >
+                  <div class="w-8 h-8 flex items-center justify-center">
+                    <i class="ri-price-tag-3-line"></i>
+                  </div>
+                </div>
+                <div>
+                  <h3 class="text-sm font-medium text-gray-700">
+                    Icon Preview
+                  </h3>
+                  <p class="text-sm text-gray-500">
+                    This is how your category icon will appear
+                  </p>
+                </div>
+              </div>
+
+              <!-- Background Color Selection -->
+              <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2"
+                  >Background Color</label
+                >
+                <div class="color-picker">
+                  <div
+                    class="color-option selected"
+                    style="background-color: #dbeafe;"
+                    data-color="blue-100"
+                    data-text-color="blue-600"
+                  ></div>
+                  <div
+                    class="color-option"
+                    style="background-color: #e0e7ff;"
+                    data-color="indigo-100"
+                    data-text-color="indigo-600"
+                  ></div>
+                  <div
+                    class="color-option"
+                    style="background-color: #dcfce7;"
+                    data-color="green-100"
+                    data-text-color="green-600"
+                  ></div>
+                  <div
+                    class="color-option"
+                    style="background-color: #fee2e2;"
+                    data-color="red-100"
+                    data-text-color="red-600"
+                  ></div>
+                  <div
+                    class="color-option"
+                    style="background-color: #fce7f3;"
+                    data-color="pink-100"
+                    data-text-color="pink-600"
+                  ></div>
+                  <div
+                    class="color-option"
+                    style="background-color: #f3e8ff;"
+                    data-color="purple-100"
+                    data-text-color="purple-600"
+                  ></div>
+                  <div
+                    class="color-option"
+                    style="background-color: #fef3c7;"
+                    data-color="yellow-100"
+                    data-text-color="yellow-600"
+                  ></div>
+                  <div
+                    class="color-option"
+                    style="background-color: #cffafe;"
+                    data-color="cyan-100"
+                    data-text-color="cyan-600"
+                  ></div>
+                  <div
+                    class="color-option"
+                    style="background-color: #ffedd5;"
+                    data-color="orange-100"
+                    data-text-color="orange-600"
+                  ></div>
+                  <div
+                    class="color-option"
+                    style="background-color: #ecfccb;"
+                    data-color="lime-100"
+                    data-text-color="lime-600"
+                  ></div>
+                </div>
+              </div>
+
+              <!-- Icon Selection -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2"
+                  >Select Icon</label
+                >
+                <div class="icon-grid">
+                  <div
+                    class="icon-option selected"
+                    data-icon="ri-price-tag-3-line"
+                  >
+                    <div class="w-6 h-6 flex items-center justify-center">
+                      <i class="ri-price-tag-3-line"></i>
+                    </div>
+                  </div>
+                  <div class="icon-option" data-icon="ri-t-shirt-line">
+                    <div class="w-6 h-6 flex items-center justify-center">
+                      <i class="ri-t-shirt-line"></i>
+                    </div>
+                  </div>
+                  <div class="icon-option" data-icon="ri-computer-line">
+                    <div class="w-6 h-6 flex items-center justify-center">
+                      <i class="ri-computer-line"></i>
+                    </div>
+                  </div>
+                  <div class="icon-option" data-icon="ri-smartphone-line">
+                    <div class="w-6 h-6 flex items-center justify-center">
+                      <i class="ri-smartphone-line"></i>
+                    </div>
+                  </div>
+                  <div class="icon-option" data-icon="ri-restaurant-line">
+                    <div class="w-6 h-6 flex items-center justify-center">
+                      <i class="ri-restaurant-line"></i>
+                    </div>
+                  </div>
+                  <div class="icon-option" data-icon="ri-plane-line">
+                    <div class="w-6 h-6 flex items-center justify-center">
+                      <i class="ri-plane-line"></i>
+                    </div>
+                  </div>
+                  <div class="icon-option" data-icon="ri-hotel-line">
+                    <div class="w-6 h-6 flex items-center justify-center">
+                      <i class="ri-hotel-line"></i>
+                    </div>
+                  </div>
+                  <div class="icon-option" data-icon="ri-car-line">
+                    <div class="w-6 h-6 flex items-center justify-center">
+                      <i class="ri-car-line"></i>
+                    </div>
+                  </div>
+                  <div class="icon-option" data-icon="ri-book-line">
+                    <div class="w-6 h-6 flex items-center justify-center">
+                      <i class="ri-book-line"></i>
+                    </div>
+                  </div>
+                  <div class="icon-option" data-icon="ri-movie-line">
+                    <div class="w-6 h-6 flex items-center justify-center">
+                      <i class="ri-movie-line"></i>
+                    </div>
+                  </div>
+                  <div class="icon-option" data-icon="ri-music-line">
+                    <div class="w-6 h-6 flex items-center justify-center">
+                      <i class="ri-music-line"></i>
+                    </div>
+                  </div>
+                  <div class="icon-option" data-icon="ri-gamepad-line">
+                    <div class="w-6 h-6 flex items-center justify-center">
+                      <i class="ri-gamepad-line"></i>
+                    </div>
+                  </div>
+                  <div class="icon-option" data-icon="ri-home-line">
+                    <div class="w-6 h-6 flex items-center justify-center">
+                      <i class="ri-home-line"></i>
+                    </div>
+                  </div>
+                  <div class="icon-option" data-icon="ri-palette-line">
+                    <div class="w-6 h-6 flex items-center justify-center">
+                      <i class="ri-palette-line"></i>
+                    </div>
+                  </div>
+                  <div class="icon-option" data-icon="ri-shopping-basket-line">
+                    <div class="w-6 h-6 flex items-center justify-center">
+                      <i class="ri-shopping-basket-line"></i>
+                    </div>
+                  </div>
+                  <div class="icon-option" data-icon="ri-shopping-bag-line">
+                    <div class="w-6 h-6 flex items-center justify-center">
+                      <i class="ri-shopping-bag-line"></i>
+                    </div>
+                  </div>
+                  <div class="icon-option" data-icon="ri-gift-line">
+                    <div class="w-6 h-6 flex items-center justify-center">
+                      <i class="ri-gift-line"></i>
+                    </div>
+                  </div>
+                  <div class="icon-option" data-icon="ri-basketball-line">
+                    <div class="w-6 h-6 flex items-center justify-center">
+                      <i class="ri-basketball-line"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Store Association -->
+            <div class="p-6 border-b border-gray-100">
+              <h2 class="text-lg font-medium text-gray-900 mb-4">
+                Associated Stores
+              </h2>
+
+              <!-- Store Selector -->
+              <div class="mb-4">
+                <label
+                  for="store-search"
+                  class="block text-sm font-medium text-gray-700 mb-1"
+                  >Select Stores <span class="text-red-500">*</span></label
+                >
+                <div class="relative">
+                  <div
+                    class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+                  >
+                    <div
+                      class="w-5 h-5 flex items-center justify-center text-gray-400"
+                    >
+                      <i class="ri-search-line"></i>
+                    </div>
+                  </div>
+                  <input
+                    type="text"
+                    id="store-search"
+                    class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Search stores..."
+                  />
+                  <button
+                    type="button"
+                    id="toggle-store-dropdown"
+                    class="absolute inset-y-0 right-0 flex items-center pr-3"
+                  >
+                    <div
+                      class="w-5 h-5 flex items-center justify-center text-gray-400"
+                    >
+                      <i class="ri-arrow-down-s-line"></i>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Store Dropdown -->
+              <div
+                id="store-dropdown"
+                class="hidden mb-4 max-h-60 overflow-y-auto border border-gray-200 rounded-lg"
+              >
+                <div class="p-2">
+                  <div
+                    class="store-option flex items-center p-2"
+                    data-store-id="1"
+                    data-store-name="Fashion Plus"
+                  >
+                    <div
+                      class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 mr-3"
+                    >
+                      <div class="w-4 h-4 flex items-center justify-center">
+                        <i class="ri-t-shirt-line"></i>
+                      </div>
+                    </div>
+                    <span>Fashion Plus</span>
+                  </div>
+                  <div
+                    class="store-option flex items-center p-2"
+                    data-store-id="2"
+                    data-store-name="TechWorld"
+                  >
+                    <div
+                      class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mr-3"
+                    >
+                      <div class="w-4 h-4 flex items-center justify-center">
+                        <i class="ri-computer-line"></i>
+                      </div>
+                    </div>
+                    <span>TechWorld</span>
+                  </div>
+                  <div
+                    class="store-option flex items-center p-2"
+                    data-store-id="3"
+                    data-store-name="FoodExpress"
+                  >
+                    <div
+                      class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center text-red-600 mr-3"
+                    >
+                      <div class="w-4 h-4 flex items-center justify-center">
+                        <i class="ri-restaurant-line"></i>
+                      </div>
+                    </div>
+                    <span>FoodExpress</span>
+                  </div>
+                  <div
+                    class="store-option flex items-center p-2"
+                    data-store-id="4"
+                    data-store-name="GlamBeauty"
+                  >
+                    <div
+                      class="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center text-pink-600 mr-3"
+                    >
+                      <div class="w-4 h-4 flex items-center justify-center">
+                        <i class="ri-palette-line"></i>
+                      </div>
+                    </div>
+                    <span>GlamBeauty</span>
+                  </div>
+                  <div
+                    class="store-option flex items-center p-2"
+                    data-store-id="5"
+                    data-store-name="TravelEasy"
+                  >
+                    <div
+                      class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 mr-3"
+                    >
+                      <div class="w-4 h-4 flex items-center justify-center">
+                        <i class="ri-plane-line"></i>
+                      </div>
+                    </div>
+                    <span>TravelEasy</span>
+                  </div>
+                  <div
+                    class="store-option flex items-center p-2"
+                    data-store-id="6"
+                    data-store-name="HomeGoods"
+                  >
+                    <div
+                      class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-600 mr-3"
+                    >
+                      <div class="w-4 h-4 flex items-center justify-center">
+                        <i class="ri-home-line"></i>
+                      </div>
+                    </div>
+                    <span>HomeGoods</span>
+                  </div>
+                  <div
+                    class="store-option flex items-center p-2"
+                    data-store-id="7"
+                    data-store-name="SportsZone"
+                  >
+                    <div
+                      class="w-8 h-8 bg-lime-100 rounded-full flex items-center justify-center text-lime-600 mr-3"
+                    >
+                      <div class="w-4 h-4 flex items-center justify-center">
+                        <i class="ri-basketball-line"></i>
+                      </div>
+                    </div>
+                    <span>SportsZone</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Selected Stores -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2"
+                  >Selected Stores</label
+                >
+                <div
+                  id="selected-stores"
+                  class="min-h-12 p-2 border border-gray-200 rounded-lg bg-gray-50 flex flex-wrap"
+                >
+                  <!-- Selected stores will be added here -->
+                </div>
+                <p id="store-error" class="hidden text-sm text-red-500 mt-1">
+                  Please select at least one store
+                </p>
+              </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="p-6 flex justify-end space-x-3">
+              <a
+                href="https://readdy.ai/home/b6d26466-ac22-40b0-a1cf-a428553ebde9/d6fcffce-0200-4bec-a075-8d8657899ed3"
+                data-readdy="true"
+                class="border border-gray-300 text-gray-700 py-2 px-6 !rounded-button hover:bg-gray-50 whitespace-nowrap"
+                >Cancel</a
+              >
+              <button
+                type="submit"
+                class="bg-primary text-white py-2 px-6 !rounded-button hover:bg-primary/90 whitespace-nowrap"
+              >
+                Save Category
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Icon and Color Selection
+        const colorOptions = document.querySelectorAll(".color-option");
+        const iconOptions = document.querySelectorAll(".icon-option");
+        const iconPreview = document.getElementById("icon-preview");
+        let selectedColor = "blue-100";
+        let selectedTextColor = "blue-600";
+        let selectedIcon = "ri-price-tag-3-line";
+
+        // Update icon preview
+        function updateIconPreview() {
+          iconPreview.className = `w-16 h-16 rounded-full bg-${selectedColor} flex items-center justify-center text-${selectedTextColor} mr-4`;
+          iconPreview.querySelector("div i").className = selectedIcon;
+        }
+
+        // Color selection
+        colorOptions.forEach((option) => {
+          option.addEventListener("click", function () {
+            colorOptions.forEach((opt) => opt.classList.remove("selected"));
+            this.classList.add("selected");
+            selectedColor = this.getAttribute("data-color");
+            selectedTextColor = this.getAttribute("data-text-color");
+            updateIconPreview();
+          });
+        });
+
+        // Icon selection
+        iconOptions.forEach((option) => {
+          option.addEventListener("click", function () {
+            iconOptions.forEach((opt) => opt.classList.remove("selected"));
+            this.classList.add("selected");
+            selectedIcon = this.getAttribute("data-icon");
+            updateIconPreview();
+          });
+        });
+
+        // Store selection
+        const toggleStoreDropdown = document.getElementById("toggle-store-dropdown");
+        const storeDropdown = document.getElementById("store-dropdown");
+        const storeSearch = document.getElementById("store-search");
+        const storeOptions = document.querySelectorAll(".store-option");
+        const selectedStoresContainer = document.getElementById("selected-stores");
+        const selectedStores = new Map();
+
+        // Toggle store dropdown
+        toggleStoreDropdown.addEventListener("click", function () {
+          storeDropdown.classList.toggle("hidden");
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener("click", function (event) {
+          if (
+            !storeDropdown.contains(event.target) &&
+            event.target !== toggleStoreDropdown &&
+            event.target !== storeSearch
+          ) {
+            storeDropdown.classList.add("hidden");
+          }
+        });
+
+        // Store search functionality
+        storeSearch.addEventListener("input", function () {
+          const searchTerm = this.value.toLowerCase();
+          storeOptions.forEach((option) => {
+            const storeName = option.getAttribute("data-store-name").toLowerCase();
+            if (storeName.includes(searchTerm)) {
+              option.style.display = "flex";
+            } else {
+              option.style.display = "none";
+            }
+          });
+
+          if (searchTerm.length > 0) {
+            storeDropdown.classList.remove("hidden");
+          }
+        });
+
+        // Select store
+        storeOptions.forEach((option) => {
+          option.addEventListener("click", function () {
+            const storeId = this.getAttribute("data-store-id");
+            const storeName = this.getAttribute("data-store-name");
+
+            if (!selectedStores.has(storeId)) {
+              selectedStores.set(storeId, storeName);
+              addStoreTag(storeId, storeName);
+              document.getElementById("store-error").classList.add("hidden");
+            }
+
+            storeDropdown.classList.add("hidden");
+            storeSearch.value = "";
+            storeOptions.forEach((opt) => (opt.style.display = "flex"));
+          });
+        });
+
+        // Add store tag
+        function addStoreTag(id, name) {
+          const tag = document.createElement("div");
+          tag.className = "store-tag";
+          tag.setAttribute("data-store-id", id);
+          tag.innerHTML = `
+                  <span>${name}</span>
+                  <button type="button" class="remove-store">
+                      <div class="w-4 h-4 flex items-center justify-center">
+                          <i class="ri-close-line"></i>
+                      </div>
+                  </button>
+              `;
+
+          tag.querySelector(".remove-store").addEventListener("click", function () {
+            selectedStores.delete(id);
+            tag.remove();
+
+            if (selectedStores.size === 0) {
+              selectedStoresContainer.innerHTML = "";
+            }
+          });
+
+          selectedStoresContainer.appendChild(tag);
+        }
+
+        // Form validation and submission
+        const categoryForm = document.getElementById("category-form");
+        const categoryName = document.getElementById("category-name");
+
+        categoryForm.addEventListener("submit", function (event) {
+          event.preventDefault();
+          let isValid = true;
+
+          // Validate category name
+          if (!categoryName.value.trim()) {
+            categoryName.classList.add("border-red-500");
+            isValid = false;
+          } else {
+            categoryName.classList.remove("border-red-500");
+          }
+
+          // Validate store selection
+          if (selectedStores.size === 0) {
+            document.getElementById("store-error").classList.remove("hidden");
+            isValid = false;
+          } else {
+            document.getElementById("store-error").classList.add("hidden");
+          }
+
+          // If form is valid, submit
+          if (isValid) {
+            // Simulate successful submission
+            showSuccessMessage();
+
+            // In a real application, you would submit the form data to the server here
+            console.log({
+              name: categoryName.value,
+              description: document.getElementById("category-description").value,
+              status: document.getElementById("category-status").checked,
+              icon: selectedIcon,
+              backgroundColor: selectedColor,
+              textColor: selectedTextColor,
+              stores: Array.from(selectedStores.entries()).map(([id, name]) => ({
+                id,
+                name,
+              })),
+            });
+
+            // Redirect to categories page after short delay
+            setTimeout(() => {
+              window.location.href =
+                "https://readdy.ai/home/b6d26466-ac22-40b0-a1cf-a428553ebde9/d6fcffce-0200-4bec-a075-8d8657899ed3";
+            }, 1500);
+          }
+        });
+
+        // Show success message
+        function showSuccessMessage() {
+          const successMessage = document.createElement("div");
+          successMessage.className =
+            "fixed top-4 right-4 bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-md z-50";
+          successMessage.innerHTML = `
+                  <div class="flex">
+                      <div class="w-5 h-5 flex items-center justify-center mr-3">
+                          <i class="ri-check-line"></i>
+                      </div>
+                      <div>
+                          <p class="font-medium">Success!</p>
+                          <p>Category has been created successfully.</p>
+                      </div>
+                  </div>
+              `;
+          document.body.appendChild(successMessage);
+
+          setTimeout(() => {
+            successMessage.remove();
+          }, 3000);
+        }
+      });
+    </script>
+  </body>
+</html>
