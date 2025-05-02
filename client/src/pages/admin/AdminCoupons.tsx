@@ -72,12 +72,12 @@ const AdminCoupons = () => {
     }
     
     // Category filter
-    if (filterCategory && coupon.categoryId.toString() !== filterCategory) {
+    if (filterCategory && filterCategory !== "all" && coupon.categoryId.toString() !== filterCategory) {
       return false;
     }
     
     // Store filter
-    if (filterStore && coupon.storeId.toString() !== filterStore) {
+    if (filterStore && filterStore !== "all" && coupon.storeId.toString() !== filterStore) {
       return false;
     }
     
@@ -156,7 +156,7 @@ const AdminCoupons = () => {
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value="all">All Categories</SelectItem>
                 {categories.map(category => (
                   <SelectItem key={category.id} value={category.id.toString()}>
                     {category.name}
@@ -173,7 +173,7 @@ const AdminCoupons = () => {
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Stores</SelectItem>
+                <SelectItem value="all">All Stores</SelectItem>
                 {stores.map(store => (
                   <SelectItem key={store.id} value={store.id.toString()}>
                     {store.name}
