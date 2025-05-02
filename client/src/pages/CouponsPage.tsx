@@ -24,15 +24,15 @@ const CouponsPage = () => {
   
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
   const [selectedCoupon, setSelectedCoupon] = useState<CouponWithRelations | null>(null);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>(searchParams.get("categoryId") || "");
-  const [selectedStoreId, setSelectedStoreId] = useState<string>(searchParams.get("storeId") || "");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>(searchParams.get("categoryId") || "all");
+  const [selectedStoreId, setSelectedStoreId] = useState<string>(searchParams.get("storeId") || "all");
   const [selectedSort, setSelectedSort] = useState<string>(searchParams.get("sortBy") || "newest");
   const [featured, setFeatured] = useState<boolean>(searchParams.get("featured") === "true");
 
   // Build query parameters
   const queryParams: any = {};
-  if (selectedCategoryId) queryParams.categoryId = Number(selectedCategoryId);
-  if (selectedStoreId) queryParams.storeId = Number(selectedStoreId);
+  if (selectedCategoryId && selectedCategoryId !== "all") queryParams.categoryId = Number(selectedCategoryId);
+  if (selectedStoreId && selectedStoreId !== "all") queryParams.storeId = Number(selectedStoreId);
   if (searchTerm) queryParams.search = searchTerm;
   if (featured) queryParams.featured = true;
   if (selectedSort) queryParams.sortBy = selectedSort;
@@ -42,8 +42,8 @@ const CouponsPage = () => {
     queryKey: ["/api/coupons", queryParams],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (selectedCategoryId) params.append("categoryId", selectedCategoryId);
-      if (selectedStoreId) params.append("storeId", selectedStoreId);
+      if (selectedCategoryId && selectedCategoryId !== "all") params.append("categoryId", selectedCategoryId);
+      if (selectedStoreId && selectedStoreId !== "all") params.append("storeId", selectedStoreId);
       if (searchTerm) params.append("search", searchTerm);
       if (featured) params.append("featured", "true");
       if (selectedSort) params.append("sortBy", selectedSort);
@@ -77,8 +77,8 @@ const CouponsPage = () => {
   // Update URL when filters change
   useEffect(() => {
     const params = new URLSearchParams();
-    if (selectedCategoryId) params.append("categoryId", selectedCategoryId);
-    if (selectedStoreId) params.append("storeId", selectedStoreId);
+    if (selectedCategoryId && selectedCategoryId !== "all") params.append("categoryId", selectedCategoryId);
+    if (selectedStoreId && selectedStoreId !== "all") params.append("storeId", selectedStoreId);
     if (searchTerm) params.append("search", searchTerm);
     if (featured) params.append("featured", "true");
     if (selectedSort) params.append("sortBy", selectedSort);
@@ -105,8 +105,8 @@ const CouponsPage = () => {
 
   // Handle clear filters
   const clearFilters = () => {
-    setSelectedCategoryId("");
-    setSelectedStoreId("");
+    setSelectedCategoryId("all");
+    setSelectedStoreId("all");
     setSelectedSort("newest");
     setFeatured(false);
     if (searchTerm) setSearchTerm("");
@@ -114,8 +114,8 @@ const CouponsPage = () => {
 
   // Count active filters
   const activeFilterCount = [
-    selectedCategoryId,
-    selectedStoreId,
+    selectedCategoryId !== "all" ? selectedCategoryId : null,
+    selectedStoreId !== "all" ? selectedStoreId : null,
     featured,
     searchTerm
   ].filter(Boolean).length;
@@ -127,8 +127,8 @@ const CouponsPage = () => {
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-neutral-800">
             {featured ? "Featured Coupons" : 
-              selectedCategoryId && categories ? `${categories.find(c => c.id === Number(selectedCategoryId))?.name} Coupons` :
-              selectedStoreId && stores ? `${stores.find(s => s.id === Number(selectedStoreId))?.name} Coupons` :
+              selectedCategoryId && selectedCategoryId !== "all" && categories ? `${categories.find(c => c.id === Number(selectedCategoryId))?.name} Coupons` :
+              selectedStoreId && selectedStoreId !== "all" && stores ? `${stores.find(s => s.id === Number(selectedStoreId))?.name} Coupons` :
               searchTerm ? `Search Results for "${searchTerm}"` : "All Coupons"}
           </h1>
           <p className="text-neutral-600 mt-1">
@@ -163,7 +163,7 @@ const CouponsPage = () => {
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   {categories?.map((category) => (
                     <SelectItem key={category.id} value={category.id.toString()}>
                       {category.name}
@@ -177,7 +177,7 @@ const CouponsPage = () => {
                   <SelectValue placeholder="All Stores" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Stores</SelectItem>
+                  <SelectItem value="all">All Stores</SelectItem>
                   {stores?.map((store) => (
                     <SelectItem key={store.id} value={store.id.toString()}>
                       {store.name}
