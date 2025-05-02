@@ -40,7 +40,7 @@ const PopularStores = () => {
             stores?.slice(0, 12).map((store) => (
               <Link
                 key={store.id}
-                href={`/coupons?storeId=${store.id}`}
+                href={`/store/${store.slug}`}
                 className="bg-white rounded-lg p-4 text-center hover:shadow-md transition-shadow border border-neutral-200 flex flex-col items-center"
               >
                 <img 

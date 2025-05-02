@@ -68,7 +68,7 @@ const CouponCard = ({ coupon, onShowCode }: CouponCardProps) => {
   return (
     <div className="bg-white rounded-lg shadow-sm border border-neutral-200 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between border-b border-neutral-100 p-4">
-        <div className="flex items-center">
+        <Link href={`/store/${coupon.store.slug}`} className="flex items-center hover:opacity-90">
           <img 
             src={coupon.store.logo} 
             alt={coupon.store.name} 
@@ -80,12 +80,14 @@ const CouponCard = ({ coupon, onShowCode }: CouponCardProps) => {
           <div className="ml-3">
             <h3 className="font-semibold text-neutral-800">{coupon.store.name}</h3>
             <div className="flex items-center mt-1">
-              <span className={`text-xs font-medium px-2 py-0.5 ${getCategoryColor(coupon.categoryId)} rounded-full`}>
-                {coupon.category.name}
-              </span>
+              <Link href={`/category/${coupon.category.slug}`}>
+                <span className={`text-xs font-medium px-2 py-0.5 ${getCategoryColor(coupon.categoryId)} rounded-full`}>
+                  {coupon.category.name}
+                </span>
+              </Link>
             </div>
           </div>
-        </div>
+        </Link>
         <button 
           onClick={toggleFavorite}
           className={`${isFavorite ? 'text-secondary' : 'text-neutral-400 hover:text-secondary'}`}
@@ -114,7 +116,7 @@ const CouponCard = ({ coupon, onShowCode }: CouponCardProps) => {
             </span>
           </span>
           <span className="mx-2 text-neutral-300">•</span>
-          <span>Used {formatCount(coupon.usedCount)} times</span>
+          <span>Used {formatCount(coupon.usedCount || 0)} times</span>
         </div>
         <div className="flex items-center justify-between">
           <div className="flex-1 pr-3">

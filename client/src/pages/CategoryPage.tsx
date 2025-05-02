@@ -24,12 +24,12 @@ const CategoryPage = () => {
     }
   }, [match, navigate]);
 
-  // Fetch category data
+  // Fetch category data by slug
   const { data: category, isLoading: isLoadingCategory } = useQuery<Category>({
-    queryKey: [`/api/categories/${params?.slug}`],
+    queryKey: ['/api/categories/bySlug', params?.slug],
     queryFn: async () => {
       if (!params?.slug) throw new Error("Category slug is required");
-      const response = await fetch(`/api/categories/${params.slug}`);
+      const response = await fetch(`/api/categories/bySlug/${params.slug}`);
       if (!response.ok) {
         if (response.status === 404) {
           navigate("/", { replace: true });

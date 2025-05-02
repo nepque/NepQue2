@@ -5,12 +5,13 @@ interface StoreCardProps {
   name: string;
   logo: string;
   couponCount: number;
+  slug: string;
 }
 
-const StoreCard = ({ id, name, logo, couponCount }: StoreCardProps) => {
+const StoreCard = ({ id, name, logo, slug, couponCount }: StoreCardProps) => {
   return (
     <Link
-      href={`/coupons?storeId=${id}`}
+      href={`/store/${slug}`}
       className="bg-white rounded-lg p-4 text-center hover:shadow-md transition-shadow border border-neutral-200 flex flex-col items-center"
     >
       <img 
