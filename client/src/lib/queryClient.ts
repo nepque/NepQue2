@@ -11,8 +11,20 @@ export async function apiRequest(
   url: string,
   options?: RequestInit,
 ): Promise<any> {
+  // Set up default headers
+  const headers = new Headers(options?.headers);
+  
+  // Add admin auth token for admin-related endpoints
+  if (url.includes('/api/admin') || url.includes('/api/stores/with-counts') || url.includes('/api/categories/with-counts')) {
+    const adminToken = localStorage.getItem('adminToken');
+    if (adminToken) {
+      headers.set('Authorization', `Bearer ${adminToken}`);
+    }
+  }
+
   const res = await fetch(url, {
     ...options,
+    headers,
     credentials: "include",
   });
 
@@ -33,8 +45,20 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
+    const url = queryKey[0] as string;
+    
+    // Include admin auth token for admin API requests
+    const headers = new Headers();
+    if (url.includes('/api/admin') || url.includes('/api/stores/with-counts') || url.includes('/api/categories/with-counts')) {
+      const adminToken = localStorage.getItem('adminToken');
+      if (adminToken) {
+        headers.set('Authorization', `Bearer ${adminToken}`);
+      }
+    }
+    
+    const res = await fetch(url, {
       credentials: "include",
+      headers
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {

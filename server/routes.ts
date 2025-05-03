@@ -276,9 +276,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/categories/with-counts", async (_req, res) => {
+  app.get("/api/categories/with-counts", async (req, res) => {
     try {
+      const authHeader = req.headers.authorization;
+      
+      // Verify admin token for protected route
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to access categories with counts");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
       const categoriesWithCounts = await storage.getCategoryWithCouponCount();
+      console.log(`Sending ${categoriesWithCounts.length} categories with counts`);
       res.json(categoriesWithCounts);
     } catch (error) {
       console.error("Error fetching categories with counts:", error);
@@ -296,9 +305,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/stores/with-counts", async (_req, res) => {
+  app.get("/api/stores/with-counts", async (req, res) => {
     try {
+      const authHeader = req.headers.authorization;
+      
+      // Verify admin token for protected route
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to access stores with counts");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
       const storesWithCounts = await storage.getStoreWithCouponCount();
+      console.log(`Sending ${storesWithCounts.length} stores with counts`);
       res.json(storesWithCounts);
     } catch (error) {
       console.error("Error fetching stores with counts:", error);
