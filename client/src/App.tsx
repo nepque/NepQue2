@@ -23,6 +23,7 @@ import FAQPage from "@/pages/FAQPage";
 import ContactPage from "@/pages/ContactPage";
 import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
 import TermsOfServicePage from "@/pages/TermsOfServicePage";
+import WithdrawalsPage from "@/pages/WithdrawalsPage"; // Added import
 
 // Admin components
 import AdminLogin from "@/pages/admin/AdminLogin";
@@ -59,6 +60,7 @@ function UserRouter() {
         <Route path="/contact" component={ContactPage} />
         <Route path="/privacy-policy" component={PrivacyPolicyPage} />
         <Route path="/terms-of-service" component={TermsOfServicePage} />
+        <Route path="/withdrawals" component={WithdrawalsPage} /> {/* Added withdrawals route */}
         <Route component={NotFound} />
       </Switch>
       <Footer />
