@@ -1291,36 +1291,37 @@ export class DatabaseStorage implements IStorage {
 
   async createUserSubmittedCoupon(insertCoupon: InsertUserSubmittedCoupon): Promise<UserSubmittedCoupon> {
     try {
-      // Ensure dates are proper Date objects and handle null values for optional fields
-      // By this point, the route handler should have already verified and converted the dates
       const formattedData = {
         userId: insertCoupon.userId,
         title: insertCoupon.title,
         description: insertCoupon.description,
         code: insertCoupon.code,
-        storeId: insertCoupon.storeId,
-        categoryId: insertCoupon.categoryId,
-        expiresAt: insertCoupon.expiresAt, // This is already a Date object from the route handler
+        storeId: Number(insertCoupon.storeId),
+        categoryId: Number(insertCoupon.categoryId),
+        expiresAt: new Date(insertCoupon.expiresAt),
         terms: insertCoupon.terms || null,
-        // Set defaults for required fields with default values
         status: 'pending',
         submittedAt: new Date(),
         reviewedAt: null,
         reviewNotes: null
       };
       
-      console.log("Final user-submitted coupon data to insert:", {
-        ...formattedData,
-        expiresAt: formattedData.expiresAt instanceof Date 
-          ? formattedData.expiresAt.toISOString() 
-          : String(formattedData.expiresAt)
-      });
+      console.log("Inserting user-submitted coupon:", formattedData);
       
-      const [coupon] = await db.insert(userSubmittedCoupons).values(formattedData).returning();
+      // Use drizzle to insert the coupon
+      const [coupon] = await db
+        .insert(userSubmittedCoupons)
+        .values(formattedData)
+        .returning();
+
+      if (!coupon) {
+        throw new Error("Failed to create coupon - no coupon returned");
+      }
+
       return coupon;
     } catch (error) {
       console.error("Error creating user-submitted coupon:", error);
-      throw error;
+      throw new Error("Failed to create user-submitted coupon");
     }
   }
 
