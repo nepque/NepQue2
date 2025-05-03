@@ -44,6 +44,9 @@ const formSchema = z.object({
   slug: z.string().min(1, "Slug is required"),
   icon: z.string().min(1, "Icon is required"),
   color: z.string().min(1, "Color is required"),
+  metaTitle: z.string().optional(),
+  metaDescription: z.string().optional(),
+  metaKeywords: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -80,6 +83,9 @@ const AdminCategoryEdit = () => {
       slug: "",
       icon: "tag",
       color: "blue",
+      metaTitle: "",
+      metaDescription: "",
+      metaKeywords: "",
     },
   });
 
