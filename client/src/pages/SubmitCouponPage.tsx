@@ -69,17 +69,24 @@ export default function SubmitCouponPage() {
   });
   
   const onSubmit = async (data: SubmitCouponFormValues) => {
-    if (!currentUser?.id) {
+    if (!currentUser) {
       setShowAuthModal(true);
       return;
     }
     
     setIsSubmitting(true);
     try {
+      // First get the database user by Firebase UID
+      const userData = await apiRequest(`/api/users/${currentUser.uid}`);
+      
+      if (!userData || !userData.id) {
+        throw new Error("User not found in database");
+      }
+      
       // Add userId to the data
       const submitData = {
         ...data,
-        userId: currentUser.id,
+        userId: userData.id,
       };
       
       await apiRequest('/api/user-submitted-coupons', {

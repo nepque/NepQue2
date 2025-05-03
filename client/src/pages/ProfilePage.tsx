@@ -21,20 +21,20 @@ export default function ProfilePage() {
   
   // Fetch user data from API to get the latest preferences
   const { data: userData, isLoading: isLoadingUser } = useQuery({
-    queryKey: currentUser?.firebaseUid ? [`/api/users/${currentUser.firebaseUid}`] : null,
+    queryKey: currentUser?.uid ? [`/api/users/${currentUser.uid}`] : null,
     queryFn: ({ signal }) => 
-      currentUser?.firebaseUid 
-        ? apiRequest<User>(`/api/users/${currentUser.firebaseUid}`, { signal }) 
+      currentUser?.uid 
+        ? apiRequest<User>(`/api/users/${currentUser.uid}`, { signal }) 
         : null
   });
   
   // Fetch user submitted coupons
   const { data: userCoupons = [], isLoading: isLoadingCoupons } = useQuery({
-    queryKey: currentUser?.id ? ['/api/user-submitted-coupons', { userId: currentUser.id }] : null,
+    queryKey: userData?.id ? ['/api/user-submitted-coupons', { userId: userData.id }] : null,
     queryFn: ({ signal }) => 
-      currentUser?.id 
+      userData?.id 
         ? apiRequest<UserSubmittedCouponWithRelations[]>(
-            `/api/user-submitted-coupons?userId=${currentUser.id}&sortBy=newest`, 
+            `/api/user-submitted-coupons?userId=${userData.id}&sortBy=newest`, 
             { signal }
           ) 
         : []
@@ -107,7 +107,7 @@ export default function ProfilePage() {
             <div className="space-y-4">
               <div>
                 <h3 className="text-sm font-semibold text-muted-foreground mb-1">Member since</h3>
-                <p>{currentUser.createdAt ? format(new Date(currentUser.createdAt), 'MMMM d, yyyy') : 'N/A'}</p>
+                <p>{userData?.createdAt ? format(new Date(userData.createdAt), 'MMMM d, yyyy') : 'N/A'}</p>
               </div>
               
               <div>
