@@ -16,6 +16,8 @@ export interface IStorage {
   getUserByFirebaseUid(firebaseUid: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(user: Partial<User> & { id: number }): Promise<User>;
+  deleteUser(id: number): Promise<void>;
+  getAllUsers(): Promise<User[]>;
   updateUserPreferences(userId: number, preferences: { 
     preferredCategories?: number[], 
     preferredStores?: number[],
@@ -162,6 +164,18 @@ export class MemStorage implements IStorage {
 
     this.users.set(userId, updatedUser);
     return updatedUser;
+  }
+  
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
+  }
+
+  async deleteUser(id: number): Promise<void> {
+    const user = await this.getUser(id);
+    if (!user) {
+      throw new Error(`User with ID ${id} not found`);
+    }
+    this.users.delete(id);
   }
 
   // Category operations

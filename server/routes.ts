@@ -46,6 +46,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Admin user management endpoints
+  
+  // Get all users with submission counts
+  app.get("/api/admin/users", async (req, res) => {
+    try {
+      // Get all users
+      const users = await storage.getAllUsers();
+      
+      // Count submissions for each user and enrich data
+      const usersWithSubmissionCounts = await Promise.all(
+        users.map(async (user) => {
+          // Get user submissions
+          const userSubmissions = await storage.getUserSubmittedCoupons({ userId: user.id });
+          
+          // Return user with submission count
+          return {
+            ...user,
+            submissionCount: userSubmissions.length
+          };
+        })
+      );
+      
+      res.json(usersWithSubmissionCounts);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+  
+  // Update user details
+  app.patch("/api/admin/users/:id", async (req, res) => {
+    try {
+      const userId = Number(req.params.id);
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const updatedUser = await storage.updateUser({ 
+        id: userId,
+        ...req.body 
+      });
+      
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+  
+  // Ban/unban user
+  app.post("/api/admin/users/:id/ban", async (req, res) => {
+    try {
+      const userId = Number(req.params.id);
+      const { isBanned } = req.body;
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const updatedUser = await storage.updateUser({
+        id: userId,
+        isBanned
+      });
+      
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user ban status:", error);
+      res.status(500).json({ message: "Failed to update user ban status" });
+    }
+  });
+  
+  // Delete user
+  app.delete("/api/admin/users/:id", async (req, res) => {
+    try {
+      const userId = Number(req.params.id);
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Delete all user's submissions first
+      const userSubmissions = await storage.getUserSubmittedCoupons({ userId });
+      for (const submission of userSubmissions) {
+        await storage.deleteUserSubmittedCoupon(submission.id);
+      }
+      
+      // Delete the user
+      await storage.deleteUser(userId);
+      
+      res.json({ success: true, message: "User and all associated data deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+  
   // API Routes
   app.get("/api/coupons", async (req, res) => {
     try {
