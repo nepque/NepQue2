@@ -1,9 +1,46 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
 
+// Admin credentials for development
+const ADMIN_CREDENTIALS = {
+  username: "admin",
+  password: "admin123",
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Admin auth route - simple username/password for development
+  app.post("/api/admin/login", (req, res) => {
+    const { username, password } = req.body;
+    
+    if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+      console.log("Admin login successful");
+      res.json({ 
+        success: true, 
+        message: "Admin login successful",
+        token: "admin-development-token" // In production, use a real JWT
+      });
+    } else {
+      console.log("Admin login failed", { username, password });
+      res.status(401).json({ 
+        success: false, 
+        message: "Invalid credentials" 
+      });
+    }
+  });
+  
+  // Admin auth check - for API routes that require admin rights
+  app.get("/api/admin/check", (req, res) => {
+    const authHeader = req.headers.authorization;
+    
+    if (authHeader === "Bearer admin-development-token") {
+      res.json({ isAdmin: true });
+    } else {
+      res.json({ isAdmin: false });
+    }
+  });
+  
   // API Routes
   app.get("/api/coupons", async (req, res) => {
     try {
