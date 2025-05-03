@@ -75,12 +75,12 @@ export function WithdrawModal({ open, onClose, user }: WithdrawModalProps) {
     mutationFn: (data: {
       userId: number;
       amount: number;
-      paymentMethod: string;
-      paymentDetails: string;
+      method: string;
+      accountDetails: string;
     }) => {
       return apiRequest("/api/withdrawals", {
         method: "POST",
-        body: data,
+        body: JSON.stringify(data),
       });
     },
     onSuccess: () => {
@@ -159,8 +159,8 @@ export function WithdrawModal({ open, onClose, user }: WithdrawModalProps) {
     withdrawMutation.mutate({
       userId: user.id,
       amount,
-      paymentMethod,
-      paymentDetails,
+      method: paymentMethod,
+      accountDetails: paymentDetails,
     });
   };
 

@@ -864,7 +864,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a new withdrawal request
   app.post("/api/withdrawals", async (req, res) => {
     try {
-      const { userId, amount, paymentMethod, paymentDetails } = req.body;
+      let { userId, amount, paymentMethod, paymentDetails } = req.body;
+      
+      // Parse the request body if it's a string (happens sometimes with fetch)
+      if (typeof req.body === 'string') {
+        const parsedBody = JSON.parse(req.body);
+        userId = parsedBody.userId;
+        amount = parsedBody.amount;
+        paymentMethod = parsedBody.paymentMethod;
+        paymentDetails = parsedBody.paymentDetails;
+      }
       
       if (!userId || !amount || !paymentMethod || !paymentDetails) {
         return res.status(400).json({ 
@@ -894,8 +903,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const withdrawalRequest = await storage.createWithdrawalRequest({
         userId,
         amount,
-        paymentMethod,
-        paymentDetails
+        method: paymentMethod,
+        accountDetails: paymentDetails
       });
       
       res.status(201).json(withdrawalRequest);
