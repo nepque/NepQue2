@@ -245,15 +245,21 @@ export default function ProfilePage() {
                               </div>
                               
                               <div className="mt-2 flex items-center text-sm">
-                                <img 
-                                  src={coupon.store.logo} 
-                                  alt={coupon.store.name} 
-                                  className="w-4 h-4 mr-1 object-contain"
-                                  onError={(e) => {
-                                    e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(coupon.store.name)}&background=random&size=16`;
-                                  }}
-                                />
-                                <span className="mr-2">{coupon.store.name}</span>
+                                {coupon.store ? (
+                                  <>
+                                    <img 
+                                      src={coupon.store.logo || ''} 
+                                      alt={coupon.store.name || 'Store'} 
+                                      className="w-4 h-4 mr-1 object-contain"
+                                      onError={(e) => {
+                                        e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(coupon.store.name || 'Store')}&background=random&size=16`;
+                                      }}
+                                    />
+                                    <span className="mr-2">{coupon.store.name || 'Unknown Store'}</span>
+                                  </>
+                                ) : (
+                                  <span className="mr-2 text-muted-foreground">Store information not available</span>
+                                )}
                                 <span className="text-muted-foreground">
                                   Submitted {format(new Date(coupon.submittedAt || new Date()), 'MMM d, yyyy')}
                                 </span>
