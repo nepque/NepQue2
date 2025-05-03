@@ -84,25 +84,46 @@ function Router() {
   const { currentUser, isAdmin } = useAuth();
   const isAdminRoute = location.startsWith("/admin");
   
-  // For testing purposes, we'll allow all authenticated users into admin
-  if (isAdminRoute && !currentUser) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-red-500 text-white p-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Login Required</h1>
-          <p className="mb-4">Please login to access the admin area.</p>
-          <Link href="/">
-            <button className="px-4 py-2 bg-white text-red-500 rounded shadow hover:bg-gray-100">
-              Go to Homepage
-            </button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
-  
-  // Continue to the right router based on path
+  // Check for login and admin permissions
   if (isAdminRoute) {
+    // First check if user is logged in
+    if (!currentUser) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-red-500 text-white p-6">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-2">Login Required</h1>
+            <p className="mb-4">Please login to access the admin area.</p>
+            <Link href="/">
+              <button className="px-4 py-2 bg-white text-red-500 rounded shadow hover:bg-gray-100">
+                Go to Homepage
+              </button>
+            </Link>
+          </div>
+        </div>
+      );
+    }
+    
+    // Then check if user has admin privileges
+    // For development, we're auto-granting admin access
+    const hasAdminAccess = true; // In production, use: isAdmin
+    
+    if (!hasAdminAccess) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-red-500 text-white p-6">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
+            <p className="mb-4">You don't have permission to access this page.</p>
+            <Link href="/">
+              <button className="px-4 py-2 bg-white text-red-500 rounded shadow hover:bg-gray-100">
+                Go to Homepage
+              </button>
+            </Link>
+          </div>
+        </div>
+      );
+    }
+    
+    // User is logged in and has admin access
     return <AdminRouter />;
   }
   
