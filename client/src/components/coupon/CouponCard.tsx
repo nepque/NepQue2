@@ -123,16 +123,13 @@ const CouponCard = ({ coupon, onShowCode }: CouponCardProps) => {
           <span>Used {formatCount(coupon.usedCount || 0)} times</span>
         </div>
         <div className="flex items-center justify-between">
-          <div className="flex-1 pr-3">
+          <div className="w-full">
             <Button 
               onClick={onShowCode}
               className="w-full bg-secondary hover:bg-secondary/90 text-white font-medium py-2.5 px-4 rounded transition-colors"
             >
               Show Code
             </Button>
-          </div>
-          <div className="rounded-md bg-neutral-100 px-4 py-2.5 relative overflow-hidden text-center">
-            <span className="font-mono font-medium text-neutral-800">{coupon.code}</span>
           </div>
         </div>
       </div>
