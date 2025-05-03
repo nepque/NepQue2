@@ -10,14 +10,21 @@ async function throwIfResNotOk(res: Response) {
 export async function apiRequest(
   url: string,
   options?: RequestInit,
-): Promise<Response> {
+): Promise<any> {
   const res = await fetch(url, {
     ...options,
     credentials: "include",
   });
 
   await throwIfResNotOk(res);
-  return res;
+  
+  // Parse JSON response
+  try {
+    return await res.json();
+  } catch (error) {
+    console.error("Error parsing JSON response:", error);
+    return null;
+  }
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
