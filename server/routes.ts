@@ -502,15 +502,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/user-submitted-coupons/:id", async (req, res) => {
     try {
       const id = Number(req.params.id);
+      console.log(`DELETE Request received for coupon ID: ${id}`);
+      
       const coupon = await storage.getUserSubmittedCouponById(id);
       
       if (!coupon) {
+        console.log(`Coupon with ID ${id} not found`);
         return res.status(404).json({ message: "User-submitted coupon not found" });
       }
       
+      console.log(`Found coupon to delete:`, JSON.stringify(coupon));
+      
       // Use the dedicated delete method for user-submitted coupons
       await storage.deleteUserSubmittedCoupon(id);
-      res.json({ success: true });
+      console.log(`Successfully deleted coupon ID: ${id}`);
+      
+      // Return success message
+      res.json({ success: true, message: "Coupon permanently deleted from the database" });
     } catch (error) {
       console.error("Error deleting user-submitted coupon:", error);
       res.status(500).json({ message: "Failed to delete user-submitted coupon" });

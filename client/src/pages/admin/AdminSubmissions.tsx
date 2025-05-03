@@ -173,16 +173,26 @@ export default function AdminSubmissions() {
         throw new Error(`Failed to delete coupon: ${response.status}`);
       }
       
-      return await response.json();
+      const result = await response.json();
+      console.log("Delete response:", result);
+      return result;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Invalidating queries after successful delete");
+      // Force a refresh of all submission status tabs
       queryClient.invalidateQueries({ queryKey: ['/api/user-submitted-coupons'] });
       toast({
-        title: "Coupon deleted",
-        description: "The coupon has been permanently deleted."
+        title: "Coupon permanently deleted",
+        description: "The coupon has been removed from the database."
       });
       setShowDeleteDialog(false);
       setSelectedCoupon(null);
+      
+      // Force refetch to ensure UI is updated
+      setTimeout(() => {
+        console.log("Forcing refetch after delete");
+        queryClient.refetchQueries({ queryKey: ['/api/user-submitted-coupons'] });
+      }, 100);
     },
     onError: (error) => {
       console.error("Error in delete mutation:", error);
@@ -451,9 +461,9 @@ export default function AdminSubmissions() {
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Coupon</DialogTitle>
+            <DialogTitle>PERMANENTLY DELETE Coupon</DialogTitle>
             <DialogDescription>
-              This will permanently delete the coupon from the system. This action cannot be undone.
+              This will PERMANENTLY DELETE the coupon from the database. This action is different from the "Reject" action and cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
