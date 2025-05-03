@@ -213,6 +213,7 @@ const AdminSubmissionEdit = () => {
       status: originalStatus, // Preserve the original status
       expiresAt: new Date(data.expiresAt),
       submittedAt: coupon?.submittedAt || new Date(),
+      reviewedAt: coupon?.reviewedAt || null,
       terms: data.terms || null,
       reviewNotes: data.reviewNotes || null,
     };
@@ -309,7 +310,7 @@ const AdminSubmissionEdit = () => {
           )}
           
           <div className="mt-1 text-sm text-gray-600">
-            Submitted on: {new Date(coupon.submittedAt).toLocaleDateString()}
+            Submitted on: {coupon.submittedAt ? new Date(coupon.submittedAt).toLocaleDateString() : 'Unknown date'}
           </div>
         </div>
 

@@ -494,6 +494,24 @@ export class MemStorage implements IStorage {
     return coupon;
   }
 
+  async updateUserSubmittedCoupon(coupon: UserSubmittedCoupon): Promise<UserSubmittedCoupon> {
+    const existing = this.userSubmittedCoupons.get(coupon.id);
+    if (!existing) {
+      throw new Error(`User submitted coupon with ID ${coupon.id} not found`);
+    }
+    
+    // Preserve certain fields from the original coupon
+    const updatedCoupon: UserSubmittedCoupon = {
+      ...coupon,
+      status: existing.status, // Keep original status
+      submittedAt: existing.submittedAt, // Keep original submission time
+      reviewedAt: existing.reviewedAt, // Keep original review time
+    };
+    
+    this.userSubmittedCoupons.set(coupon.id, updatedCoupon);
+    return updatedCoupon;
+  }
+
   async updateUserSubmittedCouponStatus(
     id: number, 
     status: 'approved' | 'rejected', 
