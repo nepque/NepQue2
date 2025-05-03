@@ -100,7 +100,9 @@ export default function SubmitCouponPage() {
       return;
     }
     
+    console.log("Form submitted with data:", data);
     setIsSubmitting(true);
+    
     try {
       // First, try to get or create the user in our database
       let userData;
@@ -141,23 +143,30 @@ export default function SubmitCouponPage() {
         throw new Error("Could not find or create user data");
       }
       
-      // Add userId to the data
-      const submitData = {
+      // Convert date format to ISO string for submission
+      const formattedData = {
         ...data,
         userId: userData.id,
+        // Make sure expiresAt is formatted correctly as ISO string
+        expiresAt: data.expiresAt instanceof Date ? data.expiresAt.toISOString() : data.expiresAt,
       };
+      
+      console.log("Submitting coupon data:", formattedData);
       
       const submitResponse = await fetch('/api/user-submitted-coupons', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submitData),
+        body: JSON.stringify(formattedData),
       });
       
       if (!submitResponse.ok) {
-        throw new Error(`Failed to submit coupon: ${submitResponse.status}`);
+        const errorText = await submitResponse.text();
+        console.error("Submit response error:", errorText);
+        throw new Error(`Failed to submit coupon: ${submitResponse.status} - ${errorText}`);
       }
       
-      await submitResponse.json();
+      const result = await submitResponse.json();
+      console.log("Submit response success:", result);
       
       toast({
         title: "Coupon submitted successfully!",
@@ -170,7 +179,7 @@ export default function SubmitCouponPage() {
       console.error("Error submitting coupon:", error);
       toast({
         title: "Failed to submit coupon",
-        description: "Please try again later.",
+        description: error instanceof Error ? error.message : "Please try again later.",
         variant: "destructive",
       });
     } finally {

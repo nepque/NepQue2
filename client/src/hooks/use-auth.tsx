@@ -37,7 +37,8 @@ interface AuthProviderProps {
 // List of admin emails - in a real app, this would be stored on the server side
 const ADMIN_EMAILS = [
   "admin@couponhub.com",
-  // Add other admin emails here
+  "test@example.com", // Added for testing purposes
+  // Any email can be added here for testing
 ];
 
 export function AuthProvider({ children }: AuthProviderProps) {
