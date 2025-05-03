@@ -27,6 +27,7 @@ import AdminCouponNew from "@/pages/admin/AdminCouponNew";
 import AdminStoreNew from "@/pages/admin/AdminStoreNew";
 import AdminCategoryNew from "@/pages/admin/AdminCategoryNew";
 import AdminCouponEdit from "@/pages/admin/AdminCouponEdit";
+import AdminSubmissionEdit from "@/pages/admin/AdminSubmissionEdit";
 import AdminStoreEdit from "@/pages/admin/AdminStoreEdit";
 import AdminCategoryEdit from "@/pages/admin/AdminCategoryEdit";
 import AdminUsers from "@/pages/admin/AdminUsers";
@@ -69,6 +70,7 @@ function AdminRouter() {
       
       {/* Edit routes */}
       <Route path="/admin/coupons/edit/:id" component={AdminCouponEdit} />
+      <Route path="/admin/submissions/edit/:id" component={AdminSubmissionEdit} />
       <Route path="/admin/stores/edit/:id" component={AdminStoreEdit} />
       <Route path="/admin/categories/edit/:id" component={AdminCategoryEdit} />
       

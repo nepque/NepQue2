@@ -60,6 +60,7 @@ export interface IStorage {
   }): Promise<UserSubmittedCouponWithRelations[]>;
   getUserSubmittedCouponById(id: number): Promise<UserSubmittedCouponWithRelations | undefined>;
   createUserSubmittedCoupon(coupon: InsertUserSubmittedCoupon): Promise<UserSubmittedCoupon>;
+  updateUserSubmittedCoupon(coupon: UserSubmittedCoupon): Promise<UserSubmittedCoupon>;
   updateUserSubmittedCouponStatus(id: number, status: 'approved' | 'rejected', reviewNotes?: string): Promise<UserSubmittedCoupon>;
   
   // Statistics
