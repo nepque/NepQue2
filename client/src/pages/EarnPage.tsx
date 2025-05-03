@@ -43,20 +43,20 @@ const EarnPage = () => {
 
   // Get user's current streak info
   const { data: streakInfo, isLoading: loadingStreak } = useQuery<StreakInfo>({
-    queryKey: ["/api/users/firebase", user?.uid, "streak"],
+    queryKey: ["/api/users", user?.uid, "streak"],
     queryFn: async () => {
       if (!user?.uid) return null;
-      return apiRequest(`/api/users/firebase/${user.uid}/streak`);
+      return apiRequest(`/api/users/${user.uid}/streak`);
     },
     enabled: !!user?.uid,
   });
 
   // Get user's check-in history
   const { data: checkInHistory, isLoading: loadingHistory } = useQuery<CheckIn[]>({
-    queryKey: ["/api/users/firebase", user?.uid, "check-ins"],
+    queryKey: ["/api/users", user?.uid, "check-ins"],
     queryFn: async () => {
       if (!user?.uid) return [];
-      return apiRequest(`/api/users/firebase/${user.uid}/check-ins`);
+      return apiRequest(`/api/users/${user.uid}/check-ins`);
     },
     enabled: !!user?.uid,
   });
@@ -65,7 +65,7 @@ const EarnPage = () => {
   const checkInMutation = useMutation<CheckInResponse>({
     mutationFn: async () => {
       if (!user?.uid) throw new Error("User not logged in");
-      return apiRequest(`/api/users/firebase/${user.uid}/check-in`, {
+      return apiRequest(`/api/users/${user.uid}/check-in`, {
         method: "POST",
       });
     },
