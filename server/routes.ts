@@ -279,11 +279,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/categories/with-counts", async (req, res) => {
     try {
       const authHeader = req.headers.authorization;
+      console.log("Categories with counts auth header:", authHeader);
       
       // Verify admin token for protected route
       if (authHeader !== "Bearer admin-development-token") {
         console.log("Unauthorized attempt to access categories with counts");
-        return res.status(401).json({ message: "Unauthorized" });
+        return res.status(401).json({ message: "Unauthorized", expectedToken: "Bearer admin-development-token", receivedToken: authHeader });
       }
       
       const categoriesWithCounts = await storage.getCategoryWithCouponCount();
@@ -308,11 +309,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/stores/with-counts", async (req, res) => {
     try {
       const authHeader = req.headers.authorization;
+      console.log("Stores with counts auth header:", authHeader);
       
       // Verify admin token for protected route
       if (authHeader !== "Bearer admin-development-token") {
         console.log("Unauthorized attempt to access stores with counts");
-        return res.status(401).json({ message: "Unauthorized" });
+        return res.status(401).json({ message: "Unauthorized", expectedToken: "Bearer admin-development-token", receivedToken: authHeader });
       }
       
       const storesWithCounts = await storage.getStoreWithCouponCount();

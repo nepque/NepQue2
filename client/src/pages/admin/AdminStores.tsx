@@ -39,13 +39,8 @@ const AdminStores = () => {
   // Fetch stores with coupon counts
   const { data: storesWithCounts, isLoading: isLoadingStores } = useQuery<(Store & { couponCount: number })[]>({
     queryKey: ["/api/stores/with-counts"],
-    queryFn: async () => {
-      const response = await fetch("/api/stores/with-counts");
-      if (!response.ok) {
-        throw new Error("Failed to fetch stores");
-      }
-      return response.json();
-    }
+    retry: 3,
+    staleTime: 60000, // 1 minute
   });
 
   // Filter and search stores

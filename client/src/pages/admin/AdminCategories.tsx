@@ -39,13 +39,8 @@ const AdminCategories = () => {
   // Fetch categories with coupon counts
   const { data: categoriesWithCounts, isLoading: isLoadingCategories } = useQuery<(Category & { couponCount: number })[]>({
     queryKey: ["/api/categories/with-counts"],
-    queryFn: async () => {
-      const response = await fetch("/api/categories/with-counts");
-      if (!response.ok) {
-        throw new Error("Failed to fetch categories");
-      }
-      return response.json();
-    }
+    retry: 3,
+    staleTime: 60000, // 1 minute
   });
 
   // Filter and search categories
