@@ -62,6 +62,7 @@ export interface IStorage {
   createUserSubmittedCoupon(coupon: InsertUserSubmittedCoupon): Promise<UserSubmittedCoupon>;
   updateUserSubmittedCoupon(coupon: UserSubmittedCoupon): Promise<UserSubmittedCoupon>;
   updateUserSubmittedCouponStatus(id: number, status: 'approved' | 'rejected', reviewNotes?: string): Promise<UserSubmittedCoupon>;
+  deleteUserSubmittedCoupon(id: number): Promise<void>;
   
   // Statistics
   getStoreWithCouponCount(): Promise<(Store & { couponCount: number })[]>;
@@ -549,6 +550,14 @@ export class MemStorage implements IStorage {
     }
 
     return updatedCoupon;
+  }
+
+  async deleteUserSubmittedCoupon(id: number): Promise<void> {
+    const existing = this.userSubmittedCoupons.get(id);
+    if (!existing) {
+      throw new Error(`User-submitted coupon with ID ${id} not found`);
+    }
+    this.userSubmittedCoupons.delete(id);
   }
 }
 

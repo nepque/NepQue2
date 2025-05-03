@@ -643,7 +643,7 @@ const SubmissionCard = ({ coupon, onApprove, onReject, onEdit, onDelete, showAct
             className="gap-1"
           >
             <Trash className="w-4 h-4" />
-            Delete
+            DELETE
           </Button>
           
           {/* Approve/Reject buttons only for pending submissions */}
