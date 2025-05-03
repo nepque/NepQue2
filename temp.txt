@@ -1,0 +1,11 @@
+                <div className="space-y-4">
+                  {couponsArray.map(coupon => (
+                    <SubmissionCard 
+                      key={coupon.id} 
+                      coupon={coupon}
+                      onEdit={() => handleEdit(coupon)}
+                      onDelete={() => handleDelete(coupon)}
+                      showActions={false}
+                    />
+                  ))}
+                </div>
