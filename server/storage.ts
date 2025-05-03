@@ -1326,6 +1326,24 @@ export class DatabaseStorage implements IStorage {
         .where(eq(userSubmittedCoupons.id, id))
         .returning();
       
+      // If coupon is approved, award 5 points to the user
+      if (status === 'approved') {
+        // Get the coupon details to find the user ID
+        const coupon = await this.getUserSubmittedCouponById(id);
+        if (coupon) {
+          // Get the user
+          const user = await this.getUser(coupon.userId);
+          if (user) {
+            // Add 5 points to the user's current points total
+            await this.updateUser({
+              id: user.id,
+              points: (user.points || 0) + 5
+            });
+            console.log(`Added 5 points to user ${user.id} for approved coupon submission`);
+          }
+        }
+      }
+      
       return updatedCoupon;
     } catch (error) {
       console.error("Error updating user submitted coupon status:", error);

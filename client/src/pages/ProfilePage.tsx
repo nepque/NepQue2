@@ -182,6 +182,25 @@ export default function ProfilePage() {
               </div>
             </div>
           </CardContent>
+          
+          <Card className="mt-4">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">Points Balance</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-muted-foreground">Current Points</p>
+                  <p className="text-2xl font-bold text-primary">{userData?.points || 0}</p>
+                </div>
+                <Separator className="my-2" />
+                <div className="space-y-1 text-sm text-muted-foreground">
+                  <p>• Earn 10 points when you sign up</p>
+                  <p>• Earn 5 points for each approved coupon</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </Card>
         
         {/* Tabs container for content */}

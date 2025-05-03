@@ -2,7 +2,7 @@ import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizz
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Users schema - Updated to support Firebase Authentication
+// Users schema - Updated to support Firebase Authentication and points system
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   firebaseUid: text("firebase_uid").notNull().unique(),
@@ -11,6 +11,7 @@ export const users = pgTable("users", {
   photoURL: text("photo_url"),
   isAdmin: boolean("is_admin").default(false),
   isBanned: boolean("is_banned").default(false),
+  points: integer("points").default(10), // Start with 10 points on signup
   createdAt: timestamp("created_at").defaultNow(),
   lastLogin: timestamp("last_login").defaultNow(),
   preferredCategories: jsonb("preferred_categories").$type<number[]>(),
