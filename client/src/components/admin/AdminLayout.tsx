@@ -10,7 +10,8 @@ import {
   User,
   ChevronDown,
   LogOut,
-  Users
+  Users,
+  InboxIcon
 } from "lucide-react";
 
 interface AdminLayoutProps {

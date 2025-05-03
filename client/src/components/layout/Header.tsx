@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, PlusCircle, UserCircle } from "lucide-react";
 
 const Header = () => {
   const [location] = useLocation();
@@ -92,11 +92,25 @@ const Header = () => {
                     </div>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link href="/account" className="cursor-pointer">
-                        <User className="mr-2 h-4 w-4" />
-                        <span>My Account</span>
+                      <Link href="/profile" className="cursor-pointer">
+                        <UserCircle className="mr-2 h-4 w-4" />
+                        <span>My Profile</span>
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/submit-coupon" className="cursor-pointer">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        <span>Submit Coupon</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    {currentUser.isAdmin && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin" className="cursor-pointer">
+                          <User className="mr-2 h-4 w-4" />
+                          <span>Admin Dashboard</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
                       <LogOut className="mr-2 h-4 w-4" />
