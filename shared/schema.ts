@@ -46,6 +46,9 @@ export const categories = pgTable("categories", {
   slug: text("slug").notNull().unique(),
   icon: text("icon").notNull(), // Font awesome icon name
   color: text("color").notNull(),
+  metaTitle: text("meta_title"),
+  metaDescription: text("meta_description"),
+  metaKeywords: text("meta_keywords"),
 });
 
 export const insertCategorySchema = createInsertSchema(categories).pick({
@@ -53,6 +56,9 @@ export const insertCategorySchema = createInsertSchema(categories).pick({
   slug: true,
   icon: true,
   color: true,
+  metaTitle: true,
+  metaDescription: true,
+  metaKeywords: true,
 });
 
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
@@ -65,6 +71,9 @@ export const stores = pgTable("stores", {
   slug: text("slug").notNull().unique(),
   logo: text("logo").notNull(),
   website: text("website").notNull(),
+  metaTitle: text("meta_title"),
+  metaDescription: text("meta_description"),
+  metaKeywords: text("meta_keywords"),
 });
 
 export const insertStoreSchema = createInsertSchema(stores).pick({
@@ -72,6 +81,9 @@ export const insertStoreSchema = createInsertSchema(stores).pick({
   slug: true,
   logo: true,
   website: true,
+  metaTitle: true,
+  metaDescription: true,
+  metaKeywords: true,
 });
 
 export type InsertStore = z.infer<typeof insertStoreSchema>;
