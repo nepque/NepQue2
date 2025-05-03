@@ -23,7 +23,8 @@ import FAQPage from "@/pages/FAQPage";
 import ContactPage from "@/pages/ContactPage";
 import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
 import TermsOfServicePage from "@/pages/TermsOfServicePage";
-import WithdrawalsPage from "@/pages/WithdrawalsPage"; // Added import
+import WithdrawalsPage from "@/pages/WithdrawalsPage";
+import EarnPage from "@/pages/EarnPage"; // Added import for new EarnPage
 
 // Admin components
 import AdminLogin from "@/pages/admin/AdminLogin";
@@ -61,6 +62,7 @@ function UserRouter() {
         <Route path="/privacy-policy" component={PrivacyPolicyPage} />
         <Route path="/terms-of-service" component={TermsOfServicePage} />
         <Route path="/withdrawals" component={WithdrawalsPage} /> {/* Added withdrawals route */}
+        <Route path="/earn" component={EarnPage} /> {/* Added earn points route */}
         <Route component={NotFound} />
       </Switch>
       <Footer />
