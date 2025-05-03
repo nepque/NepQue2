@@ -77,9 +77,9 @@ export default function ProfilePage() {
   const preferredStores = userData?.preferredStores || [];
   
   // Count submitted coupons by status
-  const pendingCount = userCoupons.filter(c => c.status === 'pending').length;
-  const approvedCount = userCoupons.filter(c => c.status === 'approved').length;
-  const rejectedCount = userCoupons.filter(c => c.status === 'rejected').length;
+  const pendingCount = Array.isArray(userCoupons) ? userCoupons.filter(c => c.status === 'pending').length : 0;
+  const approvedCount = Array.isArray(userCoupons) ? userCoupons.filter(c => c.status === 'approved').length : 0;
+  const rejectedCount = Array.isArray(userCoupons) ? userCoupons.filter(c => c.status === 'rejected').length : 0;
   
   return (
     <div className="container mx-auto py-8">
@@ -164,7 +164,7 @@ export default function ProfilePage() {
                     <div className="flex justify-center py-8">
                       <Loader2 className="w-6 h-6 animate-spin text-primary" />
                     </div>
-                  ) : userCoupons.length === 0 ? (
+                  ) : !Array.isArray(userCoupons) || userCoupons.length === 0 ? (
                     <div className="text-center py-8">
                       <p className="text-muted-foreground mb-4">You haven't submitted any coupons yet</p>
                       <Button asChild>
