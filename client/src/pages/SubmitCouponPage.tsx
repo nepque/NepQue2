@@ -143,12 +143,15 @@ export default function SubmitCouponPage() {
         throw new Error("Could not find or create user data");
       }
       
-      // Convert date format to ISO string for submission
+      // Convert date format to ISO string and ensure IDs are numbers
       const formattedData = {
         ...data,
         userId: userData.id,
         // Make sure expiresAt is formatted correctly as ISO string
         expiresAt: data.expiresAt instanceof Date ? data.expiresAt.toISOString() : data.expiresAt,
+        // Convert string IDs to numbers
+        storeId: data.storeId ? parseInt(data.storeId.toString(), 10) : undefined,
+        categoryId: data.categoryId ? parseInt(data.categoryId.toString(), 10) : undefined
       };
       
       console.log("Submitting coupon data:", formattedData);
