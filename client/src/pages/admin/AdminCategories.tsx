@@ -55,6 +55,7 @@ import { Badge } from "@/components/ui/badge";
 
 // Map of icon names to their corresponding Lucide components
 const iconMap: Record<string, LucideIcon> = {
+  // Icons with exact match to database values
   'shopping-cart': ShoppingCart,
   'shirt': Shirt,
   'laptop': Laptop,
@@ -75,13 +76,42 @@ const iconMap: Record<string, LucideIcon> = {
   'percent': Percent,
   'calendar': Calendar,
   'globe': Globe,
-  'tag': Tag
+  'tag': Tag,
+  
+  // Add database actual values without dashes
+  'shoppingcart': ShoppingCart,
+  'shoppingbag': ShoppingBag,
+  'creditcard': CreditCard,
+  'dollarsign': DollarSign,
+  'bookopen': BookOpen
 };
 
 // Function to get the icon component for a given icon name
 const getIconComponent = (iconName: string) => {
-  const IconComponent = iconMap[iconName];
-  return IconComponent ? <IconComponent className="h-5 w-5" /> : iconName;
+  // First try direct match
+  let IconComponent = iconMap[iconName];
+  
+  // If no direct match, try normalizing the icon name
+  if (!IconComponent) {
+    // Try without dashes
+    const normalizedName = iconName.replace(/-/g, '');
+    IconComponent = iconMap[normalizedName];
+    
+    // If still no match, try lowercase
+    if (!IconComponent) {
+      const lowerName = iconName.toLowerCase();
+      IconComponent = iconMap[lowerName];
+      
+      // If still no match, try lowercase without dashes
+      if (!IconComponent) {
+        const lowerNormalizedName = lowerName.replace(/-/g, '');
+        IconComponent = iconMap[lowerNormalizedName];
+      }
+    }
+  }
+  
+  // If we found a component, return it, otherwise return the default Tag icon
+  return IconComponent ? <IconComponent className="h-5 w-5" /> : <Tag className="h-5 w-5" />;
 };
 
 const AdminCategories = () => {
