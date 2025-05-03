@@ -115,23 +115,25 @@ const EarnPage = () => {
   const getNextCheckInTime = () => {
     if (!streakInfo) return "Unknown";
     
+    // If user can check in now, return "Now"
+    if (streakInfo.canCheckInNow) return "Now";
+    
     // Debug the value received
     console.log("Next check-in time value:", streakInfo.nextCheckInTime);
+    console.log("Can check in:", streakInfo.canCheckInNow);
     
     if (!streakInfo.nextCheckInTime) return "Unknown";
     
     try {
       // Handle string dates from API
       const nextTime = new Date(streakInfo.nextCheckInTime);
-      console.log("Parsed next check-in time:", nextTime);
       
-      // Check if date is valid before formatting
+      // Check if date is valid
       if (isNaN(nextTime.getTime())) {
         console.error("Invalid date format received:", streakInfo.nextCheckInTime);
         return "Unknown";
       }
       
-      if (streakInfo.canCheckInNow) return "Now";
       return formatDistance(nextTime, new Date(), { addSuffix: true });
     } catch (error) {
       console.error("Error parsing next check-in time:", error);
@@ -235,7 +237,7 @@ const EarnPage = () => {
                       <Button 
                         className="w-full" 
                         size="lg"
-                        disabled={checkingIn || !streakInfo?.canCheckInNow}
+                        disabled={checkingIn || (streakInfo && !streakInfo.canCheckInNow)}
                         onClick={handleCheckIn}
                       >
                         {checkingIn ? (
