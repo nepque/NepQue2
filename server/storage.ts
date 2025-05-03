@@ -598,7 +598,621 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Database-backed storage implementation
+import { eq, and, desc, sql, asc, like, or, isNull, inArray } from "drizzle-orm";
+import { db } from "./db";
+
+export class DatabaseStorage implements IStorage {
+  // User operations
+  async getUser(id: number): Promise<User | undefined> {
+    try {
+      const [user] = await db.select().from(users).where(eq(users.id, id));
+      return user;
+    } catch (error) {
+      console.error("Error getting user by ID:", error);
+      return undefined;
+    }
+  }
+
+  async getUserByFirebaseUid(firebaseUid: string): Promise<User | undefined> {
+    try {
+      const [user] = await db.select().from(users).where(eq(users.firebaseUid, firebaseUid));
+      return user;
+    } catch (error) {
+      console.error("Error getting user by firebaseUid:", error);
+      return undefined;
+    }
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    try {
+      const [user] = await db.insert(users).values(insertUser).returning();
+      return user;
+    } catch (error) {
+      console.error("Error creating user:", error);
+      throw error;
+    }
+  }
+
+  async updateUser(user: Partial<User> & { id: number }): Promise<User> {
+    try {
+      console.log("DatabaseStorage updating user:", user);
+      const [updatedUser] = await db
+        .update(users)
+        .set(user)
+        .where(eq(users.id, user.id))
+        .returning();
+      
+      console.log("User updated in database:", updatedUser);
+      return updatedUser;
+    } catch (error) {
+      console.error("Error updating user:", error);
+      throw error;
+    }
+  }
+
+  async deleteUser(id: number): Promise<void> {
+    try {
+      await db.delete(users).where(eq(users.id, id));
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      throw error;
+    }
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    try {
+      return await db.select().from(users);
+    } catch (error) {
+      console.error("Error getting all users:", error);
+      return [];
+    }
+  }
+
+  async updateUserPreferences(userId: number, preferences: { 
+    preferredCategories?: number[], 
+    preferredStores?: number[],
+    hasCompletedOnboarding?: boolean
+  }): Promise<User> {
+    try {
+      const updateData: Partial<User> = { id: userId };
+      
+      if (preferences.preferredCategories !== undefined) {
+        updateData.preferredCategories = preferences.preferredCategories;
+      }
+      
+      if (preferences.preferredStores !== undefined) {
+        updateData.preferredStores = preferences.preferredStores;
+      }
+      
+      if (preferences.hasCompletedOnboarding !== undefined) {
+        updateData.hasCompletedOnboarding = preferences.hasCompletedOnboarding;
+      }
+      
+      const [updatedUser] = await db
+        .update(users)
+        .set(updateData)
+        .where(eq(users.id, userId))
+        .returning();
+      
+      return updatedUser;
+    } catch (error) {
+      console.error("Error updating user preferences:", error);
+      throw error;
+    }
+  }
+
+  // Category operations
+  async getCategories(): Promise<Category[]> {
+    try {
+      return await db.select().from(categories);
+    } catch (error) {
+      console.error("Error getting categories:", error);
+      return [];
+    }
+  }
+
+  async getCategoryById(id: number): Promise<Category | undefined> {
+    try {
+      const [category] = await db.select().from(categories).where(eq(categories.id, id));
+      return category;
+    } catch (error) {
+      console.error("Error getting category by ID:", error);
+      return undefined;
+    }
+  }
+
+  async getCategoryBySlug(slug: string): Promise<Category | undefined> {
+    try {
+      const [category] = await db.select().from(categories).where(eq(categories.slug, slug));
+      return category;
+    } catch (error) {
+      console.error("Error getting category by slug:", error);
+      return undefined;
+    }
+  }
+
+  async createCategory(insertCategory: InsertCategory): Promise<Category> {
+    try {
+      const [category] = await db.insert(categories).values(insertCategory).returning();
+      return category;
+    } catch (error) {
+      console.error("Error creating category:", error);
+      throw error;
+    }
+  }
+
+  async updateCategory(category: Category): Promise<Category> {
+    try {
+      const [updatedCategory] = await db
+        .update(categories)
+        .set(category)
+        .where(eq(categories.id, category.id))
+        .returning();
+      
+      return updatedCategory;
+    } catch (error) {
+      console.error("Error updating category:", error);
+      throw error;
+    }
+  }
+
+  async deleteCategory(id: number): Promise<void> {
+    try {
+      await db.delete(categories).where(eq(categories.id, id));
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      throw error;
+    }
+  }
+
+  // Store operations
+  async getStores(): Promise<Store[]> {
+    try {
+      return await db.select().from(stores);
+    } catch (error) {
+      console.error("Error getting stores:", error);
+      return [];
+    }
+  }
+
+  async getStoreById(id: number): Promise<Store | undefined> {
+    try {
+      const [store] = await db.select().from(stores).where(eq(stores.id, id));
+      return store;
+    } catch (error) {
+      console.error("Error getting store by ID:", error);
+      return undefined;
+    }
+  }
+
+  async getStoreBySlug(slug: string): Promise<Store | undefined> {
+    try {
+      const [store] = await db.select().from(stores).where(eq(stores.slug, slug));
+      return store;
+    } catch (error) {
+      console.error("Error getting store by slug:", error);
+      return undefined;
+    }
+  }
+
+  async createStore(insertStore: InsertStore): Promise<Store> {
+    try {
+      const [store] = await db.insert(stores).values(insertStore).returning();
+      return store;
+    } catch (error) {
+      console.error("Error creating store:", error);
+      throw error;
+    }
+  }
+
+  async updateStore(store: Store): Promise<Store> {
+    try {
+      const [updatedStore] = await db
+        .update(stores)
+        .set(store)
+        .where(eq(stores.id, store.id))
+        .returning();
+      
+      return updatedStore;
+    } catch (error) {
+      console.error("Error updating store:", error);
+      throw error;
+    }
+  }
+
+  async deleteStore(id: number): Promise<void> {
+    try {
+      await db.delete(stores).where(eq(stores.id, id));
+    } catch (error) {
+      console.error("Error deleting store:", error);
+      throw error;
+    }
+  }
+
+  // Coupon operations
+  async getCoupons(options?: { 
+    categoryId?: number, 
+    storeId?: number, 
+    featured?: boolean, 
+    search?: string,
+    sortBy?: 'newest' | 'expiring' | 'popular'
+  }): Promise<CouponWithRelations[]> {
+    try {
+      let query = db.select().from(coupons)
+        .leftJoin(stores, eq(coupons.storeId, stores.id))
+        .leftJoin(categories, eq(coupons.categoryId, categories.id));
+      
+      // Apply filters
+      const filters = [];
+      
+      if (options?.categoryId) {
+        filters.push(eq(coupons.categoryId, options.categoryId));
+      }
+      
+      if (options?.storeId) {
+        filters.push(eq(coupons.storeId, options.storeId));
+      }
+      
+      if (options?.featured !== undefined) {
+        filters.push(eq(coupons.featured, options.featured));
+      }
+      
+      if (options?.search) {
+        filters.push(
+          or(
+            like(coupons.title, `%${options.search}%`),
+            like(coupons.description, `%${options.search}%`),
+            like(coupons.code, `%${options.search}%`)
+          )
+        );
+      }
+      
+      if (filters.length > 0) {
+        query = query.where(and(...filters));
+      }
+      
+      // Apply sorting
+      if (options?.sortBy === 'newest') {
+        query = query.orderBy(desc(coupons.id));
+      } else if (options?.sortBy === 'expiring') {
+        query = query.orderBy(asc(coupons.expiresAt));
+      } else if (options?.sortBy === 'popular') {
+        query = query.orderBy(desc(coupons.usedCount));
+      } else {
+        // Default sort by newest
+        query = query.orderBy(desc(coupons.id));
+      }
+      
+      const results = await query;
+      
+      // Transform results to expected CouponWithRelations format
+      return results.map(row => ({
+        ...row.coupons,
+        store: row.stores,
+        category: row.categories
+      }));
+    } catch (error) {
+      console.error("Error getting coupons:", error);
+      return [];
+    }
+  }
+
+  async getCouponById(id: number): Promise<CouponWithRelations | undefined> {
+    try {
+      const [result] = await db.select()
+        .from(coupons)
+        .leftJoin(stores, eq(coupons.storeId, stores.id))
+        .leftJoin(categories, eq(coupons.categoryId, categories.id))
+        .where(eq(coupons.id, id));
+      
+      if (!result) return undefined;
+      
+      return {
+        ...result.coupons,
+        store: result.stores,
+        category: result.categories
+      };
+    } catch (error) {
+      console.error("Error getting coupon by ID:", error);
+      return undefined;
+    }
+  }
+
+  async createCoupon(insertCoupon: InsertCoupon): Promise<Coupon> {
+    try {
+      const [coupon] = await db.insert(coupons).values(insertCoupon).returning();
+      return coupon;
+    } catch (error) {
+      console.error("Error creating coupon:", error);
+      throw error;
+    }
+  }
+
+  async updateCoupon(coupon: Coupon): Promise<Coupon> {
+    try {
+      const [updatedCoupon] = await db
+        .update(coupons)
+        .set(coupon)
+        .where(eq(coupons.id, coupon.id))
+        .returning();
+      
+      return updatedCoupon;
+    } catch (error) {
+      console.error("Error updating coupon:", error);
+      throw error;
+    }
+  }
+
+  async deleteCoupon(id: number): Promise<void> {
+    try {
+      await db.delete(coupons).where(eq(coupons.id, id));
+    } catch (error) {
+      console.error("Error deleting coupon:", error);
+      throw error;
+    }
+  }
+
+  async incrementCouponUsage(id: number): Promise<void> {
+    try {
+      await db
+        .update(coupons)
+        .set({
+          usedCount: sql`${coupons.usedCount} + 1`
+        })
+        .where(eq(coupons.id, id));
+    } catch (error) {
+      console.error("Error incrementing coupon usage:", error);
+      throw error;
+    }
+  }
+  
+  // Statistics
+  async getStoreWithCouponCount(): Promise<(Store & { couponCount: number })[]> {
+    try {
+      const stores = await db.select().from(this.stores);
+      
+      const storeCountPromises = stores.map(async (store) => {
+        const couponCount = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(coupons)
+          .where(eq(coupons.storeId, store.id));
+          
+        return {
+          ...store,
+          couponCount: couponCount[0].count
+        };
+      });
+      
+      return Promise.all(storeCountPromises);
+    } catch (error) {
+      console.error("Error getting store with coupon count:", error);
+      return [];
+    }
+  }
+
+  async getCategoryWithCouponCount(): Promise<(Category & { couponCount: number })[]> {
+    try {
+      const categories = await db.select().from(this.categories);
+      
+      const categoryCountPromises = categories.map(async (category) => {
+        const couponCount = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(coupons)
+          .where(eq(coupons.categoryId, category.id));
+          
+        return {
+          ...category,
+          couponCount: couponCount[0].count
+        };
+      });
+      
+      return Promise.all(categoryCountPromises);
+    } catch (error) {
+      console.error("Error getting category with coupon count:", error);
+      return [];
+    }
+  }
+  
+  // Heat map data
+  async getCouponUsageByCategory(): Promise<{ category: string; usageCount: number; coupons: number }[]> {
+    try {
+      const categories = await db.select().from(this.categories);
+      
+      const categoryUsagePromises = categories.map(async (category) => {
+        const couponsResult = await db
+          .select()
+          .from(coupons)
+          .where(eq(coupons.categoryId, category.id));
+          
+        const usageCount = couponsResult.reduce((sum, coupon) => sum + (coupon.usedCount || 0), 0);
+        
+        return {
+          category: category.name,
+          usageCount,
+          coupons: couponsResult.length
+        };
+      });
+      
+      return Promise.all(categoryUsagePromises);
+    } catch (error) {
+      console.error("Error getting coupon usage by category:", error);
+      return [];
+    }
+  }
+
+  async getCouponUsageByMonth(): Promise<{ month: string; usageCount: number; coupons: number }[]> {
+    try {
+      // For simplicity, we'll generate sample data for last 6 months
+      const allCoupons = await db.select().from(coupons);
+      
+      // Get current date and last 6 months
+      const currentDate = new Date();
+      const months = [];
+      for (let i = 0; i < 6; i++) {
+        const monthDate = new Date(currentDate);
+        monthDate.setMonth(currentDate.getMonth() - i);
+        months.push({
+          name: monthDate.toLocaleString('default', { month: 'long' }),
+          year: monthDate.getFullYear(),
+          monthNumber: monthDate.getMonth()
+        });
+      }
+      
+      // Group coupons by creation month
+      const monthlyData = months.map(month => {
+        const monthCoupons = allCoupons.filter(coupon => {
+          const couponDate = new Date(coupon.expiresAt);
+          return couponDate.getMonth() === month.monthNumber && 
+                couponDate.getFullYear() === month.year;
+        });
+        
+        const usageCount = monthCoupons.reduce((sum, coupon) => sum + (coupon.usedCount || 0), 0);
+        
+        return {
+          month: `${month.name} ${month.year}`,
+          usageCount,
+          coupons: monthCoupons.length
+        };
+      });
+      
+      return monthlyData;
+    } catch (error) {
+      console.error("Error getting coupon usage by month:", error);
+      return [];
+    }
+  }
+  
+  // User-submitted coupon operations
+  async getUserSubmittedCoupons(options?: {
+    userId?: number,
+    status?: 'pending' | 'approved' | 'rejected',
+    sortBy?: 'newest'
+  }): Promise<UserSubmittedCouponWithRelations[]> {
+    try {
+      let query = db.select()
+        .from(userSubmittedCoupons)
+        .leftJoin(stores, eq(userSubmittedCoupons.storeId, stores.id))
+        .leftJoin(categories, eq(userSubmittedCoupons.categoryId, categories.id))
+        .leftJoin(users, eq(userSubmittedCoupons.userId, users.id));
+      
+      // Apply filters
+      const filters = [];
+      
+      if (options?.userId) {
+        filters.push(eq(userSubmittedCoupons.userId, options.userId));
+      }
+      
+      if (options?.status) {
+        filters.push(eq(userSubmittedCoupons.status, options.status));
+      }
+      
+      if (filters.length > 0) {
+        query = query.where(and(...filters));
+      }
+      
+      // Apply sorting
+      if (options?.sortBy === 'newest') {
+        query = query.orderBy(desc(userSubmittedCoupons.submittedAt));
+      } else {
+        // Default sort by newest
+        query = query.orderBy(desc(userSubmittedCoupons.submittedAt));
+      }
+      
+      const results = await query;
+      
+      // Transform results to expected UserSubmittedCouponWithRelations format
+      return results.map(row => ({
+        ...row.user_submitted_coupons,
+        store: row.stores,
+        category: row.categories,
+        user: row.users
+      }));
+    } catch (error) {
+      console.error("Error getting user submitted coupons:", error);
+      return [];
+    }
+  }
+
+  async getUserSubmittedCouponById(id: number): Promise<UserSubmittedCouponWithRelations | undefined> {
+    try {
+      const [result] = await db.select()
+        .from(userSubmittedCoupons)
+        .leftJoin(stores, eq(userSubmittedCoupons.storeId, stores.id))
+        .leftJoin(categories, eq(userSubmittedCoupons.categoryId, categories.id))
+        .leftJoin(users, eq(userSubmittedCoupons.userId, users.id))
+        .where(eq(userSubmittedCoupons.id, id));
+      
+      if (!result) return undefined;
+      
+      return {
+        ...result.user_submitted_coupons,
+        store: result.stores,
+        category: result.categories,
+        user: result.users
+      };
+    } catch (error) {
+      console.error("Error getting user submitted coupon by ID:", error);
+      return undefined;
+    }
+  }
+
+  async createUserSubmittedCoupon(insertCoupon: InsertUserSubmittedCoupon): Promise<UserSubmittedCoupon> {
+    try {
+      const [coupon] = await db.insert(userSubmittedCoupons).values(insertCoupon).returning();
+      return coupon;
+    } catch (error) {
+      console.error("Error creating user submitted coupon:", error);
+      throw error;
+    }
+  }
+
+  async updateUserSubmittedCoupon(coupon: UserSubmittedCoupon): Promise<UserSubmittedCoupon> {
+    try {
+      const [updatedCoupon] = await db
+        .update(userSubmittedCoupons)
+        .set(coupon)
+        .where(eq(userSubmittedCoupons.id, coupon.id))
+        .returning();
+      
+      return updatedCoupon;
+    } catch (error) {
+      console.error("Error updating user submitted coupon:", error);
+      throw error;
+    }
+  }
+
+  async updateUserSubmittedCouponStatus(id: number, status: 'approved' | 'rejected', reviewNotes?: string): Promise<UserSubmittedCoupon> {
+    try {
+      const [updatedCoupon] = await db
+        .update(userSubmittedCoupons)
+        .set({
+          status,
+          reviewedAt: new Date(),
+          reviewNotes: reviewNotes || null
+        })
+        .where(eq(userSubmittedCoupons.id, id))
+        .returning();
+      
+      return updatedCoupon;
+    } catch (error) {
+      console.error("Error updating user submitted coupon status:", error);
+      throw error;
+    }
+  }
+
+  async deleteUserSubmittedCoupon(id: number): Promise<void> {
+    try {
+      await db.delete(userSubmittedCoupons).where(eq(userSubmittedCoupons.id, id));
+    } catch (error) {
+      console.error("Error deleting user submitted coupon:", error);
+      throw error;
+    }
+  }
+}
+
+// Use the database storage implementation
+export const storage = new DatabaseStorage();
 
 // Initialize with some seed data
 (async () => {
