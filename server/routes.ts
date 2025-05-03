@@ -1024,14 +1024,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.set('Expires', '0');
       
       const firebaseUid = req.params.firebaseUid;
+      console.log(`Fetching streak info for Firebase UID: ${firebaseUid}`);
+      
       const user = await storage.getUserByFirebaseUid(firebaseUid);
       
       if (!user) {
+        console.log(`User not found for Firebase UID: ${firebaseUid}`);
         return res.status(404).json({ message: "User not found" });
       }
       
+      console.log(`Found user for Firebase UID: ${firebaseUid}`, user);
+      
       try {
         const streakInfo = await storage.getUserCurrentStreak(user.id);
+        console.log(`Streak info for user ${user.id}:`, streakInfo);
         res.json(streakInfo);
       } catch (error) {
         console.error("Error getting user streak info:", error);
@@ -1115,17 +1121,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/users/firebase/:firebaseUid/check-in", async (req, res) => {
     try {
       const firebaseUid = req.params.firebaseUid;
+      console.log(`Processing check-in for Firebase UID: ${firebaseUid}`);
+      
       const user = await storage.getUserByFirebaseUid(firebaseUid);
       
       if (!user) {
+        console.log(`User not found for Firebase UID: ${firebaseUid}`);
         return res.status(404).json({ 
           success: false,
           message: "User not found" 
         });
       }
       
+      console.log(`Found user for check-in, ID: ${user.id}`);
+      
       try {
+        console.log(`Calling processUserCheckIn for user ID: ${user.id}`);
         const result = await storage.processUserCheckIn(user.id);
+        console.log(`Check-in result for user ${user.id}:`, result);
         res.status(200).json(result);
       } catch (error) {
         console.error("Error processing user check-in:", error);
