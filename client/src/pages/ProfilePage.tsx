@@ -21,29 +21,41 @@ export default function ProfilePage() {
   
   // Fetch user data from API to get the latest preferences
   const { data: userData, isLoading: isLoadingUser, error: userError } = useQuery({
-    queryKey: currentUser?.uid ? [`/api/users/${currentUser.uid}`] : null,
-    queryFn: async ({ signal }) => {
+    queryKey: currentUser?.uid ? [`/api/users/${currentUser.uid}`] : ['no-user'],
+    queryFn: async () => {
       if (!currentUser?.uid) return null;
       
       try {
         // Try to fetch the user
-        return await apiRequest(`/api/users/${currentUser.uid}`, { signal });
-      } catch (error) {
-        // If user doesn't exist (404), create them
-        if (error && typeof error === 'object' && 'status' in error && error.status === 404) {
-          console.log("User not found in database, creating user...");
-          const newUser = await apiRequest('/api/users', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              firebaseUid: currentUser.uid,
-              email: currentUser.email,
-              displayName: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
-              photoURL: currentUser.photoURL,
-            }),
-          });
-          return newUser;
+        const response = await fetch(`/api/users/${currentUser.uid}`);
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            // User doesn't exist, create them
+            console.log("User not found in database, creating user...");
+            const createResponse = await fetch('/api/users', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                firebaseUid: currentUser.uid,
+                email: currentUser.email,
+                displayName: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
+                photoURL: currentUser.photoURL,
+              }),
+            });
+            
+            if (!createResponse.ok) {
+              throw new Error(`Failed to create user: ${createResponse.status}`);
+            }
+            
+            return await createResponse.json();
+          }
+          throw new Error(`Failed to fetch user: ${response.status}`);
         }
+        
+        return await response.json();
+      } catch (error) {
+        console.error("Error in user data fetch:", error);
         throw error;
       }
     },
@@ -52,14 +64,22 @@ export default function ProfilePage() {
   
   // Fetch user submitted coupons
   const { data: userCoupons = [], isLoading: isLoadingCoupons } = useQuery({
-    queryKey: userData?.id ? ['/api/user-submitted-coupons', { userId: userData.id }] : null,
-    queryFn: ({ signal }) => 
-      userData?.id 
-        ? apiRequest<UserSubmittedCouponWithRelations[]>(
-            `/api/user-submitted-coupons?userId=${userData.id}&sortBy=newest`, 
-            { signal }
-          ) 
-        : []
+    queryKey: userData?.id ? ['/api/user-submitted-coupons', { userId: userData.id }] : ['no-coupons'],
+    queryFn: async () => {
+      if (!userData?.id) return [];
+      
+      try {
+        const response = await fetch(`/api/user-submitted-coupons?userId=${userData.id}&sortBy=newest`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch user coupons: ${response.status}`);
+        }
+        return await response.json();
+      } catch (error) {
+        console.error("Error fetching user coupons:", error);
+        return [];
+      }
+    },
+    enabled: !!userData?.id
   });
   
   useEffect(() => {
@@ -198,7 +218,7 @@ export default function ProfilePage() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {userCoupons.map(coupon => (
+                      {userCoupons.map((coupon: UserSubmittedCouponWithRelations) => (
                         <Card key={coupon.id} className="overflow-hidden">
                           <div className="flex flex-col md:flex-row">
                             <div className="p-4 flex-1">
@@ -280,7 +300,7 @@ export default function ProfilePage() {
                       ) : (
                         <div className="flex flex-wrap gap-2">
                           {/* We'd need to fetch full category details to display names */}
-                          {preferredCategories.map(id => (
+                          {preferredCategories.map((id: number) => (
                             <Badge key={id} variant="secondary">Category #{id}</Badge>
                           ))}
                         </div>
@@ -295,7 +315,7 @@ export default function ProfilePage() {
                       ) : (
                         <div className="flex flex-wrap gap-2">
                           {/* We'd need to fetch full store details to display names */}
-                          {preferredStores.map(id => (
+                          {preferredStores.map((id: number) => (
                             <Badge key={id} variant="secondary">Store #{id}</Badge>
                           ))}
                         </div>
