@@ -804,6 +804,139 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Withdrawal request endpoints
+  
+  // Get all withdrawal requests (admin only)
+  app.get("/api/admin/withdrawals", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to access withdrawal requests");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const status = req.query.status as 'pending' | 'approved' | 'rejected' | undefined;
+      
+      const withdrawalRequests = await storage.getWithdrawalRequests({ status });
+      res.json(withdrawalRequests);
+    } catch (error) {
+      console.error("Error fetching withdrawal requests:", error);
+      res.status(500).json({ message: "Failed to fetch withdrawal requests" });
+    }
+  });
+  
+  // Get withdrawal requests for a user
+  app.get("/api/users/:userId/withdrawals", async (req, res) => {
+    try {
+      const userId = Number(req.params.userId);
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const withdrawalRequests = await storage.getWithdrawalRequests({ userId });
+      res.json(withdrawalRequests);
+    } catch (error) {
+      console.error("Error fetching user withdrawal requests:", error);
+      res.status(500).json({ message: "Failed to fetch user withdrawal requests" });
+    }
+  });
+  
+  // Get a specific withdrawal request
+  app.get("/api/withdrawals/:id", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const withdrawalRequest = await storage.getWithdrawalRequestById(id);
+      
+      if (!withdrawalRequest) {
+        return res.status(404).json({ message: "Withdrawal request not found" });
+      }
+      
+      res.json(withdrawalRequest);
+    } catch (error) {
+      console.error("Error fetching withdrawal request:", error);
+      res.status(500).json({ message: "Failed to fetch withdrawal request" });
+    }
+  });
+  
+  // Create a new withdrawal request
+  app.post("/api/withdrawals", async (req, res) => {
+    try {
+      const { userId, amount, paymentMethod, paymentDetails } = req.body;
+      
+      if (!userId || !amount || !paymentMethod || !paymentDetails) {
+        return res.status(400).json({ 
+          message: "Missing required fields. userId, amount, paymentMethod, and paymentDetails are required." 
+        });
+      }
+      
+      // Minimum withdrawal amount check
+      if (amount < 1000) {
+        return res.status(400).json({ 
+          message: "Minimum withdrawal amount is 1000 points." 
+        });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Check if user has enough points
+      if ((user.points || 0) < amount) {
+        return res.status(400).json({ 
+          message: `Insufficient points. You have ${user.points} points, but requested ${amount} points.` 
+        });
+      }
+      
+      const withdrawalRequest = await storage.createWithdrawalRequest({
+        userId,
+        amount,
+        paymentMethod,
+        paymentDetails
+      });
+      
+      res.status(201).json(withdrawalRequest);
+    } catch (error) {
+      console.error("Error creating withdrawal request:", error);
+      res.status(500).json({ message: "Failed to create withdrawal request" });
+    }
+  });
+  
+  // Update withdrawal request status (admin only)
+  app.patch("/api/admin/withdrawals/:id", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to update withdrawal request status");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const id = Number(req.params.id);
+      const { status, notes } = req.body;
+      
+      if (!status || (status !== 'approved' && status !== 'rejected')) {
+        return res.status(400).json({ 
+          message: "Status must be 'approved' or 'rejected'" 
+        });
+      }
+      
+      const withdrawalRequest = await storage.getWithdrawalRequestById(id);
+      if (!withdrawalRequest) {
+        return res.status(404).json({ message: "Withdrawal request not found" });
+      }
+      
+      const updatedRequest = await storage.updateWithdrawalRequestStatus(id, status, notes);
+      res.json(updatedRequest);
+    } catch (error) {
+      console.error("Error updating withdrawal request status:", error);
+      res.status(500).json({ message: "Failed to update withdrawal request status" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
