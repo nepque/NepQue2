@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { 
   LayoutDashboard, 
@@ -20,7 +20,15 @@ interface AdminLayoutProps {
 }
 
 const AdminLayout = ({ children, title }: AdminLayoutProps) => {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
+  
+  // Verify admin is logged in on component mount and redirect if not
+  useEffect(() => {
+    const adminToken = localStorage.getItem("adminToken");
+    if (!adminToken) {
+      setLocation("/admin/login");
+    }
+  }, [setLocation]);
   
   const isActive = (path: string) => {
     return location.startsWith(path);
@@ -184,12 +192,18 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
                   Settings
                 </Link>
                 <div className="border-t border-gray-100 my-1"></div>
-                <Link href="/" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <button
+                  onClick={() => {
+                    localStorage.removeItem("adminToken");
+                    setLocation("/admin/login");
+                  }}
+                  className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
                   <div className="flex items-center text-red-600">
                     <LogOut className="h-4 w-4 mr-2" />
                     <span>Sign out</span>
                   </div>
-                </Link>
+                </button>
               </div>
             </div>
           </div>
