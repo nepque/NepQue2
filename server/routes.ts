@@ -703,10 +703,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.post("/api/user-submitted-coupons", async (req, res) => {
     try {
-      // Convert the date string to Date object
+      // Log the raw input for debugging
+      console.log("Raw req.body:", JSON.stringify(req.body));
+      
+      // Ensure expiresAt is properly parsed from ISO string
+      const expiresAtDate = new Date(req.body.expiresAt);
+      
+      // Validate the date is valid
+      if (isNaN(expiresAtDate.getTime())) {
+        return res.status(400).json({ 
+          message: "Invalid expiration date format", 
+          received: req.body.expiresAt 
+        });
+      }
+      
+      // Format data with proper types
       const submissionData = {
         ...req.body,
-        expiresAt: new Date(req.body.expiresAt)
+        expiresAt: expiresAtDate,
+        terms: req.body.terms || null, // Handle null/undefined
+        storeId: Number(req.body.storeId),
+        categoryId: Number(req.body.categoryId),
+        userId: Number(req.body.userId)
       };
       
       console.log("Processed submission data:", submissionData);

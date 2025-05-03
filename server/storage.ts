@@ -1292,18 +1292,30 @@ export class DatabaseStorage implements IStorage {
   async createUserSubmittedCoupon(insertCoupon: InsertUserSubmittedCoupon): Promise<UserSubmittedCoupon> {
     try {
       // Ensure dates are proper Date objects and handle null values for optional fields
+      // By this point, the route handler should have already verified and converted the dates
       const formattedData = {
-        ...insertCoupon,
-        // Make sure terms is not undefined (convert to null if needed)
+        userId: insertCoupon.userId,
+        title: insertCoupon.title,
+        description: insertCoupon.description,
+        code: insertCoupon.code,
+        storeId: insertCoupon.storeId,
+        categoryId: insertCoupon.categoryId,
+        expiresAt: insertCoupon.expiresAt, // This is already a Date object from the route handler
         terms: insertCoupon.terms || null,
-        // Set status and timestamps
+        // Set defaults for required fields with default values
         status: 'pending',
         submittedAt: new Date(),
         reviewedAt: null,
         reviewNotes: null
       };
       
-      console.log("Creating user-submitted coupon with data:", formattedData);
+      console.log("Final user-submitted coupon data to insert:", {
+        ...formattedData,
+        expiresAt: formattedData.expiresAt instanceof Date 
+          ? formattedData.expiresAt.toISOString() 
+          : String(formattedData.expiresAt)
+      });
+      
       const [coupon] = await db.insert(userSubmittedCoupons).values(formattedData).returning();
       return coupon;
     } catch (error) {
