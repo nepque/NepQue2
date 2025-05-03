@@ -1217,132 +1217,166 @@ export const storage = new DatabaseStorage();
 // Initialize with some seed data
 (async () => {
   // Create some categories
-  const categoriesData: InsertCategory[] = [
-    { name: "Retail", slug: "retail", icon: "shopping-cart", color: "blue" },
-    { name: "Fashion", slug: "fashion", icon: "tshirt", color: "green" },
-    { name: "Electronics", slug: "electronics", icon: "laptop", color: "purple" },
-    { name: "Food", slug: "food", icon: "utensils", color: "red" },
-    { name: "Travel", slug: "travel", icon: "plane", color: "yellow" },
-  ];
-
-  for (const category of categoriesData) {
-    await storage.createCategory(category);
-  }
-
-  // Create some stores
-  const storesData: InsertStore[] = [
-    { name: "Amazon", slug: "amazon", logo: "https://logo.clearbit.com/amazon.com", website: "https://amazon.com" },
-    { name: "Walmart", slug: "walmart", logo: "https://logo.clearbit.com/walmart.com", website: "https://walmart.com" },
-    { name: "Target", slug: "target", logo: "https://logo.clearbit.com/target.com", website: "https://target.com" },
-    { name: "Best Buy", slug: "best-buy", logo: "https://logo.clearbit.com/bestbuy.com", website: "https://bestbuy.com" },
-    { name: "DoorDash", slug: "doordash", logo: "https://logo.clearbit.com/doordash.com", website: "https://doordash.com" },
-    { name: "Nike", slug: "nike", logo: "https://logo.clearbit.com/nike.com", website: "https://nike.com" },
-    { name: "Macy's", slug: "macys", logo: "https://logo.clearbit.com/macys.com", website: "https://macys.com" },
-    { name: "Kohl's", slug: "kohls", logo: "https://logo.clearbit.com/kohls.com", website: "https://kohls.com" },
-    { name: "Home Depot", slug: "home-depot", logo: "https://logo.clearbit.com/homedepot.com", website: "https://homedepot.com" },
-    { name: "Lowe's", slug: "lowes", logo: "https://logo.clearbit.com/lowes.com", website: "https://lowes.com" },
-    { name: "Adidas", slug: "adidas", logo: "https://logo.clearbit.com/adidas.com", website: "https://adidas.com" },
-    { name: "Samsung", slug: "samsung", logo: "https://logo.clearbit.com/samsung.com", website: "https://samsung.com" },
-  ];
-
-  for (const store of storesData) {
-    await storage.createStore(store);
-  }
-
-  // Create some coupons
-  const now = new Date();
-  const oneMonth = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-  const twoMonths = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
-  const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  // Check if categories already exist before creating them
+  const existingCategories = await storage.getCategories();
   
-  const couponsData: InsertCoupon[] = [
-    { 
-      title: "20% Off Electronics & Free Shipping", 
-      description: "Get 20% off on all electronics and enjoy free shipping on orders over $25.",
-      code: "SUMMER20",
-      storeId: 1, // Amazon
-      categoryId: 3, // Electronics
-      expiresAt: oneMonth,
-      featured: true,
-      verified: true,
-      terms: "Valid for all electronics categories\nMinimum purchase of $25 required\nOne coupon per customer\nCannot be combined with other offers\nValid for new and existing customers",
-      usedCount: 2400
-    },
-    { 
-      title: "$10 Off Your $50+ Purchase", 
-      description: "Save $10 when you spend $50 or more on groceries, home goods, and more.",
-      code: "SAVE10WM",
-      storeId: 2, // Walmart
-      categoryId: 1, // Retail
-      expiresAt: twoMonths,
-      featured: true,
-      verified: false,
-      terms: "Valid on purchases of $50 or more\nExcludes alcohol and gift cards\nOne coupon per transaction\nCannot be combined with other coupons",
-      usedCount: 1800
-    },
-    { 
-      title: "25% Off Home Decor", 
-      description: "Save 25% on all home decor items, including furniture, bedding, and more.",
-      code: "HOME25",
-      storeId: 3, // Target
-      categoryId: 1, // Retail
-      expiresAt: tomorrow,
-      featured: true,
-      verified: false,
-      terms: "Valid on home decor items only\nExcludes clearance items\nOne coupon per customer\nIn-store and online",
-      usedCount: 3200
-    },
-    { 
-      title: "$50 Off Laptops Over $500", 
-      description: "Save $50 on select laptops priced $500 or more. Includes major brands.",
-      code: "LAPTOP50",
-      storeId: 4, // Best Buy
-      categoryId: 3, // Electronics
-      expiresAt: oneMonth,
-      featured: true,
-      verified: true,
-      terms: "Valid on laptops $500+\nMust be signed in to rewards account\nOne coupon per transaction\nValid for online purchases only",
-      usedCount: 956
-    },
-    { 
-      title: "$15 Off First Order", 
-      description: "Get $15 off your first order of $20 or more. New customers only.",
-      code: "FIRST15",
-      storeId: 5, // DoorDash
-      categoryId: 4, // Food
-      expiresAt: new Date(now.getTime() + 180 * 24 * 60 * 60 * 1000), // 6 months
-      featured: true,
-      verified: true,
-      terms: "New customers only\nMinimum order of $20\nDelivery fee not included\nOne-time use only",
-      usedCount: 5100
-    },
-    { 
-      title: "30% Off Clearance Items", 
-      description: "Take an extra 30% off already reduced clearance items. Includes shoes and apparel.",
-      code: "EXTRA30",
-      storeId: 6, // Nike
-      categoryId: 2, // Fashion
-      expiresAt: oneMonth,
-      featured: true,
-      verified: false,
-      terms: "Valid on clearance items only\nDiscount applied at checkout\nCannot be combined with other promotions\nValid online and in select stores",
-      usedCount: 1200
-    },
-    { 
-      title: "Free Shipping on Orders $25+", 
-      description: "Get free standard shipping on all orders of $25 or more. No code needed.",
-      code: "FREESHIP",
-      storeId: 7, // Macy's
-      categoryId: 2, // Fashion
-      expiresAt: twoMonths,
-      featured: false,
-      verified: true,
-      terms: "Minimum purchase of $25\nStandard shipping only\nContiguous US only\nAutomatically applied at checkout",
-      usedCount: 950
-    },
-  ];
+  if (existingCategories.length === 0) {
+    const categoriesData: InsertCategory[] = [
+      { name: "Retail", slug: "retail", icon: "shopping-cart", color: "blue" },
+      { name: "Fashion", slug: "fashion", icon: "tshirt", color: "green" },
+      { name: "Electronics", slug: "electronics", icon: "laptop", color: "purple" },
+      { name: "Food", slug: "food", icon: "utensils", color: "red" },
+      { name: "Travel", slug: "travel", icon: "plane", color: "yellow" },
+    ];
 
-  for (const coupon of couponsData) {
-    await storage.createCoupon(coupon);
+    for (const category of categoriesData) {
+      try {
+        await storage.createCategory(category);
+        console.log(`Created category: ${category.name}`);
+      } catch (error) {
+        console.error(`Error creating category ${category.name}:`, error);
+      }
+    }
+  } else {
+    console.log("Categories already exist, skipping initialization");
+  }
+
+  // Check if stores already exist before creating them
+  const existingStores = await storage.getStores();
+  
+  if (existingStores.length === 0) {
+    const storesData: InsertStore[] = [
+      { name: "Amazon", slug: "amazon", logo: "https://logo.clearbit.com/amazon.com", website: "https://amazon.com" },
+      { name: "Walmart", slug: "walmart", logo: "https://logo.clearbit.com/walmart.com", website: "https://walmart.com" },
+      { name: "Target", slug: "target", logo: "https://logo.clearbit.com/target.com", website: "https://target.com" },
+      { name: "Best Buy", slug: "best-buy", logo: "https://logo.clearbit.com/bestbuy.com", website: "https://bestbuy.com" },
+      { name: "DoorDash", slug: "doordash", logo: "https://logo.clearbit.com/doordash.com", website: "https://doordash.com" },
+      { name: "Nike", slug: "nike", logo: "https://logo.clearbit.com/nike.com", website: "https://nike.com" },
+      { name: "Macy's", slug: "macys", logo: "https://logo.clearbit.com/macys.com", website: "https://macys.com" },
+      { name: "Kohl's", slug: "kohls", logo: "https://logo.clearbit.com/kohls.com", website: "https://kohls.com" },
+      { name: "Home Depot", slug: "home-depot", logo: "https://logo.clearbit.com/homedepot.com", website: "https://homedepot.com" },
+      { name: "Lowe's", slug: "lowes", logo: "https://logo.clearbit.com/lowes.com", website: "https://lowes.com" },
+      { name: "Adidas", slug: "adidas", logo: "https://logo.clearbit.com/adidas.com", website: "https://adidas.com" },
+      { name: "Samsung", slug: "samsung", logo: "https://logo.clearbit.com/samsung.com", website: "https://samsung.com" },
+    ];
+
+    for (const store of storesData) {
+      try {
+        await storage.createStore(store);
+        console.log(`Created store: ${store.name}`);
+      } catch (error) {
+        console.error(`Error creating store ${store.name}:`, error);
+      }
+    }
+  } else {
+    console.log("Stores already exist, skipping initialization");
+  }
+
+  // Check if coupons already exist before creating them
+  const existingCoupons = await storage.getCoupons();
+  
+  if (existingCoupons.length === 0) {
+    const now = new Date();
+    const oneMonth = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const twoMonths = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
+    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    
+    const couponsData: InsertCoupon[] = [
+      { 
+        title: "20% Off Electronics & Free Shipping", 
+        description: "Get 20% off on all electronics and enjoy free shipping on orders over $25.",
+        code: "SUMMER20",
+        storeId: 1, // Amazon
+        categoryId: 3, // Electronics
+        expiresAt: oneMonth,
+        featured: true,
+        verified: true,
+        terms: "Valid for all electronics categories\nMinimum purchase of $25 required\nOne coupon per customer\nCannot be combined with other offers\nValid for new and existing customers",
+        usedCount: 2400
+      },
+      { 
+        title: "$10 Off Your $50+ Purchase", 
+        description: "Save $10 when you spend $50 or more on groceries, home goods, and more.",
+        code: "SAVE10WM",
+        storeId: 2, // Walmart
+        categoryId: 1, // Retail
+        expiresAt: twoMonths,
+        featured: true,
+        verified: false,
+        terms: "Valid on purchases of $50 or more\nExcludes alcohol and gift cards\nOne coupon per transaction\nCannot be combined with other coupons",
+        usedCount: 1800
+      },
+      { 
+        title: "25% Off Home Decor", 
+        description: "Save 25% on all home decor items, including furniture, bedding, and more.",
+        code: "HOME25",
+        storeId: 3, // Target
+        categoryId: 1, // Retail
+        expiresAt: tomorrow,
+        featured: true,
+        verified: false,
+        terms: "Valid on home decor items only\nExcludes clearance items\nOne coupon per customer\nIn-store and online",
+        usedCount: 3200
+      },
+      { 
+        title: "$50 Off Laptops Over $500", 
+        description: "Save $50 on select laptops priced $500 or more. Includes major brands.",
+        code: "LAPTOP50",
+        storeId: 4, // Best Buy
+        categoryId: 3, // Electronics
+        expiresAt: oneMonth,
+        featured: true,
+        verified: true,
+        terms: "Valid on laptops $500+\nMust be signed in to rewards account\nOne coupon per transaction\nValid for online purchases only",
+        usedCount: 956
+      },
+      { 
+        title: "$15 Off First Order", 
+        description: "Get $15 off your first order of $20 or more. New customers only.",
+        code: "FIRST15",
+        storeId: 5, // DoorDash
+        categoryId: 4, // Food
+        expiresAt: new Date(now.getTime() + 180 * 24 * 60 * 60 * 1000), // 6 months
+        featured: true,
+        verified: true,
+        terms: "New customers only\nMinimum order of $20\nDelivery fee not included\nOne-time use only",
+        usedCount: 5100
+      },
+      { 
+        title: "30% Off Clearance Items", 
+        description: "Take an extra 30% off already reduced clearance items. Includes shoes and apparel.",
+        code: "EXTRA30",
+        storeId: 6, // Nike
+        categoryId: 2, // Fashion
+        expiresAt: oneMonth,
+        featured: true,
+        verified: false,
+        terms: "Valid on clearance items only\nDiscount applied at checkout\nCannot be combined with other promotions\nValid online and in select stores",
+        usedCount: 1200
+      },
+      { 
+        title: "Free Shipping on Orders $25+", 
+        description: "Get free standard shipping on all orders of $25 or more. No code needed.",
+        code: "FREESHIP",
+        storeId: 7, // Macy's
+        categoryId: 2, // Fashion
+        expiresAt: twoMonths,
+        featured: false,
+        verified: true,
+        terms: "Minimum purchase of $25\nStandard shipping only\nContiguous US only\nAutomatically applied at checkout",
+        usedCount: 950
+      },
+    ];
+
+    for (const coupon of couponsData) {
+      try {
+        await storage.createCoupon(coupon);
+        console.log(`Created coupon: ${coupon.title}`);
+      } catch (error) {
+        console.error(`Error creating coupon ${coupon.title}:`, error);
+      }
+    }
+  } else {
+    console.log("Coupons already exist, skipping initialization");
   }
 })();

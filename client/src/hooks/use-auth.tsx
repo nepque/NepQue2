@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User } from "firebase/auth";
+import { createRoot } from "react-dom/client";
 import { 
   signInWithGoogle, 
   signInWithEmail, 
@@ -8,6 +9,7 @@ import {
   onAuthStateChange,
   updateUserProfile
 } from "@/lib/firebase";
+import BannedUserNotification from "@/components/BannedUserNotification";
 
 interface AuthContextType {
   currentUser: User | null;
@@ -61,6 +63,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // First try to get the user
       const response = await fetch(`/api/users/${user.uid}`);
       
+      // Check for banned status
+      if (response.status === 403) {
+        const data = await response.json();
+        if (data.banned) {
+          console.error('User is banned from the platform');
+          
+          // Sign out the user immediately
+          await signOut();
+          
+          // Show banned user notification
+          showBannedUserNotification();
+          
+          return false;
+        }
+      }
+      
       // If user doesn't exist, create them
       if (response.status === 404) {
         await fetch('/api/users', {
@@ -77,21 +95,51 @@ export function AuthProvider({ children }: AuthProviderProps) {
         });
         console.log('Created new user in database');
       }
+      
+      return true;
     } catch (error) {
       console.error('Error ensuring user exists:', error);
+      return false;
     }
+  };
+  
+  // Function to show banned user notification
+  const showBannedUserNotification = () => {
+    // Create container for notification
+    const container = document.createElement('div');
+    container.id = 'banned-user-notification';
+    document.body.appendChild(container);
+    
+    // Render notification component
+    const root = createRoot(container);
+    root.render(
+      <BannedUserNotification 
+        onClose={() => {
+          root.unmount();
+          container.remove();
+        }} 
+      />
+    );
   };
 
   // Listen for auth state changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChange((user) => {
-      setCurrentUser(user);
-      setLoading(false);
-      
+    const unsubscribe = onAuthStateChange(async (user) => {
       if (user) {
-        // Ensure the user exists in our database
-        ensureUserExists(user);
+        // Check if user is banned before setting current user
+        const userAllowed = await ensureUserExists(user);
+        if (userAllowed) {
+          setCurrentUser(user);
+        } else {
+          // If user is banned, set current user to null
+          setCurrentUser(null);
+        }
+      } else {
+        // No user is signed in
+        setCurrentUser(null);
       }
+      
+      setLoading(false);
     });
 
     return unsubscribe;
