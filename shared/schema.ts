@@ -1,21 +1,43 @@
-import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Users schema (keeping from original)
+// Users schema - Updated to support Firebase Authentication
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+  firebaseUid: text("firebase_uid").notNull().unique(),
+  email: text("email").notNull(),
+  displayName: text("display_name"),
+  photoURL: text("photo_url"),
+  isAdmin: boolean("is_admin").default(false),
+  isBanned: boolean("is_banned").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  lastLogin: timestamp("last_login").defaultNow(),
+  preferredCategories: jsonb("preferred_categories").$type<number[]>(),
+  preferredStores: jsonb("preferred_stores").$type<number[]>(),
+  hasCompletedOnboarding: boolean("has_completed_onboarding").default(false),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+  firebaseUid: true,
+  email: true,
+  displayName: true,
+  photoURL: true,
+  isAdmin: true,
+  preferredCategories: true,
+  preferredStores: true,
+  hasCompletedOnboarding: true
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+
+// User preferences schema for easier updates
+export const userPreferencesSchema = z.object({
+  preferredCategories: z.array(z.number()).optional(),
+  preferredStores: z.array(z.number()).optional(),
+  hasCompletedOnboarding: z.boolean().optional(),
+});
 
 // Categories schema
 export const categories = pgTable("categories", {
@@ -90,4 +112,42 @@ export type Coupon = typeof coupons.$inferSelect;
 export type CouponWithRelations = Coupon & {
   store: Store;
   category: Category;
+};
+
+// User-submitted coupons schema
+export const userSubmittedCoupons = pgTable("user_submitted_coupons", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  code: text("code").notNull(),
+  storeId: integer("store_id").notNull(),
+  categoryId: integer("category_id").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  terms: text("terms"),
+  status: text("status").notNull().default("pending"), // pending, approved, rejected
+  submittedAt: timestamp("submitted_at").defaultNow(),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewNotes: text("review_notes"),
+});
+
+export const insertUserSubmittedCouponSchema = createInsertSchema(userSubmittedCoupons).pick({
+  userId: true,
+  title: true,
+  description: true,
+  code: true,
+  storeId: true,
+  categoryId: true,
+  expiresAt: true,
+  terms: true,
+});
+
+export type InsertUserSubmittedCoupon = z.infer<typeof insertUserSubmittedCouponSchema>;
+export type UserSubmittedCoupon = typeof userSubmittedCoupons.$inferSelect;
+
+// Extended type for frontend use with related data
+export type UserSubmittedCouponWithRelations = UserSubmittedCoupon & {
+  store: Store;
+  category: Category;
+  user: User;
 };

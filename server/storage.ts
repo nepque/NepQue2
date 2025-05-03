@@ -2,13 +2,25 @@ import { coupons, type Coupon, type InsertCoupon, type CouponWithRelations } fro
 import { categories, type Category, type InsertCategory } from "@shared/schema";
 import { stores, type Store, type InsertStore } from "@shared/schema";
 import { users, type User, type InsertUser } from "@shared/schema";
+import { 
+  userSubmittedCoupons, 
+  type UserSubmittedCoupon, 
+  type InsertUserSubmittedCoupon, 
+  type UserSubmittedCouponWithRelations 
+} from "@shared/schema";
 
 // Storage interface
 export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByFirebaseUid(firebaseUid: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(user: Partial<User> & { id: number }): Promise<User>;
+  updateUserPreferences(userId: number, preferences: { 
+    preferredCategories?: number[], 
+    preferredStores?: number[],
+    hasCompletedOnboarding?: boolean
+  }): Promise<User>;
 
   // Category operations
   getCategories(): Promise<Category[]>;
@@ -40,6 +52,16 @@ export interface IStorage {
   deleteCoupon(id: number): Promise<void>;
   incrementCouponUsage(id: number): Promise<void>;
   
+  // User-submitted coupon operations
+  getUserSubmittedCoupons(options?: {
+    userId?: number,
+    status?: 'pending' | 'approved' | 'rejected',
+    sortBy?: 'newest'
+  }): Promise<UserSubmittedCouponWithRelations[]>;
+  getUserSubmittedCouponById(id: number): Promise<UserSubmittedCouponWithRelations | undefined>;
+  createUserSubmittedCoupon(coupon: InsertUserSubmittedCoupon): Promise<UserSubmittedCoupon>;
+  updateUserSubmittedCouponStatus(id: number, status: 'approved' | 'rejected', reviewNotes?: string): Promise<UserSubmittedCoupon>;
+  
   // Statistics
   getStoreWithCouponCount(): Promise<(Store & { couponCount: number })[]>;
   getCategoryWithCouponCount(): Promise<(Category & { couponCount: number })[]>;
@@ -54,20 +76,24 @@ export class MemStorage implements IStorage {
   private categories: Map<number, Category>;
   private stores: Map<number, Store>;
   private coupons: Map<number, Coupon>;
+  private userSubmittedCoupons: Map<number, UserSubmittedCoupon>;
   currentUserId: number;
   currentCategoryId: number;
   currentStoreId: number;
   currentCouponId: number;
+  currentUserSubmittedCouponId: number;
 
   constructor() {
     this.users = new Map();
     this.categories = new Map();
     this.stores = new Map();
     this.coupons = new Map();
+    this.userSubmittedCoupons = new Map();
     this.currentUserId = 1;
     this.currentCategoryId = 1;
     this.currentStoreId = 1;
     this.currentCouponId = 1;
+    this.currentUserSubmittedCouponId = 1;
   }
 
   // User operations
@@ -75,17 +101,65 @@ export class MemStorage implements IStorage {
     return this.users.get(id);
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
+  async getUserByFirebaseUid(firebaseUid: string): Promise<User | undefined> {
     return Array.from(this.users.values()).find(
-      (user) => user.username === username,
+      (user) => user.firebaseUid === firebaseUid,
     );
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentUserId++;
-    const user: User = { ...insertUser, id };
+    const now = new Date();
+    const user: User = { 
+      ...insertUser, 
+      id,
+      isBanned: false,
+      createdAt: now,
+      lastLogin: now,
+      preferredCategories: insertUser.preferredCategories || null,
+      preferredStores: insertUser.preferredStores || null,
+      hasCompletedOnboarding: insertUser.hasCompletedOnboarding || false,
+    };
     this.users.set(id, user);
     return user;
+  }
+
+  async updateUser(user: Partial<User> & { id: number }): Promise<User> {
+    const existing = await this.getUser(user.id);
+    if (!existing) {
+      throw new Error(`User with ID ${user.id} not found`);
+    }
+
+    const updatedUser: User = { ...existing, ...user };
+    this.users.set(user.id, updatedUser);
+    return updatedUser;
+  }
+
+  async updateUserPreferences(userId: number, preferences: { 
+    preferredCategories?: number[],
+    preferredStores?: number[],
+    hasCompletedOnboarding?: boolean
+  }): Promise<User> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error(`User with ID ${userId} not found`);
+    }
+
+    const updatedUser: User = { 
+      ...user,
+      preferredCategories: preferences.preferredCategories !== undefined 
+        ? preferences.preferredCategories 
+        : user.preferredCategories,
+      preferredStores: preferences.preferredStores !== undefined 
+        ? preferences.preferredStores 
+        : user.preferredStores,
+      hasCompletedOnboarding: preferences.hasCompletedOnboarding !== undefined 
+        ? preferences.hasCompletedOnboarding 
+        : user.hasCompletedOnboarding
+    };
+
+    this.users.set(userId, updatedUser);
+    return updatedUser;
   }
 
   // Category operations
@@ -352,6 +426,110 @@ export class MemStorage implements IStorage {
         coupons: couponCount
       };
     });
+  }
+
+  // User-submitted coupon operations
+  async getUserSubmittedCoupons(options?: {
+    userId?: number,
+    status?: 'pending' | 'approved' | 'rejected',
+    sortBy?: 'newest'
+  }): Promise<UserSubmittedCouponWithRelations[]> {
+    let filteredCoupons = Array.from(this.userSubmittedCoupons.values());
+
+    // Apply filters
+    if (options?.userId) {
+      filteredCoupons = filteredCoupons.filter(
+        (coupon) => coupon.userId === options.userId,
+      );
+    }
+
+    if (options?.status) {
+      filteredCoupons = filteredCoupons.filter(
+        (coupon) => coupon.status === options.status,
+      );
+    }
+
+    // Apply sorting
+    if (options?.sortBy === 'newest') {
+      filteredCoupons.sort((a, b) => {
+        return new Date(b.submittedAt || 0).getTime() - new Date(a.submittedAt || 0).getTime();
+      });
+    }
+
+    // Add relations
+    return filteredCoupons.map(coupon => {
+      const store = this.stores.get(coupon.storeId)!;
+      const category = this.categories.get(coupon.categoryId)!;
+      const user = this.users.get(coupon.userId)!;
+      return { ...coupon, store, category, user };
+    });
+  }
+
+  async getUserSubmittedCouponById(id: number): Promise<UserSubmittedCouponWithRelations | undefined> {
+    const coupon = this.userSubmittedCoupons.get(id);
+    if (!coupon) return undefined;
+
+    const store = this.stores.get(coupon.storeId)!;
+    const category = this.categories.get(coupon.categoryId)!;
+    const user = this.users.get(coupon.userId)!;
+    
+    return { ...coupon, store, category, user };
+  }
+
+  async createUserSubmittedCoupon(insertCoupon: InsertUserSubmittedCoupon): Promise<UserSubmittedCoupon> {
+    const id = this.currentUserSubmittedCouponId++;
+    const now = new Date();
+    
+    const coupon: UserSubmittedCoupon = { 
+      ...insertCoupon, 
+      id,
+      status: 'pending',
+      submittedAt: now,
+      reviewedAt: null,
+      reviewNotes: null
+    };
+    
+    this.userSubmittedCoupons.set(id, coupon);
+    return coupon;
+  }
+
+  async updateUserSubmittedCouponStatus(
+    id: number, 
+    status: 'approved' | 'rejected', 
+    reviewNotes?: string
+  ): Promise<UserSubmittedCoupon> {
+    const coupon = this.userSubmittedCoupons.get(id);
+    if (!coupon) {
+      throw new Error(`User-submitted coupon with ID ${id} not found`);
+    }
+
+    const now = new Date();
+    const updatedCoupon: UserSubmittedCoupon = {
+      ...coupon,
+      status,
+      reviewedAt: now,
+      reviewNotes: reviewNotes || null
+    };
+
+    this.userSubmittedCoupons.set(id, updatedCoupon);
+
+    // If approved, create a regular coupon from the user-submitted one
+    if (status === 'approved') {
+      await this.createCoupon({
+        title: coupon.title,
+        description: coupon.description,
+        code: coupon.code,
+        storeId: coupon.storeId,
+        categoryId: coupon.categoryId,
+        expiresAt: coupon.expiresAt,
+        terms: coupon.terms || null,
+        featured: false,
+        verified: true,
+        usedCount: 0
+      });
+    }
+
+    return updatedCoupon;
   }
 }
 
