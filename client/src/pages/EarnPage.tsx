@@ -237,7 +237,7 @@ const EarnPage = () => {
                       <Button 
                         className="w-full" 
                         size="lg"
-                        disabled={!user || checkingIn || (streakInfo && !streakInfo.canCheckInNow)}
+                        disabled={checkingIn || (streakInfo?.canCheckInNow === false)}
                         onClick={handleCheckIn}
                       >
                         {!user ? (
