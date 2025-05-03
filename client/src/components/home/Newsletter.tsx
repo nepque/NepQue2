@@ -52,24 +52,24 @@ const Newsletter = () => {
           <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">Never Miss a Deal</h2>
           <p className="text-white/80 mb-6">Subscribe to get personalized deals and updates delivered straight to your inbox</p>
           
-          <form onSubmit={handleSubmit} className="flex flex-col md:flex-row md:items-stretch max-w-md mx-auto">
-            <div className="flex-grow mb-2 md:mb-0">
-              <Input
+          <form onSubmit={handleSubmit} className="max-w-md mx-auto flex">
+            <div className="flex-1">
+              <input
                 type="email"
                 placeholder="Enter your email address"
-                className="w-full px-4 py-3 rounded-md md:rounded-r-none shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary/50 h-auto md:border-r-0"
+                className="w-full px-4 py-3 rounded-l-md border-0 h-12 shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isSubmitting}
               />
             </div>
-            <Button 
+            <button 
               type="submit" 
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-md md:rounded-l-none shadow-sm transition-colors h-auto"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 rounded-r-md shadow-sm transition-colors h-12 whitespace-nowrap"
               disabled={isSubmitting}
             >
               {isSubmitting ? "Subscribing..." : "Subscribe"}
-            </Button>
+            </button>
           </form>
           <p className="text-white/70 text-sm mt-4">By subscribing, you agree to our privacy policy and terms of service</p>
         </div>
