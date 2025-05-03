@@ -53,11 +53,11 @@ const Newsletter = () => {
           <p className="text-white/80 mb-6">Subscribe to get personalized deals and updates delivered straight to your inbox</p>
           
           <form onSubmit={handleSubmit} className="flex flex-col md:flex-row md:items-stretch max-w-md mx-auto">
-            <div className="flex-grow mb-2 md:mb-0 md:mr-0">
+            <div className="flex-grow mb-2 md:mb-0">
               <Input
                 type="email"
                 placeholder="Enter your email address"
-                className="w-full px-4 py-3 rounded-md md:rounded-r-none shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary/50 h-auto"
+                className="w-full px-4 py-3 rounded-md md:rounded-r-none shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary/50 h-auto md:border-r-0"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isSubmitting}
