@@ -790,9 +790,9 @@ export class MemStorage implements IStorage {
     
     return {
       currentStreak,
-      lastCheckIn,
+      lastCheckIn: lastCheckIn ? lastCheckIn.toISOString() : null,
       canCheckInNow,
-      nextCheckInTime
+      nextCheckInTime: nextCheckInTime ? nextCheckInTime.toISOString() : null
     };
   }
   
@@ -800,7 +800,7 @@ export class MemStorage implements IStorage {
     success: boolean;
     points: number;
     newStreak: number;
-    nextCheckInTime: Date;
+    nextCheckInTime: string;
     message: string;
   }> {
     // Check if user exists
@@ -829,7 +829,8 @@ export class MemStorage implements IStorage {
     
     if (streakInfo.lastCheckIn) {
       // Check if this is a continuation of a streak (less than 48 hours since last check-in)
-      const hoursSinceLastCheckIn = (now.getTime() - streakInfo.lastCheckIn.getTime()) / (1000 * 60 * 60);
+      const lastCheckInDate = new Date(streakInfo.lastCheckIn);
+      const hoursSinceLastCheckIn = (now.getTime() - lastCheckInDate.getTime()) / (1000 * 60 * 60);
       
       if (hoursSinceLastCheckIn < 48) {
         // Continuing streak
@@ -869,7 +870,7 @@ export class MemStorage implements IStorage {
       success: true,
       points,
       newStreak,
-      nextCheckInTime,
+      nextCheckInTime: nextCheckInTime.toISOString(),
       message: `You earned ${points} points! Your current streak is ${newStreak} day${newStreak !== 1 ? 's' : ''}.`
     };
   }
