@@ -342,6 +342,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch heat map data" });
     }
   });
+  
+  // User profile and preferences routes
+  app.get("/api/users/:firebaseUid", async (req, res) => {
+    try {
+      const { firebaseUid } = req.params;
+      const user = await storage.getUserByFirebaseUid(firebaseUid);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+  
+  app.post("/api/users", async (req, res) => {
+    try {
+      const user = await storage.createUser(req.body);
+      res.status(201).json(user);
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+  
+  app.put("/api/users/:id", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const user = await storage.getUser(id);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const updatedUser = await storage.updateUser({ ...req.body, id });
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+  
+  app.put("/api/users/:id/preferences", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const user = await storage.getUser(id);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const updatedUser = await storage.updateUserPreferences(id, req.body);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user preferences:", error);
+      res.status(500).json({ message: "Failed to update user preferences" });
+    }
+  });
+  
+  // User-submitted coupons routes
+  app.get("/api/user-submitted-coupons", async (req, res) => {
+    try {
+      const { userId, status, sortBy } = req.query;
+      
+      const options: any = {};
+      
+      if (userId) {
+        options.userId = Number(userId);
+      }
+      
+      if (status && ['pending', 'approved', 'rejected'].includes(status as string)) {
+        options.status = status as 'pending' | 'approved' | 'rejected';
+      }
+      
+      if (sortBy === 'newest') {
+        options.sortBy = 'newest';
+      }
+      
+      const coupons = await storage.getUserSubmittedCoupons(options);
+      res.json(coupons);
+    } catch (error) {
+      console.error("Error fetching user-submitted coupons:", error);
+      res.status(500).json({ message: "Failed to fetch user-submitted coupons" });
+    }
+  });
+  
+  app.get("/api/user-submitted-coupons/:id", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const coupon = await storage.getUserSubmittedCouponById(id);
+      
+      if (!coupon) {
+        return res.status(404).json({ message: "User-submitted coupon not found" });
+      }
+      
+      res.json(coupon);
+    } catch (error) {
+      console.error("Error fetching user-submitted coupon:", error);
+      res.status(500).json({ message: "Failed to fetch user-submitted coupon" });
+    }
+  });
+  
+  app.post("/api/user-submitted-coupons", async (req, res) => {
+    try {
+      const coupon = await storage.createUserSubmittedCoupon(req.body);
+      res.status(201).json(coupon);
+    } catch (error) {
+      console.error("Error creating user-submitted coupon:", error);
+      res.status(500).json({ message: "Failed to create user-submitted coupon" });
+    }
+  });
+  
+  app.put("/api/user-submitted-coupons/:id/status", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const { status, reviewNotes } = req.body;
+      
+      if (!status || !['approved', 'rejected'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status. Must be 'approved' or 'rejected'" });
+      }
+      
+      const coupon = await storage.updateUserSubmittedCouponStatus(id, status, reviewNotes);
+      res.json(coupon);
+    } catch (error) {
+      console.error("Error updating user-submitted coupon status:", error);
+      res.status(500).json({ message: "Failed to update user-submitted coupon status" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

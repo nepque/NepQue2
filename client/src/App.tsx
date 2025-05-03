@@ -15,6 +15,8 @@ import CouponDetailPage from "@/pages/CouponDetailPage";
 import StorePage from "@/pages/StorePage";
 import CategoryPage from "@/pages/CategoryPage";
 import SearchResultsPage from "@/pages/SearchResultsPage";
+import ProfilePage from "@/pages/ProfilePage";
+import SubmitCouponPage from "@/pages/SubmitCouponPage";
 
 // Admin components
 import AdminDashboard from "@/pages/admin/AdminDashboard";
@@ -40,6 +42,8 @@ function UserRouter() {
         <Route path="/store/:slug" component={StorePage} />
         <Route path="/category/:slug" component={CategoryPage} />
         <Route path="/search" component={SearchResultsPage} />
+        <Route path="/profile" component={ProfilePage} />
+        <Route path="/submit-coupon" component={SubmitCouponPage} />
         <Route component={NotFound} />
       </Switch>
       <Footer />
