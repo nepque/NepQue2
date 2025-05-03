@@ -134,8 +134,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     
     try {
       await updateUserProfile(currentUser, displayName, photoURL);
-      // Force refresh the user
-      setCurrentUser({...currentUser, displayName, photoURL});
+      // Force refresh the user - ensure values are not undefined
+      setCurrentUser({
+        ...currentUser, 
+        displayName: displayName === undefined ? currentUser.displayName : displayName,
+        photoURL: photoURL === undefined ? currentUser.photoURL : photoURL
+      });
     } catch (error) {
       console.error("Error updating profile:", error);
       throw error;

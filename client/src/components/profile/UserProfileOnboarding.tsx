@@ -20,12 +20,12 @@ export const UserProfileOnboarding = ({ onComplete }: { onComplete: () => void }
   // Fetch categories and stores with counts
   const { data: categoriesWithCount = [], isLoading: isLoadingCategories } = useQuery({
     queryKey: ['/api/categories/with-counts'],
-    queryFn: ({ signal }) => apiRequest<(Category & { couponCount: number })[]>('/api/categories/with-counts', { signal })
+    queryFn: ({ signal }) => apiRequest('/api/categories/with-counts', { signal })
   });
 
   const { data: storesWithCount = [], isLoading: isLoadingStores } = useQuery({
     queryKey: ['/api/stores/with-counts'],
-    queryFn: ({ signal }) => apiRequest<(Store & { couponCount: number })[]>('/api/stores/with-counts', { signal })
+    queryFn: ({ signal }) => apiRequest('/api/stores/with-counts', { signal })
   });
 
   // Toggle category selection
@@ -52,11 +52,29 @@ export const UserProfileOnboarding = ({ onComplete }: { onComplete: () => void }
     
     setIsSubmitting(true);
     try {
-      // First, fetch the user from our DB using Firebase UID
-      const userData = await apiRequest(`/api/users/${currentUser.uid}`);
+      // First, try to get or create the user in our database
+      let userData;
+      
+      try {
+        // Try to fetch the user from our DB using Firebase UID
+        userData = await apiRequest(`/api/users/${currentUser.uid}`);
+      } catch (err) {
+        // User doesn't exist, create them
+        console.log("User not found in database, creating user...");
+        userData = await apiRequest('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            firebaseUid: currentUser.uid,
+            email: currentUser.email,
+            displayName: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
+            photoURL: currentUser.photoURL,
+          }),
+        });
+      }
       
       if (!userData || !userData.id) {
-        throw new Error("Could not find user data");
+        throw new Error("Could not find or create user data");
       }
       
       // Then update preferences using the database ID
@@ -93,8 +111,8 @@ export const UserProfileOnboarding = ({ onComplete }: { onComplete: () => void }
   };
 
   // Limit to top 6 categories and stores for display
-  const topCategories = categoriesWithCount.slice(0, 6);
-  const topStores = storesWithCount.slice(0, 6);
+  const topCategories = Array.isArray(categoriesWithCount) ? categoriesWithCount.slice(0, 6) : [];
+  const topStores = Array.isArray(storesWithCount) ? storesWithCount.slice(0, 6) : [];
 
   if (isLoadingCategories || isLoadingStores) {
     return (
@@ -117,7 +135,7 @@ export const UserProfileOnboarding = ({ onComplete }: { onComplete: () => void }
           <div>
             <h3 className="text-lg font-semibold mb-4">Categories you're interested in</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {topCategories.map(category => (
+              {topCategories.map((category: any) => (
                 <div key={category.id} className="flex items-start space-x-2">
                   <Checkbox 
                     id={`category-${category.id}`}

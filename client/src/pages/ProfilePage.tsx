@@ -20,12 +20,34 @@ export default function ProfilePage() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   
   // Fetch user data from API to get the latest preferences
-  const { data: userData, isLoading: isLoadingUser } = useQuery({
+  const { data: userData, isLoading: isLoadingUser, error: userError } = useQuery({
     queryKey: currentUser?.uid ? [`/api/users/${currentUser.uid}`] : null,
-    queryFn: ({ signal }) => 
-      currentUser?.uid 
-        ? apiRequest<User>(`/api/users/${currentUser.uid}`, { signal }) 
-        : null
+    queryFn: async ({ signal }) => {
+      if (!currentUser?.uid) return null;
+      
+      try {
+        // Try to fetch the user
+        return await apiRequest(`/api/users/${currentUser.uid}`, { signal });
+      } catch (error) {
+        // If user doesn't exist (404), create them
+        if (error && typeof error === 'object' && 'status' in error && error.status === 404) {
+          console.log("User not found in database, creating user...");
+          const newUser = await apiRequest('/api/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              firebaseUid: currentUser.uid,
+              email: currentUser.email,
+              displayName: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
+              photoURL: currentUser.photoURL,
+            }),
+          });
+          return newUser;
+        }
+        throw error;
+      }
+    },
+    retry: 1
   });
   
   // Fetch user submitted coupons

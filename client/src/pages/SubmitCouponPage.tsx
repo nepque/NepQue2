@@ -48,14 +48,14 @@ export default function SubmitCouponPage() {
   // Fetch categories and stores
   const { data: categoriesData, isLoading: isLoadingCategories } = useQuery({
     queryKey: ['/api/categories'],
-    queryFn: ({ signal }) => apiRequest<Category[]>('/api/categories', { signal }),
+    queryFn: ({ signal }) => apiRequest('/api/categories', { signal }),
   });
   // Ensure categories is always an array
   const categories = Array.isArray(categoriesData) ? categoriesData : [];
 
   const { data: storesData, isLoading: isLoadingStores } = useQuery({
     queryKey: ['/api/stores'],
-    queryFn: ({ signal }) => apiRequest<Store[]>('/api/stores', { signal }),
+    queryFn: ({ signal }) => apiRequest('/api/stores', { signal }),
   });
   // Ensure stores is always an array
   const stores = Array.isArray(storesData) ? storesData : [];
@@ -80,11 +80,29 @@ export default function SubmitCouponPage() {
     
     setIsSubmitting(true);
     try {
-      // First get the database user by Firebase UID
-      const userData = await apiRequest(`/api/users/${currentUser.uid}`);
+      // First, try to get or create the user in our database
+      let userData;
+      
+      try {
+        // Try to fetch the user from our DB using Firebase UID
+        userData = await apiRequest(`/api/users/${currentUser.uid}`);
+      } catch (err) {
+        // User doesn't exist, create them
+        console.log("User not found in database, creating user...");
+        userData = await apiRequest('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            firebaseUid: currentUser.uid,
+            email: currentUser.email,
+            displayName: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
+            photoURL: currentUser.photoURL,
+          }),
+        });
+      }
       
       if (!userData || !userData.id) {
-        throw new Error("User not found in database");
+        throw new Error("Could not find or create user data");
       }
       
       // Add userId to the data
