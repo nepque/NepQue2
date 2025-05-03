@@ -1291,10 +1291,22 @@ export class DatabaseStorage implements IStorage {
 
   async createUserSubmittedCoupon(insertCoupon: InsertUserSubmittedCoupon): Promise<UserSubmittedCoupon> {
     try {
-      const [coupon] = await db.insert(userSubmittedCoupons).values(insertCoupon).returning();
+      // Ensure dates are proper Date objects
+      const formattedData = {
+        ...insertCoupon,
+        expiresAt: insertCoupon.expiresAt instanceof Date 
+          ? insertCoupon.expiresAt 
+          : new Date(insertCoupon.expiresAt),
+        submittedAt: new Date(),
+        status: 'pending',
+        reviewedAt: null,
+        reviewNotes: null
+      };
+      
+      const [coupon] = await db.insert(userSubmittedCoupons).values(formattedData).returning();
       return coupon;
     } catch (error) {
-      console.error("Error creating user submitted coupon:", error);
+      console.error("Error creating user-submitted coupon:", error);
       throw error;
     }
   }

@@ -147,8 +147,8 @@ export default function SubmitCouponPage() {
       const formattedData = {
         ...data,
         userId: userData.id,
-        // Make sure expiresAt is formatted correctly as ISO string
-        expiresAt: data.expiresAt instanceof Date ? data.expiresAt.toISOString() : data.expiresAt,
+        // Make sure expiresAt is formatted correctly
+        expiresAt: data.expiresAt instanceof Date ? data.expiresAt : new Date(data.expiresAt),
         // Convert string IDs to numbers
         storeId: data.storeId ? parseInt(data.storeId.toString(), 10) : undefined,
         categoryId: data.categoryId ? parseInt(data.categoryId.toString(), 10) : undefined
