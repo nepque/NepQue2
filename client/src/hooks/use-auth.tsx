@@ -54,11 +54,43 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [currentUser]);
 
+  // Ensure user exists in our database when they authenticate
+  const ensureUserExists = async (user: User) => {
+    try {
+      // First try to get the user
+      const response = await fetch(`/api/users/${user.uid}`);
+      
+      // If user doesn't exist, create them
+      if (response.status === 404) {
+        await fetch('/api/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            firebaseUid: user.uid,
+            email: user.email,
+            displayName: user.displayName || user.email?.split('@')[0] || 'User',
+            photoURL: user.photoURL,
+          }),
+        });
+        console.log('Created new user in database');
+      }
+    } catch (error) {
+      console.error('Error ensuring user exists:', error);
+    }
+  };
+
   // Listen for auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChange((user) => {
       setCurrentUser(user);
       setLoading(false);
+      
+      if (user) {
+        // Ensure the user exists in our database
+        ensureUserExists(user);
+      }
     });
 
     return unsubscribe;

@@ -46,15 +46,19 @@ export default function SubmitCouponPage() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   
   // Fetch categories and stores
-  const { data: categories = [], isLoading: isLoadingCategories } = useQuery({
+  const { data: categoriesData, isLoading: isLoadingCategories } = useQuery({
     queryKey: ['/api/categories'],
     queryFn: ({ signal }) => apiRequest<Category[]>('/api/categories', { signal }),
   });
+  // Ensure categories is always an array
+  const categories = Array.isArray(categoriesData) ? categoriesData : [];
 
-  const { data: stores = [], isLoading: isLoadingStores } = useQuery({
+  const { data: storesData, isLoading: isLoadingStores } = useQuery({
     queryKey: ['/api/stores'],
     queryFn: ({ signal }) => apiRequest<Store[]>('/api/stores', { signal }),
   });
+  // Ensure stores is always an array
+  const stores = Array.isArray(storesData) ? storesData : [];
   
   // Form setup
   const form = useForm<SubmitCouponFormValues>({
