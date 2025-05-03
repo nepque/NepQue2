@@ -85,13 +85,19 @@ export default function SubmitCouponPage() {
       
       try {
         // Try to fetch the user from our DB using Firebase UID
-        userData = await apiRequest(`/api/users/${currentUser.uid}`);
+        const response = await fetch(`/api/users/${currentUser.uid}`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch user: ${response.status}`);
+        }
+        userData = await response.json();
       } catch (err) {
         // User doesn't exist, create them
-        console.log("User not found in database, creating user...");
-        userData = await apiRequest('/api/users', {
+        console.log("User not found or error fetching, creating user...", err);
+        const createResponse = await fetch('/api/users', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+          },
           body: JSON.stringify({
             firebaseUid: currentUser.uid,
             email: currentUser.email,
@@ -99,9 +105,17 @@ export default function SubmitCouponPage() {
             photoURL: currentUser.photoURL,
           }),
         });
+        
+        if (!createResponse.ok) {
+          throw new Error(`Failed to create user: ${createResponse.status}`);
+        }
+        
+        userData = await createResponse.json();
       }
       
-      if (!userData || !userData.id) {
+      console.log("User data:", userData);
+      
+      if (!userData || typeof userData.id === 'undefined') {
         throw new Error("Could not find or create user data");
       }
       
@@ -111,11 +125,17 @@ export default function SubmitCouponPage() {
         userId: userData.id,
       };
       
-      await apiRequest('/api/user-submitted-coupons', {
+      const submitResponse = await fetch('/api/user-submitted-coupons', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(submitData),
       });
+      
+      if (!submitResponse.ok) {
+        throw new Error(`Failed to submit coupon: ${submitResponse.status}`);
+      }
+      
+      await submitResponse.json();
       
       toast({
         title: "Coupon submitted successfully!",
