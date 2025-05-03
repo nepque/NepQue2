@@ -125,31 +125,16 @@ const AdminUsers = () => {
     mutationFn: async (updatedUser: Partial<User> & { id: number }) => {
       console.log('Sending update to server:', JSON.stringify(updatedUser));
       
-      // Show a loading toast
-      const loadingToast = toast({
-        title: "Updating user...",
-        description: "Please wait while we update the user details",
+      // No loading toast - using the mutation state for UI feedback
+      return await apiRequest(`/api/admin/users/${updatedUser.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(updatedUser),
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
       });
-      
-      try {
-        const response = await apiRequest(`/api/admin/users/${updatedUser.id}`, {
-          method: 'PATCH',
-          body: JSON.stringify(updatedUser),
-          headers: {
-            'Content-Type': 'application/json',
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-          }
-        });
-        
-        // Close the loading toast
-        toast.dismiss(loadingToast);
-        return response;
-      } catch (error) {
-        // Close the loading toast
-        toast.dismiss(loadingToast);
-        throw error;
-      }
     },
     onSuccess: (data) => {
       console.log('Update successful, received data:', data);
@@ -209,24 +194,11 @@ const AdminUsers = () => {
     console.log(`Attempting to change ban status from ${currentIsBanned} to ${newBanStatus}`);
     console.log('User object:', user);
     
-    // Show a loading toast
-    const loadingToast = toast({
-      title: `${newBanStatus ? 'Banning' : 'Unbanning'} user...`,
-      description: "Please wait while we update the user status",
+    // Use mutation UI states instead of toast for loading indicators
+    banUserMutation.mutate({
+      userId: user.id,
+      isBanned: newBanStatus
     });
-    
-    banUserMutation.mutate(
-      {
-        userId: user.id,
-        isBanned: newBanStatus
-      },
-      {
-        onSettled: () => {
-          // Close the loading toast
-          toast.dismiss(loadingToast);
-        }
-      }
-    );
   };
 
   const handleEditUser = (user: UserWithSubmissionCount) => {
