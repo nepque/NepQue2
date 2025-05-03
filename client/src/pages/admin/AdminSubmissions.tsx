@@ -416,31 +416,43 @@ const SubmissionCard = ({ coupon, onApprove, onReject, showActions = false }: Su
           <div>
             <h4 className="text-sm font-medium mb-1">Store</h4>
             <div className="flex items-center">
-              <img 
-                src={coupon.store.logo} 
-                alt={coupon.store.name}
-                className="w-4 h-4 mr-2 object-contain"
-                onError={(e) => {
-                  e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(coupon.store.name)}&background=random&size=16`;
-                }}
-              />
-              <a 
-                href={coupon.store.website} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline flex items-center"
-              >
-                {coupon.store.name}
-                <ArrowUpRight className="w-3 h-3 ml-1" />
-              </a>
+              {coupon.store ? (
+                <>
+                  <img 
+                    src={coupon.store.logo || ''} 
+                    alt={coupon.store.name || 'Store'}
+                    className="w-4 h-4 mr-2 object-contain"
+                    onError={(e) => {
+                      e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(coupon.store.name || 'Store')}&background=random&size=16`;
+                    }}
+                  />
+                  <a 
+                    href={coupon.store.website || '#'} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline flex items-center"
+                  >
+                    {coupon.store.name || 'Unknown Store'}
+                    <ArrowUpRight className="w-3 h-3 ml-1" />
+                  </a>
+                </>
+              ) : (
+                <span className="text-muted-foreground">Store information not available</span>
+              )}
             </div>
           </div>
           
           <div>
             <h4 className="text-sm font-medium mb-1">Category</h4>
             <div className="flex items-center">
-              <span className={`w-2 h-2 rounded-full bg-${coupon.category.color}-500 mr-1`}></span>
-              <span>{coupon.category.name}</span>
+              {coupon.category ? (
+                <>
+                  <span className={`w-2 h-2 rounded-full ${coupon.category.color ? `bg-${coupon.category.color}-500` : 'bg-gray-500'} mr-1`}></span>
+                  <span>{coupon.category.name || 'Unknown Category'}</span>
+                </>
+              ) : (
+                <span className="text-muted-foreground">Category information not available</span>
+              )}
             </div>
           </div>
           
@@ -454,21 +466,27 @@ const SubmissionCard = ({ coupon, onApprove, onReject, showActions = false }: Su
           <div>
             <h4 className="text-sm font-medium mb-1">Submitted By</h4>
             <div className="flex items-center">
-              {coupon.user.photoURL ? (
-                <img 
-                  src={coupon.user.photoURL} 
-                  alt="" 
-                  className="w-5 h-5 rounded-full mr-2"
-                  onError={(e) => {
-                    e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(coupon.user.displayName || coupon.user.email)}&background=random&size=20`;
-                  }}
-                />
+              {coupon.user ? (
+                <>
+                  {coupon.user.photoURL ? (
+                    <img 
+                      src={coupon.user.photoURL} 
+                      alt="" 
+                      className="w-5 h-5 rounded-full mr-2"
+                      onError={(e) => {
+                        e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(coupon.user.displayName || coupon.user.email || 'User')}&background=random&size=20`;
+                      }}
+                    />
+                  ) : (
+                    <div className="w-5 h-5 rounded-full bg-gray-200 mr-2 flex items-center justify-center text-xs">
+                      {(coupon.user.displayName || coupon.user.email || 'U')[0]}
+                    </div>
+                  )}
+                  <span>{coupon.user.displayName || coupon.user.email || 'Unknown User'}</span>
+                </>
               ) : (
-                <div className="w-5 h-5 rounded-full bg-gray-200 mr-2 flex items-center justify-center text-xs">
-                  {coupon.user.displayName?.[0] || coupon.user.email[0]}
-                </div>
+                <span className="text-muted-foreground">User information not available</span>
               )}
-              <span>{coupon.user.displayName || coupon.user.email}</span>
             </div>
           </div>
           
