@@ -31,6 +31,9 @@ export default function AdminSubmissions() {
       )
   });
   
+  // Ensure coupons is always an array
+  const couponsArray = Array.isArray(coupons) ? coupons : [];
+  
   // Handle approving a coupon
   const approveMutation = useMutation({
     mutationFn: (id: number) => 
@@ -137,13 +140,13 @@ export default function AdminSubmissions() {
                 <div className="flex justify-center py-8">
                   <Loader2 className="w-8 h-8 animate-spin text-primary" />
                 </div>
-              ) : coupons.length === 0 ? (
+              ) : couponsArray.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   No pending submissions found
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {coupons.map(coupon => (
+                  {couponsArray.map(coupon => (
                     <SubmissionCard 
                       key={coupon.id} 
                       coupon={coupon} 
@@ -161,13 +164,13 @@ export default function AdminSubmissions() {
                 <div className="flex justify-center py-8">
                   <Loader2 className="w-8 h-8 animate-spin text-primary" />
                 </div>
-              ) : coupons.length === 0 ? (
+              ) : couponsArray.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   No approved submissions found
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {coupons.map(coupon => (
+                  {couponsArray.map(coupon => (
                     <SubmissionCard 
                       key={coupon.id} 
                       coupon={coupon}
@@ -183,13 +186,13 @@ export default function AdminSubmissions() {
                 <div className="flex justify-center py-8">
                   <Loader2 className="w-8 h-8 animate-spin text-primary" />
                 </div>
-              ) : coupons.length === 0 ? (
+              ) : couponsArray.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   No rejected submissions found
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {coupons.map(coupon => (
+                  {couponsArray.map(coupon => (
                     <SubmissionCard 
                       key={coupon.id} 
                       coupon={coupon}
