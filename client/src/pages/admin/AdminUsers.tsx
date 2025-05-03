@@ -51,18 +51,41 @@ const AdminUsers = () => {
   const { data: users = [], isLoading, error } = useQuery({
     queryKey: ['/api/admin/users'],
     queryFn: async () => {
-      const response = await apiRequest('/api/admin/users');
-      console.log('API Response:', response); // Debug the response
-      
-      // Make sure we always return an array with the expected structure
-      if (Array.isArray(response)) {
-        // Add submissionCount if it doesn't exist
-        return response.map(user => ({
-          ...user,
-          submissionCount: user.submissionCount || 0
-        }));
+      try {
+        const response = await apiRequest('/api/admin/users');
+        console.log('API Response:', response); // Debug the response
+        
+        // Check if we actually got a response
+        if (!response) {
+          console.error('No response from API');
+          return [];
+        }
+        
+        // Handle different response types
+        if (Array.isArray(response)) {
+          // Response is already an array
+          return response.map(user => ({
+            ...user,
+            submissionCount: user.submissionCount || 0
+          }));
+        } else if (typeof response === 'object') {
+          // Try to extract users from response object if it's not an array
+          const possibleUsers = Object.values(response);
+          if (possibleUsers.length > 0) {
+            return possibleUsers.map((user: any) => ({
+              ...user,
+              submissionCount: user.submissionCount || 0
+            }));
+          }
+        }
+        
+        // Default case, return empty array
+        console.log('Returning empty array, response format not recognized');
+        return [];
+      } catch (e) {
+        console.error('Error fetching users:', e);
+        return [];
       }
-      return [];
     }
   });
 
