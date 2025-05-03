@@ -20,6 +20,9 @@ import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminCoupons from "@/pages/admin/AdminCoupons";
 import AdminStores from "@/pages/admin/AdminStores";
 import AdminCategories from "@/pages/admin/AdminCategories";
+import AdminCouponNew from "@/pages/admin/AdminCouponNew";
+import AdminStoreNew from "@/pages/admin/AdminStoreNew";
+import AdminCategoryNew from "@/pages/admin/AdminCategoryNew";
 
 function UserRouter() {
   return (
@@ -46,13 +49,17 @@ function AdminRouter() {
       <Route path="/admin/coupons" component={AdminCoupons} />
       <Route path="/admin/stores" component={AdminStores} />
       <Route path="/admin/categories" component={AdminCategories} />
-      {/* These would normally have individual routes for create/edit forms */}
-      <Route path="/admin/coupons/new" component={AdminCoupons} />
+      
+      {/* Create new item routes */}
+      <Route path="/admin/coupons/new" component={AdminCouponNew} />
+      <Route path="/admin/stores/new" component={AdminStoreNew} />
+      <Route path="/admin/categories/new" component={AdminCategoryNew} />
+      
+      {/* Edit routes - would need to be implemented */}
       <Route path="/admin/coupons/edit/:id" component={AdminCoupons} />
-      <Route path="/admin/stores/new" component={AdminStores} />
       <Route path="/admin/stores/edit/:id" component={AdminStores} />
-      <Route path="/admin/categories/new" component={AdminCategories} />
       <Route path="/admin/categories/edit/:id" component={AdminCategories} />
+      
       <Route component={NotFound} />
     </Switch>
   );
