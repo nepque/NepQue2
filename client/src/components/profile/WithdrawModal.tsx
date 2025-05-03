@@ -78,7 +78,7 @@ export function WithdrawModal({ open, onClose, user }: WithdrawModalProps) {
       paymentMethod: string;
       paymentDetails: string;
     }) => {
-      return apiRequest<any>("/api/withdrawals", {
+      return apiRequest("/api/withdrawals", {
         method: "POST",
         body: data,
       });

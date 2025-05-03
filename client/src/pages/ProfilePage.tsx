@@ -5,13 +5,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserProfileOnboarding } from "@/components/profile/UserProfileOnboarding";
+import { WithdrawModal } from "@/components/profile/WithdrawModal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, Edit, PlusCircle, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Loader2, Edit, PlusCircle, Clock, CheckCircle, XCircle, CreditCard } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { User, UserSubmittedCouponWithRelations } from "@shared/schema";
+import { User, UserSubmittedCouponWithRelations, WithdrawalRequestWithUser } from "@shared/schema";
 import { format } from "date-fns";
 import { Link } from "wouter";
 
@@ -19,6 +20,7 @@ export default function ProfilePage() {
   const { currentUser, isAdmin } = useAuth();
   const { toast } = useToast();
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   
   // Fetch user data from API to get the latest preferences
   const { data: userData, isLoading: isLoadingUser, error: userError } = useQuery({
@@ -198,7 +200,19 @@ export default function ProfilePage() {
                 <div className="space-y-1 text-sm text-muted-foreground">
                   <p>• Earn 10 points when you sign up</p>
                   <p>• Earn 5 points for each approved coupon</p>
+                  <p>• Minimum withdrawal: 1000 points</p>
                 </div>
+                
+                <Button 
+                  onClick={() => setShowWithdrawModal(true)}
+                  className="w-full mt-2"
+                  variant="outline"
+                  size="sm"
+                  disabled={(userData?.points || 0) < 1000}
+                >
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  {(userData?.points || 0) >= 1000 ? "Withdraw Points" : "Insufficient Points"}
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -354,6 +368,15 @@ export default function ProfilePage() {
           </Tabs>
         </div>
       </div>
+      
+      {/* Withdrawal modal */}
+      {userData && (
+        <WithdrawModal
+          open={showWithdrawModal}
+          onClose={() => setShowWithdrawModal(false)}
+          user={userData}
+        />
+      )}
     </div>
   );
 }
