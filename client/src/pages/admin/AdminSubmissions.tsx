@@ -11,15 +11,17 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
-import { ArrowUpRight, CheckCircle, Clock, Loader2, ThumbsDown, ThumbsUp, XCircle } from "lucide-react";
+import { ArrowUpRight, CheckCircle, Clock, Edit, Loader2, Pencil, ThumbsDown, ThumbsUp, Trash, XCircle } from "lucide-react";
 
 export default function AdminSubmissions() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState<'pending' | 'approved' | 'rejected'>('pending');
   const [selectedCoupon, setSelectedCoupon] = useState<UserSubmittedCouponWithRelations | null>(null);
   const [reviewNotes, setReviewNotes] = useState("");
   const [showApproveDialog, setShowApproveDialog] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
   // Fetch user-submitted coupons based on the selected status tab
   const { data: coupons = [], isLoading } = useQuery({
@@ -393,10 +395,12 @@ interface SubmissionCardProps {
   coupon: UserSubmittedCouponWithRelations;
   onApprove?: () => void;
   onReject?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
   showActions?: boolean;
 }
 
-const SubmissionCard = ({ coupon, onApprove, onReject, showActions = false }: SubmissionCardProps) => {
+const SubmissionCard = ({ coupon, onApprove, onReject, onEdit, onDelete, showActions = false }: SubmissionCardProps) => {
   return (
     <Card className="overflow-hidden">
       <div className="p-6">
@@ -527,27 +531,51 @@ const SubmissionCard = ({ coupon, onApprove, onReject, showActions = false }: Su
           </div>
         )}
         
-        {showActions && (
-          <div className="flex gap-2 mt-4 justify-end">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={onReject}
-              className="gap-1"
-            >
-              <ThumbsDown className="w-4 h-4" />
-              Reject
-            </Button>
-            <Button 
-              size="sm" 
-              onClick={onApprove}
-              className="gap-1"
-            >
-              <ThumbsUp className="w-4 h-4" />
-              Approve
-            </Button>
-          </div>
-        )}
+        <div className="flex flex-wrap gap-2 mt-4 justify-end">
+          {/* Edit and Delete buttons available for all statuses */}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onEdit}
+            className="gap-1"
+          >
+            <Pencil className="w-4 h-4" />
+            Edit
+          </Button>
+          
+          <Button 
+            variant="destructive" 
+            size="sm" 
+            onClick={onDelete}
+            className="gap-1"
+          >
+            <Trash className="w-4 h-4" />
+            Delete
+          </Button>
+          
+          {/* Approve/Reject buttons only for pending submissions */}
+          {showActions && (
+            <>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={onReject}
+                className="gap-1"
+              >
+                <ThumbsDown className="w-4 h-4" />
+                Reject
+              </Button>
+              <Button 
+                size="sm" 
+                onClick={onApprove}
+                className="gap-1"
+              >
+                <ThumbsUp className="w-4 h-4" />
+                Approve
+              </Button>
+            </>
+          )}
+        </div>
       </div>
     </Card>
   );
