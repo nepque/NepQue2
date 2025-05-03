@@ -123,13 +123,40 @@ const AdminUsers = () => {
   // Update user details mutation
   const updateUserMutation = useMutation({
     mutationFn: async (updatedUser: Partial<User> & { id: number }) => {
-      return apiRequest(`/api/admin/users/${updatedUser.id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(updatedUser)
+      console.log('Sending update to server:', JSON.stringify(updatedUser));
+      
+      // Show a loading toast
+      const loadingToast = toast({
+        title: "Updating user...",
+        description: "Please wait while we update the user details",
       });
+      
+      try {
+        const response = await apiRequest(`/api/admin/users/${updatedUser.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify(updatedUser),
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
+        
+        // Close the loading toast
+        toast.dismiss(loadingToast);
+        return response;
+      } catch (error) {
+        // Close the loading toast
+        toast.dismiss(loadingToast);
+        throw error;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Update successful, received data:', data);
+      
+      // Force a hard refresh of the users data
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      
       setIsEditDialogOpen(false);
       toast({
         title: "Success",
@@ -140,7 +167,7 @@ const AdminUsers = () => {
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to update user details",
+        description: "Failed to update user details. Please try again.",
         variant: "destructive",
       });
       console.error("Error updating user:", error);
@@ -176,13 +203,30 @@ const AdminUsers = () => {
 
   const handleBanUser = (user: UserWithSubmissionCount) => {
     // Make sure isBanned is a boolean (not undefined)
-    const currentIsBanned = user.isBanned === true;
-    console.log(`Attempting to change ban status from ${currentIsBanned} to ${!currentIsBanned}`);
+    const currentIsBanned = Boolean(user.isBanned);
+    const newBanStatus = !currentIsBanned;
     
-    banUserMutation.mutate({
-      userId: user.id,
-      isBanned: !currentIsBanned
+    console.log(`Attempting to change ban status from ${currentIsBanned} to ${newBanStatus}`);
+    console.log('User object:', user);
+    
+    // Show a loading toast
+    const loadingToast = toast({
+      title: `${newBanStatus ? 'Banning' : 'Unbanning'} user...`,
+      description: "Please wait while we update the user status",
     });
+    
+    banUserMutation.mutate(
+      {
+        userId: user.id,
+        isBanned: newBanStatus
+      },
+      {
+        onSettled: () => {
+          // Close the loading toast
+          toast.dismiss(loadingToast);
+        }
+      }
+    );
   };
 
   const handleEditUser = (user: UserWithSubmissionCount) => {
