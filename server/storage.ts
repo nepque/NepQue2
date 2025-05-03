@@ -43,6 +43,10 @@ export interface IStorage {
   // Statistics
   getStoreWithCouponCount(): Promise<(Store & { couponCount: number })[]>;
   getCategoryWithCouponCount(): Promise<(Category & { couponCount: number })[]>;
+  
+  // Heat map data
+  getCouponUsageByCategory(): Promise<{ category: string; usageCount: number; coupons: number }[]>;
+  getCouponUsageByMonth(): Promise<{ month: string; usageCount: number; coupons: number }[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -296,6 +300,58 @@ export class MemStorage implements IStorage {
       const couponCount = coupons.filter(c => c.categoryId === category.id).length;
       return { ...category, couponCount };
     }).sort((a, b) => b.couponCount - a.couponCount);
+  }
+
+  // Heat map data methods
+  async getCouponUsageByCategory(): Promise<{ category: string; usageCount: number; coupons: number }[]> {
+    const categories = await this.getCategories();
+    const coupons = Array.from(this.coupons.values());
+    
+    return categories.map(category => {
+      const categoryCoupons = coupons.filter(c => c.categoryId === category.id);
+      const usageCount = categoryCoupons.reduce((sum, coupon) => sum + (coupon.usedCount || 0), 0);
+      
+      return {
+        category: category.name,
+        usageCount,
+        coupons: categoryCoupons.length
+      };
+    });
+  }
+
+  async getCouponUsageByMonth(): Promise<{ month: string; usageCount: number; coupons: number }[]> {
+    // Generate data for the last 12 months
+    const coupons = Array.from(this.coupons.values());
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    
+    // For demo purposes, we'll generate some random usage data for each month
+    return months.map((month, index) => {
+      // Calculate relative month (0-11) starting from current month and going back
+      const relativeIndex = (currentMonth - index + 12) % 12;
+      
+      // For demo, we'll simulate more usage in recent months
+      const monthFactor = 1 - (index * 0.05);
+      // Base usage is sum of all coupon usage divided by 12 (for each month)
+      const baseUsage = coupons.reduce((sum, coupon) => sum + (coupon.usedCount || 0), 0) / 12;
+      // Apply month factor to simulate more recent usage
+      const usageCount = Math.round(baseUsage * monthFactor);
+      
+      // Similarly for coupon count
+      const baseCoupons = coupons.length / 3; // Assuming about 1/3 of coupons are active in each month
+      const couponCount = Math.round(baseCoupons * monthFactor);
+
+      return {
+        month: months[relativeIndex],
+        usageCount,
+        coupons: couponCount
+      };
+    });
   }
 }
 

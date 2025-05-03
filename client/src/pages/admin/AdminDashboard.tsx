@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { CouponWithRelations, Category, Store } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
+import CouponHeatMap from "@/components/admin/CouponHeatMap";
 
 const DashboardCard = ({ 
   title, 
@@ -123,6 +124,11 @@ const AdminDashboard = () => {
         />
       </div>
       
+      {/* Heat Map Visualization */}
+      <div className="mb-8">
+        <CouponHeatMap />
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Coupons */}
         <Card className="col-span-1">

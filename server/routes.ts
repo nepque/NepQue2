@@ -322,6 +322,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Heat map data routes
+  app.get("/api/heatmap/category", async (_req, res) => {
+    try {
+      const data = await storage.getCouponUsageByCategory();
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching heat map data by category:", error);
+      res.status(500).json({ message: "Failed to fetch heat map data" });
+    }
+  });
+
+  app.get("/api/heatmap/time", async (_req, res) => {
+    try {
+      const data = await storage.getCouponUsageByMonth();
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching heat map data by time:", error);
+      res.status(500).json({ message: "Failed to fetch heat map data" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
