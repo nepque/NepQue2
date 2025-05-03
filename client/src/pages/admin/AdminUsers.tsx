@@ -97,8 +97,14 @@ const AdminUsers = () => {
   // Ban/unban user mutation
   const banUserMutation = useMutation({
     mutationFn: async ({ userId, isBanned }: { userId: number, isBanned: boolean }) => {
+      console.log('Ban mutation with params:', { userId, isBanned });
       return apiRequest(`/api/admin/users/${userId}/ban`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        },
         body: JSON.stringify({ isBanned })
       });
     },

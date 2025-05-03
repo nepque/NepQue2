@@ -127,21 +127,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Ban/unban user
   app.post("/api/admin/users/:id/ban", async (req, res) => {
     try {
-      // Set cache control headers to prevent browser caching
+      console.log("Ban user endpoint called with request body:", req.body);
+      
+      // Set cache control and content type headers
       res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
       res.set('Pragma', 'no-cache');
       res.set('Expires', '0');
+      res.set('Content-Type', 'application/json');
       
       const userId = Number(req.params.id);
       
       // Safely extract isBanned, ensuring it's a boolean
+      const rawValue = req.body && req.body.isBanned;
+      console.log("Raw isBanned value:", rawValue, "Type:", typeof rawValue);
+      
       let isBanned;
-      if (req.body.isBanned === true || req.body.isBanned === "true") {
+      if (rawValue === true || rawValue === "true" || rawValue === 1) {
         isBanned = true;
-      } else if (req.body.isBanned === false || req.body.isBanned === "false") {
+      } else if (rawValue === false || rawValue === "false" || rawValue === 0) {
         isBanned = false;
       } else {
-        console.log("Invalid isBanned value:", req.body.isBanned);
+        console.log("Invalid isBanned value:", rawValue);
         return res.status(400).json({ message: "isBanned must be a boolean value" });
       }
       
@@ -152,9 +158,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
+      // Ensure we're sending a boolean to the database
       const updatedUser = await storage.updateUser({
         id: userId,
-        isBanned
+        isBanned: Boolean(isBanned)
       });
       
       console.log(`Changed ban status for user ${userId} to ${isBanned}:`, updatedUser);
