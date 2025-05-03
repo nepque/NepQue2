@@ -1,4 +1,4 @@
-import type { Express, Request, Response } from "express";
+import express, { type Express, type Request, type Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
@@ -10,20 +10,25 @@ const ADMIN_CREDENTIALS = {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Ensure body parser middleware is setup
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
+  
   // Admin auth route - simple username/password for development
   app.post("/api/admin/login", (req, res) => {
-    const { username, password } = req.body;
+    console.log("Admin login request:", req.body);
+    const { username, password } = req.body || {};
     
     if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
       console.log("Admin login successful");
-      res.json({ 
+      return res.json({ 
         success: true, 
         message: "Admin login successful",
         token: "admin-development-token" // In production, use a real JWT
       });
     } else {
       console.log("Admin login failed", { username, password });
-      res.status(401).json({ 
+      return res.status(401).json({ 
         success: false, 
         message: "Invalid credentials" 
       });
