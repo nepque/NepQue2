@@ -9,6 +9,7 @@ import { ArrowLeft } from "lucide-react";
 import CouponCard from "@/components/coupon/CouponCard";
 import CouponDetailModal from "@/components/coupon/CouponDetailModal";
 import { generatePlaceholderImage } from "@/lib/utils";
+import SEO from "@/components/common/SEO";
 
 const CategoryPage = () => {
   const [match, params] = useRoute("/category/:slug");
@@ -127,6 +128,13 @@ const CategoryPage = () => {
 
   return (
     <>
+      <SEO
+        title={category.metaTitle || `${category.name} Coupons & Promo Codes`}
+        description={category.metaDescription || `Find the best ${category.name} discount codes, deals, and sales. Save on your next purchase with these verified offers.`}
+        keywords={category.metaKeywords || `${category.name}, coupons, promo codes, deals, discounts, sales`}
+        canonicalUrl={`/category/${category.slug}`}
+        ogType="website"
+      />
       <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-10">
         <div className="container mx-auto px-4">
           <div className="flex items-center mb-2">

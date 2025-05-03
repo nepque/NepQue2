@@ -7,6 +7,7 @@ import CouponDetailModal from "@/components/coupon/CouponDetailModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import SEO from "@/components/common/SEO";
 
 // Icons
 import { 
@@ -109,6 +110,15 @@ const StorePage = () => {
 
   return (
     <main className="bg-gray-50">
+      {store && (
+        <SEO
+          title={store.metaTitle || `${store.name} Coupons & Promo Codes - Save With NepQue`}
+          description={store.metaDescription || `Find the best ${store.name} coupons, promo codes, and deals to save on your next purchase. Updated ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}.`}
+          keywords={store.metaKeywords || `${store.name}, promo codes, coupons, discount codes, deals, vouchers, offers`}
+          canonicalUrl={`/store/${store.slug}`}
+          ogType="website"
+        />
+      )}
       {/* Store Header */}
       <section className="bg-white border-b">
         <div className="container mx-auto px-4 py-6">

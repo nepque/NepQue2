@@ -97,6 +97,9 @@ const AdminCategoryEdit = () => {
         slug: category.slug,
         icon: category.icon,
         color: category.color,
+        metaTitle: category.metaTitle || "",
+        metaDescription: category.metaDescription || "",
+        metaKeywords: category.metaKeywords || "",
       });
     }
   }, [category, form]);
@@ -182,6 +185,9 @@ const AdminCategoryEdit = () => {
       slug: data.slug,
       icon: data.icon,
       color: data.color,
+      metaTitle: data.metaTitle || null,
+      metaDescription: data.metaDescription || null,
+      metaKeywords: data.metaKeywords || null,
     };
     
     updateCategory.mutate(categoryData);
@@ -437,6 +443,63 @@ const AdminCategoryEdit = () => {
                   </FormItem>
                 )}
               />
+            </div>
+
+            {/* SEO Section */}
+            <div className="border-t border-gray-200 mt-8 pt-6">
+              <h3 className="text-lg font-medium mb-4">SEO Settings</h3>
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="metaTitle"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Meta Title</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="e.g. Best Electronics Deals & Coupons" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="metaDescription"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Meta Description</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Brief description for search engines, 150-160 characters recommended" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="metaKeywords"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Meta Keywords</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="e.g. electronics, coupons, deals, discounts" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
             <div className="mt-6 flex justify-end space-x-4">
