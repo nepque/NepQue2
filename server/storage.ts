@@ -14,6 +14,11 @@ import {
   type InsertWithdrawalRequest,
   type WithdrawalRequestWithUser
 } from "@shared/schema";
+import {
+  checkIns,
+  type CheckIn,
+  type InsertCheckIn
+} from "@shared/schema";
 
 // Storage interface
 export interface IStorage {
@@ -81,6 +86,22 @@ export interface IStorage {
   createWithdrawalRequest(request: InsertWithdrawalRequest): Promise<WithdrawalRequest>;
   updateWithdrawalRequestStatus(id: number, status: 'approved' | 'rejected', notes?: string): Promise<WithdrawalRequest>;
   
+  // Check-in operations
+  processUserCheckIn(userId: number): Promise<{ 
+    success: boolean; 
+    points: number; 
+    newStreak: number; 
+    nextCheckInTime: Date;
+    message: string; 
+  }>;
+  getUserCheckIns(userId: number): Promise<CheckIn[]>;
+  getUserCurrentStreak(userId: number): Promise<{
+    currentStreak: number;
+    lastCheckIn: Date | null;
+    canCheckInNow: boolean;
+    nextCheckInTime: Date | null;
+  }>;
+  
   // Statistics
   getStoreWithCouponCount(): Promise<(Store & { couponCount: number })[]>;
   getCategoryWithCouponCount(): Promise<(Category & { couponCount: number })[]>;
@@ -97,12 +118,15 @@ export class MemStorage implements IStorage {
   private coupons: Map<number, Coupon>;
   private userSubmittedCoupons: Map<number, UserSubmittedCoupon>;
   private withdrawalRequests: Map<number, WithdrawalRequest>;
+  private checkIns: Map<number, CheckIn>;
+  
   currentUserId: number;
   currentCategoryId: number;
   currentStoreId: number;
   currentCouponId: number;
   currentUserSubmittedCouponId: number;
   currentWithdrawalRequestId: number;
+  currentCheckInId: number;
 
   constructor() {
     this.users = new Map();
@@ -111,12 +135,15 @@ export class MemStorage implements IStorage {
     this.coupons = new Map();
     this.userSubmittedCoupons = new Map();
     this.withdrawalRequests = new Map();
+    this.checkIns = new Map();
+    
     this.currentUserId = 1;
     this.currentCategoryId = 1;
     this.currentStoreId = 1;
     this.currentCouponId = 1;
     this.currentUserSubmittedCouponId = 1;
     this.currentWithdrawalRequestId = 1;
+    this.currentCheckInId = 1;
   }
 
   // User operations

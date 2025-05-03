@@ -17,6 +17,9 @@ export const users = pgTable("users", {
   preferredCategories: jsonb("preferred_categories").$type<number[]>(),
   preferredStores: jsonb("preferred_stores").$type<number[]>(),
   hasCompletedOnboarding: boolean("has_completed_onboarding").default(false),
+  // Daily streak fields
+  currentStreak: integer("current_streak").default(0),
+  lastCheckIn: timestamp("last_check_in"),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -192,3 +195,21 @@ export type WithdrawalRequest = typeof withdrawalRequests.$inferSelect;
 export type WithdrawalRequestWithUser = WithdrawalRequest & {
   user: User;
 };
+
+// Check-in history schema
+export const checkIns = pgTable("check_ins", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  checkedInAt: timestamp("checked_in_at").defaultNow(),
+  streakDay: integer("streak_day").notNull(), // Which day in the streak (1-7)
+  pointsEarned: integer("points_earned").notNull(), // How many points earned for this check-in
+});
+
+export const insertCheckInSchema = createInsertSchema(checkIns).pick({
+  userId: true,
+  streakDay: true,
+  pointsEarned: true,
+});
+
+export type InsertCheckIn = z.infer<typeof insertCheckInSchema>;
+export type CheckIn = typeof checkIns.$inferSelect;
