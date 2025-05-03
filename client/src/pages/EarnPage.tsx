@@ -78,10 +78,10 @@ const EarnPage = () => {
       });
 
       // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ["/api/users/firebase", user?.uid, "streak"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/users/firebase", user?.uid, "check-ins"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/users/firebase", user?.uid] });
-      
+      queryClient.invalidateQueries({ queryKey: ["/api/users", user?.uid, "streak"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users", user?.uid, "check-ins"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users", user?.uid] });
+
       setCheckingIn(false);
     },
     onError: (error) => {
@@ -110,30 +110,30 @@ const EarnPage = () => {
 
   // Calculate streak progress for the week (out of 7 days)
   const streakProgress = streakInfo ? (streakInfo.currentStreak % 7 || 7) * 100 / 7 : 0;
-  
+
   // Format next check-in time
   const getNextCheckInTime = () => {
     if (!streakInfo) return "Unknown";
-    
+
     // If user can check in now, return "Now"
     if (streakInfo.canCheckInNow) return "Now";
-    
+
     // Debug the value received
     console.log("Next check-in time value:", streakInfo.nextCheckInTime);
     console.log("Can check in:", streakInfo.canCheckInNow);
-    
+
     if (!streakInfo.nextCheckInTime) return "Unknown";
-    
+
     try {
       // Handle string dates from API
       const nextTime = new Date(streakInfo.nextCheckInTime);
-      
+
       // Check if date is valid
       if (isNaN(nextTime.getTime())) {
         console.error("Invalid date format received:", streakInfo.nextCheckInTime);
         return "Unknown";
       }
-      
+
       return formatDistance(nextTime, new Date(), { addSuffix: true });
     } catch (error) {
       console.error("Error parsing next check-in time:", error);
@@ -336,7 +336,7 @@ const EarnPage = () => {
               </CardHeader>
               <CardContent>
                 <p className="mb-4">Share deals with the community and earn points when your submissions are approved!</p>
-                
+
                 <ul className="space-y-2">
                   <li className="flex items-start">
                     <Check className="h-5 w-5 mr-2 text-green-500 shrink-0 mt-0.5" />
@@ -368,7 +368,7 @@ const EarnPage = () => {
               </CardHeader>
               <CardContent>
                 <p className="mb-4">More ways to earn points are coming soon!</p>
-                
+
                 <ul className="space-y-2">
                   <li className="flex items-start">
                     <Check className="h-5 w-5 mr-2 text-green-500 shrink-0 mt-0.5" />
