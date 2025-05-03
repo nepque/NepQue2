@@ -15,12 +15,16 @@ export interface IStorage {
   getCategoryById(id: number): Promise<Category | undefined>;
   getCategoryBySlug(slug: string): Promise<Category | undefined>;
   createCategory(category: InsertCategory): Promise<Category>;
+  updateCategory(category: Category): Promise<Category>;
+  deleteCategory(id: number): Promise<void>;
 
   // Store operations
   getStores(): Promise<Store[]>;
   getStoreById(id: number): Promise<Store | undefined>;
   getStoreBySlug(slug: string): Promise<Store | undefined>;
   createStore(store: InsertStore): Promise<Store>;
+  updateStore(store: Store): Promise<Store>;
+  deleteStore(id: number): Promise<void>;
 
   // Coupon operations
   getCoupons(options?: { 
@@ -32,6 +36,8 @@ export interface IStorage {
   }): Promise<CouponWithRelations[]>;
   getCouponById(id: number): Promise<CouponWithRelations | undefined>;
   createCoupon(coupon: InsertCoupon): Promise<Coupon>;
+  updateCoupon(coupon: Coupon): Promise<Coupon>;
+  deleteCoupon(id: number): Promise<void>;
   incrementCouponUsage(id: number): Promise<void>;
   
   // Statistics
@@ -100,6 +106,23 @@ export class MemStorage implements IStorage {
     return category;
   }
 
+  async updateCategory(category: Category): Promise<Category> {
+    const existing = await this.getCategoryById(category.id);
+    if (!existing) {
+      throw new Error(`Category with ID ${category.id} not found`);
+    }
+    this.categories.set(category.id, category);
+    return category;
+  }
+
+  async deleteCategory(id: number): Promise<void> {
+    const existing = await this.getCategoryById(id);
+    if (!existing) {
+      throw new Error(`Category with ID ${id} not found`);
+    }
+    this.categories.delete(id);
+  }
+
   // Store operations
   async getStores(): Promise<Store[]> {
     return Array.from(this.stores.values());
@@ -120,6 +143,23 @@ export class MemStorage implements IStorage {
     const store: Store = { ...insertStore, id };
     this.stores.set(id, store);
     return store;
+  }
+
+  async updateStore(store: Store): Promise<Store> {
+    const existing = await this.getStoreById(store.id);
+    if (!existing) {
+      throw new Error(`Store with ID ${store.id} not found`);
+    }
+    this.stores.set(store.id, store);
+    return store;
+  }
+
+  async deleteStore(id: number): Promise<void> {
+    const existing = await this.getStoreById(id);
+    if (!existing) {
+      throw new Error(`Store with ID ${id} not found`);
+    }
+    this.stores.delete(id);
   }
 
   // Coupon operations
@@ -212,10 +252,27 @@ export class MemStorage implements IStorage {
     return coupon;
   }
 
+  async updateCoupon(coupon: Coupon): Promise<Coupon> {
+    const existing = await this.getCouponById(coupon.id);
+    if (!existing) {
+      throw new Error(`Coupon with ID ${coupon.id} not found`);
+    }
+    this.coupons.set(coupon.id, coupon);
+    return coupon;
+  }
+
+  async deleteCoupon(id: number): Promise<void> {
+    const existing = await this.getCouponById(id);
+    if (!existing) {
+      throw new Error(`Coupon with ID ${id} not found`);
+    }
+    this.coupons.delete(id);
+  }
+
   async incrementCouponUsage(id: number): Promise<void> {
     const coupon = this.coupons.get(id);
     if (coupon) {
-      coupon.usedCount += 1;
+      coupon.usedCount = (coupon.usedCount || 0) + 1;
       this.coupons.set(id, coupon);
     }
   }

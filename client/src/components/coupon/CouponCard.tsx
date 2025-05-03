@@ -80,11 +80,15 @@ const CouponCard = ({ coupon, onShowCode }: CouponCardProps) => {
           <div className="ml-3">
             <h3 className="font-semibold text-neutral-800">{coupon.store.name}</h3>
             <div className="flex items-center mt-1">
-              <Link href={`/category/${coupon.category.slug}`}>
-                <span className={`text-xs font-medium px-2 py-0.5 ${getCategoryColor(coupon.categoryId)} rounded-full`}>
-                  {coupon.category.name}
-                </span>
-              </Link>
+              <span 
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.href = `/category/${coupon.category.slug}`;
+                }}
+                className={`text-xs font-medium px-2 py-0.5 ${getCategoryColor(coupon.categoryId)} rounded-full cursor-pointer`}
+              >
+                {coupon.category.name}
+              </span>
             </div>
           </div>
         </Link>

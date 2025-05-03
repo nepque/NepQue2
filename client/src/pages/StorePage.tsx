@@ -37,12 +37,12 @@ const StorePage = () => {
     }
   }, [match, navigate]);
 
-  // Fetch store data
+  // Fetch store data by slug
   const { data: store, isLoading: isLoadingStore } = useQuery<Store>({
-    queryKey: [`/api/stores/${params?.slug}`],
+    queryKey: ['/api/stores/bySlug', params?.slug],
     queryFn: async () => {
       if (!params?.slug) throw new Error("Store slug is required");
-      const response = await fetch(`/api/stores/${params.slug}`);
+      const response = await fetch(`/api/stores/bySlug/${params.slug}`);
       if (!response.ok) {
         if (response.status === 404) {
           navigate("/", { replace: true });

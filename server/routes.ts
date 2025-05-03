@@ -176,6 +176,152 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin routes - Create, Update, Delete
+  
+  // Create a new coupon
+  app.post("/api/coupons", async (req, res) => {
+    try {
+      const coupon = await storage.createCoupon(req.body);
+      res.status(201).json(coupon);
+    } catch (error) {
+      console.error("Error creating coupon:", error);
+      res.status(500).json({ message: "Failed to create coupon" });
+    }
+  });
+
+  // Update a coupon
+  app.put("/api/coupons/:id", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const coupon = await storage.getCouponById(id);
+      
+      if (!coupon) {
+        return res.status(404).json({ message: "Coupon not found" });
+      }
+      
+      const updatedCoupon = { ...req.body, id };
+      const result = await storage.updateCoupon(updatedCoupon);
+      res.json(result);
+    } catch (error) {
+      console.error("Error updating coupon:", error);
+      res.status(500).json({ message: "Failed to update coupon" });
+    }
+  });
+
+  // Delete a coupon
+  app.delete("/api/coupons/:id", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const coupon = await storage.getCouponById(id);
+      
+      if (!coupon) {
+        return res.status(404).json({ message: "Coupon not found" });
+      }
+      
+      await storage.deleteCoupon(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting coupon:", error);
+      res.status(500).json({ message: "Failed to delete coupon" });
+    }
+  });
+
+  // Create a new store
+  app.post("/api/stores", async (req, res) => {
+    try {
+      const store = await storage.createStore(req.body);
+      res.status(201).json(store);
+    } catch (error) {
+      console.error("Error creating store:", error);
+      res.status(500).json({ message: "Failed to create store" });
+    }
+  });
+
+  // Update a store
+  app.put("/api/stores/:id", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const store = await storage.getStoreById(id);
+      
+      if (!store) {
+        return res.status(404).json({ message: "Store not found" });
+      }
+      
+      const updatedStore = { ...req.body, id };
+      const result = await storage.updateStore(updatedStore);
+      res.json(result);
+    } catch (error) {
+      console.error("Error updating store:", error);
+      res.status(500).json({ message: "Failed to update store" });
+    }
+  });
+
+  // Delete a store
+  app.delete("/api/stores/:id", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const store = await storage.getStoreById(id);
+      
+      if (!store) {
+        return res.status(404).json({ message: "Store not found" });
+      }
+      
+      await storage.deleteStore(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting store:", error);
+      res.status(500).json({ message: "Failed to delete store" });
+    }
+  });
+
+  // Create a new category
+  app.post("/api/categories", async (req, res) => {
+    try {
+      const category = await storage.createCategory(req.body);
+      res.status(201).json(category);
+    } catch (error) {
+      console.error("Error creating category:", error);
+      res.status(500).json({ message: "Failed to create category" });
+    }
+  });
+
+  // Update a category
+  app.put("/api/categories/:id", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const category = await storage.getCategoryById(id);
+      
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      
+      const updatedCategory = { ...req.body, id };
+      const result = await storage.updateCategory(updatedCategory);
+      res.json(result);
+    } catch (error) {
+      console.error("Error updating category:", error);
+      res.status(500).json({ message: "Failed to update category" });
+    }
+  });
+
+  // Delete a category
+  app.delete("/api/categories/:id", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const category = await storage.getCategoryById(id);
+      
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      
+      await storage.deleteCategory(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      res.status(500).json({ message: "Failed to delete category" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
