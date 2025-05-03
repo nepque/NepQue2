@@ -8,6 +8,12 @@ import {
   type InsertUserSubmittedCoupon, 
   type UserSubmittedCouponWithRelations 
 } from "@shared/schema";
+import {
+  withdrawalRequests,
+  type WithdrawalRequest,
+  type InsertWithdrawalRequest,
+  type WithdrawalRequestWithUser
+} from "@shared/schema";
 
 // Storage interface
 export interface IStorage {
@@ -65,6 +71,15 @@ export interface IStorage {
   updateUserSubmittedCoupon(coupon: UserSubmittedCoupon): Promise<UserSubmittedCoupon>;
   updateUserSubmittedCouponStatus(id: number, status: 'approved' | 'rejected', reviewNotes?: string): Promise<UserSubmittedCoupon>;
   deleteUserSubmittedCoupon(id: number): Promise<void>;
+  
+  // Withdrawal requests operations
+  getWithdrawalRequests(options?: {
+    userId?: number,
+    status?: 'pending' | 'approved' | 'rejected'
+  }): Promise<WithdrawalRequestWithUser[]>;
+  getWithdrawalRequestById(id: number): Promise<WithdrawalRequestWithUser | undefined>;
+  createWithdrawalRequest(request: InsertWithdrawalRequest): Promise<WithdrawalRequest>;
+  updateWithdrawalRequestStatus(id: number, status: 'approved' | 'rejected', notes?: string): Promise<WithdrawalRequest>;
   
   // Statistics
   getStoreWithCouponCount(): Promise<(Store & { couponCount: number })[]>;

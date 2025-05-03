@@ -164,3 +164,31 @@ export type UserSubmittedCouponWithRelations = UserSubmittedCoupon & {
   category: Category;
   user: User;
 };
+
+// Withdrawal requests schema
+export const withdrawalRequests = pgTable("withdrawal_requests", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  amount: integer("amount").notNull(),
+  method: text("method").notNull(), // "esewa", "khalti", "bank_transfer"
+  accountDetails: text("account_details").notNull(),
+  status: text("status").notNull().default("pending"), // pending, approved, rejected
+  requestedAt: timestamp("requested_at").defaultNow(),
+  processedAt: timestamp("processed_at"),
+  notes: text("notes"),
+});
+
+export const insertWithdrawalRequestSchema = createInsertSchema(withdrawalRequests).pick({
+  userId: true,
+  amount: true,
+  method: true,
+  accountDetails: true,
+});
+
+export type InsertWithdrawalRequest = z.infer<typeof insertWithdrawalRequestSchema>;
+export type WithdrawalRequest = typeof withdrawalRequests.$inferSelect;
+
+// Extended type for frontend use with related data
+export type WithdrawalRequestWithUser = WithdrawalRequest & {
+  user: User;
+};
