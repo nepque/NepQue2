@@ -48,11 +48,12 @@ const AdminUsers = () => {
   const [userToDelete, setUserToDelete] = useState<UserWithSubmissionCount | null>(null);
 
   // Fetch users with their submission counts
-  const { data: users, isLoading, error } = useQuery({
+  const { data: users = [], isLoading, error } = useQuery({
     queryKey: ['/api/admin/users'],
     queryFn: async () => {
       const response = await apiRequest('/api/admin/users');
-      return response as unknown as UserWithSubmissionCount[];
+      // Make sure we always return an array
+      return Array.isArray(response) ? response : [];
     }
   });
 
