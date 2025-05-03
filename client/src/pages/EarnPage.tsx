@@ -237,15 +237,20 @@ const EarnPage = () => {
                       <Button 
                         className="w-full" 
                         size="lg"
-                        disabled={checkingIn || (streakInfo && !streakInfo.canCheckInNow)}
+                        disabled={!user || checkingIn || (streakInfo && !streakInfo.canCheckInNow)}
                         onClick={handleCheckIn}
                       >
-                        {checkingIn ? (
+                        {!user ? (
+                          <>
+                            <Clock className="mr-2 h-5 w-5" />
+                            Login to Check In
+                          </>
+                        ) : checkingIn ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Checking in...
                           </>
-                        ) : streakInfo?.canCheckInNow ? (
+                        ) : (!streakInfo || streakInfo.canCheckInNow) ? (
                           <>
                             <Check className="mr-2 h-5 w-5" />
                             Check In Now
