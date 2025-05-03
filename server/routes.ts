@@ -703,7 +703,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.post("/api/user-submitted-coupons", async (req, res) => {
     try {
-      const coupon = await storage.createUserSubmittedCoupon(req.body);
+      // Convert the date string to Date object
+      const submissionData = {
+        ...req.body,
+        expiresAt: new Date(req.body.expiresAt)
+      };
+      
+      console.log("Processed submission data:", submissionData);
+      const coupon = await storage.createUserSubmittedCoupon(submissionData);
       res.status(201).json(coupon);
     } catch (error) {
       console.error("Error creating user-submitted coupon:", error);

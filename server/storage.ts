@@ -1291,18 +1291,19 @@ export class DatabaseStorage implements IStorage {
 
   async createUserSubmittedCoupon(insertCoupon: InsertUserSubmittedCoupon): Promise<UserSubmittedCoupon> {
     try {
-      // Ensure dates are proper Date objects
+      // Ensure dates are proper Date objects and handle null values for optional fields
       const formattedData = {
         ...insertCoupon,
-        expiresAt: insertCoupon.expiresAt instanceof Date 
-          ? insertCoupon.expiresAt 
-          : new Date(insertCoupon.expiresAt),
-        submittedAt: new Date(),
+        // Make sure terms is not undefined (convert to null if needed)
+        terms: insertCoupon.terms || null,
+        // Set status and timestamps
         status: 'pending',
+        submittedAt: new Date(),
         reviewedAt: null,
         reviewNotes: null
       };
       
+      console.log("Creating user-submitted coupon with data:", formattedData);
       const [coupon] = await db.insert(userSubmittedCoupons).values(formattedData).returning();
       return coupon;
     } catch (error) {
