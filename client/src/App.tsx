@@ -56,11 +56,13 @@ function UserRouter() {
 }
 
 function AdminRouter() {
-  // Add a simple admin header component
-  const AdminHeader = () => (
-    <header className="bg-blue-600 text-white py-4 px-6 mb-6 flex items-center justify-between">
+  const [, setLocation] = useLocation();
+  
+  // Admin top navigation bar
+  const AdminTopNav = () => (
+    <div className="bg-blue-600 text-white py-2 px-6 flex items-center justify-between">
       <div className="flex items-center space-x-4">
-        <h1 className="text-xl font-bold">Admin Dashboard</h1>
+        <h1 className="font-bold">Admin Dashboard</h1>
         <nav className="space-x-4">
           <Link href="/admin" className="hover:underline">Dashboard</Link>
           <Link href="/admin/coupons" className="hover:underline">Coupons</Link>
@@ -73,71 +75,124 @@ function AdminRouter() {
       <button 
         onClick={() => {
           localStorage.removeItem("adminToken");
-          window.location.href = "/admin/login";
+          setLocation("/admin/login");
         }}
         className="bg-white text-blue-600 px-3 py-1 rounded text-sm"
       >
         Logout
       </button>
-    </header>
+    </div>
+  );
+  
+  // Admin sidebar component
+  const AdminSidebar = () => (
+    <div className="w-[180px] bg-gray-900 text-white min-h-screen pt-4 flex-shrink-0">
+      <div className="px-4 py-4 border-b border-gray-800">
+        <h1 className="text-xl font-bold">CouponHunt</h1>
+      </div>
+      <nav className="mt-4">
+        <Link href="/admin" className="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white">
+          <span className="mr-3">◻️</span>
+          Dashboard
+        </Link>
+        <Link href="/admin/coupons" className="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white">
+          <span className="mr-3">◻️</span>
+          Coupons
+        </Link>
+        <Link href="/admin/stores" className="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white">
+          <span className="mr-3">◻️</span>
+          Stores
+        </Link>
+        <Link href="/admin/categories" className="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white">
+          <span className="mr-3">◻️</span>
+          Categories
+        </Link>
+        <Link href="/admin/users" className="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white">
+          <span className="mr-3">◻️</span>
+          Users
+        </Link>
+        <Link href="/admin/submissions" className="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white">
+          <span className="mr-3">◻️</span>
+          Submissions
+        </Link>
+        <Link href="/admin/settings" className="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white">
+          <span className="mr-3">◻️</span>
+          Settings
+        </Link>
+      </nav>
+    </div>
   );
 
   return (
     <div className="bg-gray-100 min-h-screen">
-      <AdminHeader />
-      <main className="container mx-auto px-4 pb-8">
-        <Switch>
-          <Route path="/admin" component={AdminDashboard} />
-          <Route path="/admin/login" component={AdminLogin} />
-          <Route path="/admin/coupons" component={AdminCoupons} />
-          <Route path="/admin/stores" component={AdminStores} />
-          <Route path="/admin/categories" component={AdminCategories} />
-          <Route path="/admin/users" component={AdminUsers} />
-          <Route path="/admin/submissions" component={AdminSubmissions} />
-          
-          {/* Create new item routes */}
-          <Route path="/admin/coupons/new" component={AdminCouponNew} />
-          <Route path="/admin/stores/new" component={AdminStoreNew} />
-          <Route path="/admin/categories/new" component={AdminCategoryNew} />
-          
-          {/* Edit routes */}
-          <Route path="/admin/coupons/edit/:id" component={AdminCouponEdit} />
-          <Route path="/admin/submissions/edit/:id" component={AdminSubmissionEdit} />
-          <Route path="/admin/stores/edit/:id" component={AdminStoreEdit} />
-          <Route path="/admin/categories/edit/:id" component={AdminCategoryEdit} />
-          
-          <Route component={NotFound} />
-        </Switch>
-      </main>
+      <AdminTopNav />
+      <div className="flex">
+        <AdminSidebar />
+        <main className="flex-1 p-6 bg-gray-100">
+          <Switch>
+            <Route path="/admin" component={AdminDashboard} />
+            <Route path="/admin/login" component={AdminLogin} />
+            <Route path="/admin/coupons" component={AdminCoupons} />
+            <Route path="/admin/stores" component={AdminStores} />
+            <Route path="/admin/categories" component={AdminCategories} />
+            <Route path="/admin/users" component={AdminUsers} />
+            <Route path="/admin/submissions" component={AdminSubmissions} />
+            
+            {/* Create new item routes */}
+            <Route path="/admin/coupons/new" component={AdminCouponNew} />
+            <Route path="/admin/stores/new" component={AdminStoreNew} />
+            <Route path="/admin/categories/new" component={AdminCategoryNew} />
+            
+            {/* Edit routes */}
+            <Route path="/admin/coupons/edit/:id" component={AdminCouponEdit} />
+            <Route path="/admin/submissions/edit/:id" component={AdminSubmissionEdit} />
+            <Route path="/admin/stores/edit/:id" component={AdminStoreEdit} />
+            <Route path="/admin/categories/edit/:id" component={AdminCategoryEdit} />
+            
+            <Route component={NotFound} />
+          </Switch>
+        </main>
+      </div>
     </div>
   );
 }
 
 function Router() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const { currentUser, isAdmin } = useAuth();
   const isAdminRoute = location.startsWith("/admin");
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   
   // Check if admin token exists in localStorage
   useEffect(() => {
     const checkAdminToken = () => {
       const token = localStorage.getItem("adminToken");
       setIsAdminLoggedIn(!!token);
+      setIsCheckingAuth(false);
     };
     
-    checkAdminToken();
-    
-    // Also check if we're on the admin login page
+    // Don't check auth on login page
     if (location === "/admin/login") {
-      // Don't trigger the admin check if we're already on the login page
+      setIsCheckingAuth(false);
       return;
     }
+    
+    checkAdminToken();
   }, [location]);
 
   // Special handling for admin login page
   if (location === "/admin/login") {
     return <AdminLogin />;
+  }
+  
+  // Show loading state while checking auth
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
   }
   
   // If this is an admin route, check for admin authentication
@@ -146,8 +201,9 @@ function Router() {
     if (isAdminLoggedIn) {
       return <AdminRouter />;
     } else {
-      // Redirect to admin login if not authenticated
-      window.location.href = "/admin/login";
+      // Use setLocation instead of direct window.location modification
+      // This prevents the page from reloading and maintains React state
+      setLocation("/admin/login");
       return null;
     }
   }
