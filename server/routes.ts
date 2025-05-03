@@ -864,20 +864,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a new withdrawal request
   app.post("/api/withdrawals", async (req, res) => {
     try {
-      let { userId, amount, paymentMethod, paymentDetails } = req.body;
+      let { userId, amount, method, accountDetails } = req.body;
       
       // Parse the request body if it's a string (happens sometimes with fetch)
       if (typeof req.body === 'string') {
         const parsedBody = JSON.parse(req.body);
         userId = parsedBody.userId;
         amount = parsedBody.amount;
-        paymentMethod = parsedBody.paymentMethod;
-        paymentDetails = parsedBody.paymentDetails;
+        method = parsedBody.method;
+        accountDetails = parsedBody.accountDetails;
       }
       
-      if (!userId || !amount || !paymentMethod || !paymentDetails) {
+      if (!userId || !amount || !method || !accountDetails) {
         return res.status(400).json({ 
-          message: "Missing required fields. userId, amount, paymentMethod, and paymentDetails are required." 
+          message: "Missing required fields. userId, amount, method, and accountDetails are required." 
         });
       }
       
@@ -903,8 +903,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const withdrawalRequest = await storage.createWithdrawalRequest({
         userId,
         amount,
-        method: paymentMethod,
-        accountDetails: paymentDetails
+        method,
+        accountDetails
       });
       
       res.status(201).json(withdrawalRequest);
