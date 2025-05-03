@@ -95,7 +95,7 @@ const EarnPage = () => {
   });
 
   const handleCheckIn = async () => {
-    if (!user) {
+    if (!user?.uid) {
       toast({
         title: "Not Logged In",
         description: "Please log in to check in and earn points.",
@@ -237,10 +237,10 @@ const EarnPage = () => {
                       <Button 
                         className="w-full" 
                         size="lg"
-                        disabled={checkingIn || (streakInfo?.canCheckInNow === false)}
+                        disabled={!user?.uid || checkingIn || (streakInfo?.canCheckInNow === false)}
                         onClick={handleCheckIn}
                       >
-                        {!user ? (
+                        {!user?.uid ? (
                           <>
                             <Clock className="mr-2 h-5 w-5" />
                             Login to Check In
