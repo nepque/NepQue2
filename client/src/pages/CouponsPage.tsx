@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useSearch } from "wouter";
 import CouponCard from "@/components/coupon/CouponCard";
@@ -7,6 +7,7 @@ import { CouponWithRelations } from "@shared/schema";
 import { Category } from "@shared/schema";
 import { Store } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
+import SEO from "@/components/common/SEO";
 import { 
   Select,
   SelectContent,
@@ -120,8 +121,72 @@ const CouponsPage = () => {
     searchTerm
   ].filter(Boolean).length;
 
+  // Create dynamic SEO meta information based on filters
+  const pageTitle = useMemo(() => {
+    if (featured) return "Featured Coupons & Promo Codes";
+    if (selectedCategoryId && selectedCategoryId !== "all" && categories) {
+      const category = categories.find(c => c.id === Number(selectedCategoryId));
+      return category ? `${category.name} Coupons & Promo Codes` : "All Coupons";
+    }
+    if (selectedStoreId && selectedStoreId !== "all" && stores) {
+      const store = stores.find(s => s.id === Number(selectedStoreId));
+      return store ? `${store.name} Coupons & Promo Codes` : "All Coupons";
+    }
+    if (searchTerm) return `Coupons for "${searchTerm}" - Search Results`;
+    return "All Coupons & Promo Codes";
+  }, [featured, selectedCategoryId, selectedStoreId, searchTerm, categories, stores]);
+
+  const pageDescription = useMemo(() => {
+    if (featured) return "Browse our handpicked collection of featured coupons and deals from top brands. Save money with these verified promotional offers.";
+    if (selectedCategoryId && selectedCategoryId !== "all" && categories) {
+      const category = categories.find(c => c.id === Number(selectedCategoryId));
+      return category 
+        ? `Find the best ${category.name} coupons and promo codes. Save money with verified discount codes for ${category.name} products and services.`
+        : "Browse our extensive collection of coupons and promo codes to save on your next purchase.";
+    }
+    if (selectedStoreId && selectedStoreId !== "all" && stores) {
+      const store = stores.find(s => s.id === Number(selectedStoreId));
+      return store 
+        ? `Find the latest ${store.name} coupons, promo codes and deals. Save money on your next purchase with these verified ${store.name} discount codes.`
+        : "Browse our extensive collection of coupons and promo codes to save on your next purchase.";
+    }
+    if (searchTerm) return `Browse coupons and promo codes matching "${searchTerm}". Find the best deals and discounts for your search.`;
+    return "Browse our extensive collection of coupons and promo codes from top stores and brands. Save money on your next purchase with verified discount codes.";
+  }, [featured, selectedCategoryId, selectedStoreId, searchTerm, categories, stores]);
+
+  const canonicalUrl = useMemo(() => {
+    let url = "/coupons";
+    const params = new URLSearchParams();
+    
+    if (selectedCategoryId && selectedCategoryId !== "all") params.append("categoryId", selectedCategoryId);
+    if (selectedStoreId && selectedStoreId !== "all") params.append("storeId", selectedStoreId);
+    if (featured) params.append("featured", "true");
+    
+    // Exclude search term from canonical URL to avoid duplicate content issues
+    // Exclude sort from canonical URL as it doesn't change the content, just the order
+    
+    return params.toString() ? `${url}?${params.toString()}` : url;
+  }, [selectedCategoryId, selectedStoreId, featured]);
+
   return (
     <main className="py-6 bg-gray-50">
+      <SEO 
+        title={`${pageTitle} | NepQue`}
+        description={pageDescription}
+        keywords={`coupons, promo codes, discounts, deals, savings, online shopping${
+          selectedCategoryId && selectedCategoryId !== "all" && categories 
+            ? `, ${categories.find(c => c.id === Number(selectedCategoryId))?.name}` 
+            : ""
+        }${
+          selectedStoreId && selectedStoreId !== "all" && stores
+            ? `, ${stores.find(s => s.id === Number(selectedStoreId))?.name}`
+            : ""
+        }${
+          searchTerm ? `, ${searchTerm}` : ""
+        }`}
+        canonicalUrl={canonicalUrl}
+        ogType="website"
+      />
       <div className="container mx-auto px-4">
         {/* Page title */}
         <div className="mb-6">

@@ -2,10 +2,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, Home, Search } from "lucide-react";
 import { Link } from "wouter";
+import SEO from "@/components/common/SEO";
 
 export default function NotFound() {
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
+      <SEO 
+        title="404 - Page Not Found | NepQue"
+        description="The page you're looking for doesn't exist or has been removed. Browse our featured coupons or search for deals from your favorite stores."
+        keywords="page not found, 404, error, NepQue, coupons, deals"
+        ogType="website"
+        canonicalUrl="/404"
+        noIndex={true}
+      />
       <Card className="w-full max-w-md mx-4 shadow-lg border-0">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 bg-red-100 p-3 rounded-full">
