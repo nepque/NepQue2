@@ -603,6 +603,7 @@ import { eq, and, desc, sql, asc, like, or, isNull, inArray } from "drizzle-orm"
 import { db } from "./db";
 
 export class DatabaseStorage implements IStorage {
+  private initialized: boolean = false;
   // User operations
   async getUser(id: number): Promise<User | undefined> {
     try {
@@ -967,24 +968,134 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
+  // Initialize demo data if needed
+  async ensureDemoData() {
+    if (this.initialized) return;
+    
+    console.log("Checking if demo data needs to be initialized...");
+    
+    try {
+      // Check if we have stores
+      const existingStores = await db.select().from(stores);
+      if (existingStores.length === 0) {
+        console.log("No stores found, creating demo stores...");
+        
+        // Create demo stores
+        const demoStores = [
+          {
+            name: "Amazon",
+            slug: "amazon",
+            website: "https://www.amazon.com",
+            logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Amazon_logo.svg/320px-Amazon_logo.svg.png",
+            description: "Online retailer of books, movies, music and games, electronics, computers, software, apparel & accessories, shoes, and more.",
+            metaTitle: "Amazon Coupons & Promo Codes",
+            metaDescription: "Save with the latest Amazon promo codes, coupons and deals. Updated daily.",
+            metaKeywords: "amazon, coupons, promo codes, deals, discount"
+          },
+          {
+            name: "Best Buy",
+            slug: "best-buy",
+            website: "https://www.bestbuy.com",
+            logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Best_Buy_Logo.svg/320px-Best_Buy_Logo.svg.png",
+            description: "Retailer of consumer electronics, computers, mobile phones, video games, and appliances.",
+            metaTitle: "Best Buy Coupons & Deals",
+            metaDescription: "Find the latest Best Buy coupons, promo codes and deals. Save on electronics, appliances, and more.",
+            metaKeywords: "best buy, electronics, coupons, deals, promo codes"
+          },
+          {
+            name: "Target",
+            slug: "target",
+            website: "https://www.target.com",
+            logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Target_Corporation_logo_%28vector%29.svg/320px-Target_Corporation_logo_%28vector%29.svg.png",
+            description: "Retailer providing high-quality, on-trend merchandise at attractive prices in clean, spacious and guest-friendly stores.",
+            metaTitle: "Target Coupons, Promo Codes & Deals",
+            metaDescription: "Find the latest Target coupons, discount codes and deals. Save on clothing, electronics, home goods and more.",
+            metaKeywords: "target, coupons, promo codes, deals, discount"
+          }
+        ];
+        
+        for (const store of demoStores) {
+          await db.insert(stores).values(store);
+        }
+        console.log("Created demo stores successfully");
+      }
+      
+      // Check if we have categories
+      const existingCategories = await db.select().from(categories);
+      if (existingCategories.length === 0) {
+        console.log("No categories found, creating demo categories...");
+        
+        // Create demo categories
+        const demoCategories = [
+          {
+            name: "Electronics",
+            slug: "electronics",
+            description: "Find the best deals on electronics including TVs, computers, smartphones, and more.",
+            icon: "laptop",
+            metaTitle: "Electronics Coupons & Deals",
+            metaDescription: "Save big on electronics with our exclusive coupons and promo codes. Find deals on TVs, computers, smartphones, and more.",
+            metaKeywords: "electronics, coupons, deals, tech, gadgets"
+          },
+          {
+            name: "Clothing",
+            slug: "clothing",
+            description: "Save on the latest fashion trends with clothing coupons and promo codes.",
+            icon: "shirt",
+            metaTitle: "Clothing & Fashion Coupons",
+            metaDescription: "Get discounts on clothing and fashion with our exclusive coupons. Save on shoes, accessories, and apparel.",
+            metaKeywords: "clothing, fashion, coupons, apparel, shoes"
+          },
+          {
+            name: "Home & Garden",
+            slug: "home-garden",
+            description: "Furnish and decorate your home for less with our home & garden coupons.",
+            icon: "home",
+            metaTitle: "Home & Garden Discount Codes",
+            metaDescription: "Find the best deals on furniture, home decor, and garden supplies with our exclusive discount codes.",
+            metaKeywords: "home, garden, furniture, decor, coupons"
+          }
+        ];
+        
+        for (const category of demoCategories) {
+          await db.insert(categories).values(category);
+        }
+        console.log("Created demo categories successfully");
+      }
+      
+      this.initialized = true;
+    } catch (error) {
+      console.error("Error initializing demo data:", error);
+    }
+  }
+
   // Statistics
   async getStoreWithCouponCount(): Promise<(Store & { couponCount: number })[]> {
     try {
-      const stores = await db.select().from(this.stores);
+      // Ensure we have demo data
+      await this.ensureDemoData();
       
-      const storeCountPromises = stores.map(async (store) => {
-        const couponCount = await db
-          .select({ count: sql<number>`count(*)` })
-          .from(coupons)
-          .where(eq(coupons.storeId, store.id));
-          
-        return {
-          ...store,
-          couponCount: couponCount[0].count
-        };
-      });
+      const storesList = await db.select().from(stores);
+      console.log(`Found ${storesList.length} stores in database`);
       
-      return Promise.all(storeCountPromises);
+      return Promise.all(storesList.map(async (store) => {
+        try {
+          const result = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(coupons)
+            .where(eq(coupons.storeId, store.id));
+            
+          return {
+            ...store,
+            couponCount: Number(result[0]?.count || 0)
+          };
+        } catch (err) {
+          console.error(`Error getting coupon count for store ${store.id}:`, err);
+          return {
+            ...store,
+            couponCount: 0
+          };
+        }
+      }));
     } catch (error) {
       console.error("Error getting store with coupon count:", error);
       return [];
@@ -993,21 +1104,31 @@ export class DatabaseStorage implements IStorage {
 
   async getCategoryWithCouponCount(): Promise<(Category & { couponCount: number })[]> {
     try {
-      const categories = await db.select().from(this.categories);
+      // Ensure we have demo data
+      await this.ensureDemoData();
       
-      const categoryCountPromises = categories.map(async (category) => {
-        const couponCount = await db
-          .select({ count: sql<number>`count(*)` })
-          .from(coupons)
-          .where(eq(coupons.categoryId, category.id));
-          
-        return {
-          ...category,
-          couponCount: couponCount[0].count
-        };
-      });
+      const categoriesList = await db.select().from(categories);
+      console.log(`Found ${categoriesList.length} categories in database`);
       
-      return Promise.all(categoryCountPromises);
+      return Promise.all(categoriesList.map(async (category) => {
+        try {
+          const result = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(coupons)
+            .where(eq(coupons.categoryId, category.id));
+            
+          return {
+            ...category,
+            couponCount: Number(result[0]?.count || 0)
+          };
+        } catch (err) {
+          console.error(`Error getting coupon count for category ${category.id}:`, err);
+          return {
+            ...category,
+            couponCount: 0
+          };
+        }
+      }));
     } catch (error) {
       console.error("Error getting category with coupon count:", error);
       return [];
@@ -1017,24 +1138,35 @@ export class DatabaseStorage implements IStorage {
   // Heat map data
   async getCouponUsageByCategory(): Promise<{ category: string; usageCount: number; coupons: number }[]> {
     try {
-      const categories = await db.select().from(this.categories);
+      // Ensure we have demo data
+      await this.ensureDemoData();
       
-      const categoryUsagePromises = categories.map(async (category) => {
-        const couponsResult = await db
-          .select()
-          .from(coupons)
-          .where(eq(coupons.categoryId, category.id));
+      const categoriesList = await db.select().from(categories);
+      console.log(`Found ${categoriesList.length} categories for heat map`);
+      
+      return Promise.all(categoriesList.map(async (category) => {
+        try {
+          const couponsResult = await db
+            .select()
+            .from(coupons)
+            .where(eq(coupons.categoryId, category.id));
+            
+          const usageCount = couponsResult.reduce((sum, coupon) => sum + (Number(coupon.usedCount) || 0), 0);
           
-        const usageCount = couponsResult.reduce((sum, coupon) => sum + (coupon.usedCount || 0), 0);
-        
-        return {
-          category: category.name,
-          usageCount,
-          coupons: couponsResult.length
-        };
-      });
-      
-      return Promise.all(categoryUsagePromises);
+          return {
+            category: category.name,
+            usageCount,
+            coupons: couponsResult.length
+          };
+        } catch (err) {
+          console.error(`Error getting coupon usage for category ${category.id}:`, err);
+          return {
+            category: category.name,
+            usageCount: 0,
+            coupons: 0
+          };
+        }
+      }));
     } catch (error) {
       console.error("Error getting coupon usage by category:", error);
       return [];
