@@ -989,6 +989,159 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to update withdrawal request status" });
     }
   });
+  
+  // Check-in routes
+  
+  // Get user's check-in streak info
+  app.get("/api/users/:userId/streak", async (req, res) => {
+    try {
+      // Set cache control headers to prevent browser caching
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      
+      const userId = Number(req.params.userId);
+      
+      try {
+        const streakInfo = await storage.getUserCurrentStreak(userId);
+        res.json(streakInfo);
+      } catch (error) {
+        console.error("Error getting user streak info:", error);
+        res.status(404).json({ message: "User not found" });
+      }
+    } catch (error) {
+      console.error("Error in streak info endpoint:", error);
+      res.status(500).json({ message: "Failed to fetch streak information" });
+    }
+  });
+  
+  // Get user's check-in streak info by Firebase UID
+  app.get("/api/users/firebase/:firebaseUid/streak", async (req, res) => {
+    try {
+      // Set cache control headers to prevent browser caching
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      
+      const firebaseUid = req.params.firebaseUid;
+      const user = await storage.getUserByFirebaseUid(firebaseUid);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      try {
+        const streakInfo = await storage.getUserCurrentStreak(user.id);
+        res.json(streakInfo);
+      } catch (error) {
+        console.error("Error getting user streak info:", error);
+        res.status(500).json({ message: "Failed to fetch streak information" });
+      }
+    } catch (error) {
+      console.error("Error in streak info endpoint:", error);
+      res.status(500).json({ message: "Failed to fetch streak information" });
+    }
+  });
+  
+  // Get user's check-in history
+  app.get("/api/users/:userId/check-ins", async (req, res) => {
+    try {
+      // Set cache control headers to prevent browser caching
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      
+      const userId = Number(req.params.userId);
+      const checkIns = await storage.getUserCheckIns(userId);
+      
+      // Return an empty array instead of null/undefined
+      res.json(checkIns || []);
+    } catch (error) {
+      console.error("Error fetching user check-ins:", error);
+      res.status(500).json({ message: "Failed to fetch user check-ins" });
+    }
+  });
+  
+  // Get user's check-in history by Firebase UID
+  app.get("/api/users/firebase/:firebaseUid/check-ins", async (req, res) => {
+    try {
+      // Set cache control headers to prevent browser caching
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      
+      const firebaseUid = req.params.firebaseUid;
+      const user = await storage.getUserByFirebaseUid(firebaseUid);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const checkIns = await storage.getUserCheckIns(user.id);
+      
+      // Return an empty array instead of null/undefined
+      res.json(checkIns || []);
+    } catch (error) {
+      console.error("Error fetching user check-ins:", error);
+      res.status(500).json({ message: "Failed to fetch user check-ins" });
+    }
+  });
+  
+  // Process a user check-in
+  app.post("/api/users/:userId/check-in", async (req, res) => {
+    try {
+      const userId = Number(req.params.userId);
+      
+      try {
+        const result = await storage.processUserCheckIn(userId);
+        res.status(200).json(result);
+      } catch (error) {
+        console.error("Error processing user check-in:", error);
+        res.status(400).json({ 
+          success: false,
+          message: error.message || "Failed to process check-in"
+        });
+      }
+    } catch (error) {
+      console.error("Error in check-in endpoint:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Server error during check-in processing"
+      });
+    }
+  });
+  
+  // Process a user check-in by Firebase UID
+  app.post("/api/users/firebase/:firebaseUid/check-in", async (req, res) => {
+    try {
+      const firebaseUid = req.params.firebaseUid;
+      const user = await storage.getUserByFirebaseUid(firebaseUid);
+      
+      if (!user) {
+        return res.status(404).json({ 
+          success: false,
+          message: "User not found" 
+        });
+      }
+      
+      try {
+        const result = await storage.processUserCheckIn(user.id);
+        res.status(200).json(result);
+      } catch (error) {
+        console.error("Error processing user check-in:", error);
+        res.status(400).json({ 
+          success: false,
+          message: error.message || "Failed to process check-in"
+        });
+      }
+    } catch (error) {
+      console.error("Error in check-in endpoint:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Server error during check-in processing"
+      });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

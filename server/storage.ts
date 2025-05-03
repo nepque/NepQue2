@@ -1798,6 +1798,164 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
+  
+  // Check-in operations
+  async getUserCheckIns(userId: number): Promise<CheckIn[]> {
+    try {
+      const userCheckIns = await db
+        .select()
+        .from(checkIns)
+        .where(eq(checkIns.userId, userId))
+        .orderBy(desc(checkIns.checkedInAt));
+      
+      return userCheckIns;
+    } catch (error) {
+      console.error("Error getting user check-ins:", error);
+      return [];
+    }
+  }
+  
+  async getUserCurrentStreak(userId: number): Promise<{
+    currentStreak: number;
+    lastCheckIn: Date | null;
+    canCheckInNow: boolean;
+    nextCheckInTime: Date | null;
+  }> {
+    try {
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      if (!user) {
+        throw new Error(`User with ID ${userId} not found`);
+      }
+      
+      // Get streak info from user record
+      const currentStreak = user.currentStreak || 0;
+      const lastCheckIn = user.lastCheckIn ? new Date(user.lastCheckIn) : null;
+      
+      // Determine if user can check in now
+      const now = new Date();
+      let canCheckInNow = false;
+      let nextCheckInTime = null;
+      
+      if (!lastCheckIn) {
+        // If never checked in before, they can check in now
+        canCheckInNow = true;
+        nextCheckInTime = now;
+      } else {
+        // Calculate the time difference from last check-in
+        const hoursSinceLastCheckIn = (now.getTime() - lastCheckIn.getTime()) / (1000 * 60 * 60);
+        
+        if (hoursSinceLastCheckIn >= 24) {
+          // Can check in if at least 24 hours have passed
+          canCheckInNow = true;
+          nextCheckInTime = now;
+        } else {
+          // Need to wait longer
+          canCheckInNow = false;
+          nextCheckInTime = new Date(lastCheckIn.getTime() + (24 * 60 * 60 * 1000));
+        }
+      }
+      
+      return {
+        currentStreak,
+        lastCheckIn,
+        canCheckInNow,
+        nextCheckInTime
+      };
+    } catch (error) {
+      console.error("Error getting user streak info:", error);
+      throw error;
+    }
+  }
+  
+  async processUserCheckIn(userId: number): Promise<{
+    success: boolean;
+    points: number;
+    newStreak: number;
+    nextCheckInTime: Date;
+    message: string;
+  }> {
+    try {
+      // Check if user exists and get streak info
+      const streakInfo = await this.getUserCurrentStreak(userId);
+      
+      // If can't check in now, return early
+      if (!streakInfo.canCheckInNow) {
+        return {
+          success: false,
+          points: 0,
+          newStreak: streakInfo.currentStreak,
+          nextCheckInTime: streakInfo.nextCheckInTime!, 
+          message: "You can't check in yet. Please try again later."
+        };
+      }
+      
+      // Get user data
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      if (!user) {
+        throw new Error(`User with ID ${userId} not found`);
+      }
+      
+      // Determine new streak value and points to award
+      let newStreak = 1; // Start with 1 if streak is broken or no streak
+      const now = new Date();
+      
+      if (streakInfo.lastCheckIn) {
+        // Check if this is a continuation of a streak (less than 48 hours since last check-in)
+        const hoursSinceLastCheckIn = (now.getTime() - streakInfo.lastCheckIn.getTime()) / (1000 * 60 * 60);
+        
+        if (hoursSinceLastCheckIn < 48) {
+          // Continuing streak
+          newStreak = streakInfo.currentStreak + 1;
+        }
+      }
+      
+      // Determine points to award based on streak day
+      const streakDay = newStreak % 7 || 7; // Convert 0 to 7 for the 7th day
+      const points = streakDay === 7 ? 10 : 5; // 10 points on 7th day, 5 on other days
+      
+      // Create a record of this check-in - use transaction to ensure atomicity
+      await db.transaction(async (tx) => {
+        // Record the check-in
+        await tx.insert(checkIns).values({
+          userId,
+          checkedInAt: now,
+          streakDay,
+          pointsEarned: points
+        });
+        
+        // Update user's streak and points
+        await tx.update(users)
+          .set({
+            currentStreak: newStreak,
+            lastCheckIn: now,
+            points: (user.points || 0) + points
+          })
+          .where(eq(users.id, userId));
+      });
+      
+      // Calculate next check-in time (24 hours from now)
+      const nextCheckInTime = new Date(now.getTime() + (24 * 60 * 60 * 1000));
+      
+      return {
+        success: true,
+        points,
+        newStreak,
+        nextCheckInTime,
+        message: `You earned ${points} points! Your current streak is ${newStreak} day${newStreak !== 1 ? 's' : ''}.`
+      };
+    } catch (error) {
+      console.error("Error processing user check-in:", error);
+      throw error;
+    }
+  }
 }
 
 // Use the database storage implementation
