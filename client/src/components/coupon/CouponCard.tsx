@@ -126,7 +126,7 @@ const CouponCard = ({ coupon, onShowCode }: CouponCardProps) => {
           <div className="w-full">
             <Button 
               onClick={onShowCode}
-              className="w-full bg-secondary hover:bg-secondary/90 text-white font-medium py-2.5 px-4 rounded transition-colors"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded transition-colors"
             >
               Show Code
             </Button>
