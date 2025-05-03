@@ -751,9 +751,9 @@ export class MemStorage implements IStorage {
   
   async getUserCurrentStreak(userId: number): Promise<{
     currentStreak: number;
-    lastCheckIn: Date | null;
+    lastCheckIn: string | null;
     canCheckInNow: boolean;
-    nextCheckInTime: Date | null;
+    nextCheckInTime: string | null;
   }> {
     const user = await this.getUser(userId);
     if (!user) {
@@ -1817,9 +1817,9 @@ export class DatabaseStorage implements IStorage {
   
   async getUserCurrentStreak(userId: number): Promise<{
     currentStreak: number;
-    lastCheckIn: Date | null;
+    lastCheckIn: string | null;
     canCheckInNow: boolean;
-    nextCheckInTime: Date | null;
+    nextCheckInTime: string | null;
   }> {
     try {
       const [user] = await db
@@ -1876,7 +1876,7 @@ export class DatabaseStorage implements IStorage {
     success: boolean;
     points: number;
     newStreak: number;
-    nextCheckInTime: Date;
+    nextCheckInTime: string;
     message: string;
   }> {
     try {
