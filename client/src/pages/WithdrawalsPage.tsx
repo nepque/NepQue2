@@ -15,22 +15,13 @@ export default function WithdrawalsPage() {
   const { currentUser } = useAuth();
 
   const { data: withdrawals = [], isLoading, error, refetch } = useQuery<WithdrawalRequestWithUser[]>({
-    queryKey: [`/api/users/${currentUser?.firebaseUid}/withdrawals`],
+    queryKey: [`/api/users/firebase/${currentUser?.firebaseUid}/withdrawals`],
     queryFn: async () => {
       try {
-        console.log('Fetching withdrawal data for user:', currentUser?.id, 'firebase uid:', currentUser?.firebaseUid);
-        // Get the database user id first
-        const userResponse = await apiRequest(`/api/users/${currentUser?.firebaseUid}`);
-        if (!userResponse || !userResponse.id) {
-          console.error('Could not find user ID in database');
-          return [];
-        }
+        console.log('Fetching withdrawal data for firebase uid:', currentUser?.firebaseUid);
         
-        const userId = userResponse.id;
-        console.log('Found user ID in database:', userId);
-        
-        // Now get the withdrawal requests using the database user ID
-        const response = await apiRequest(`/api/users/${userId}/withdrawals`, {
+        // Use our new endpoint that directly accepts Firebase UID
+        const response = await apiRequest(`/api/users/firebase/${currentUser?.firebaseUid}/withdrawals`, {
           method: 'GET',
           headers: {
             'Cache-Control': 'no-cache',

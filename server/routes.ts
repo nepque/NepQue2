@@ -826,7 +826,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Get withdrawal requests for a user
+  // Get withdrawal requests for a user by numeric user ID
   app.get("/api/users/:userId/withdrawals", async (req, res) => {
     try {
       // Set cache control headers to prevent browser caching
@@ -851,6 +851,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(withdrawalRequests || []);
     } catch (error) {
       console.error("Error fetching user withdrawal requests:", error);
+      res.status(500).json({ message: "Failed to fetch user withdrawal requests" });
+    }
+  });
+  
+  // Get withdrawal requests for a user by Firebase UID
+  app.get("/api/users/firebase/:firebaseUid/withdrawals", async (req, res) => {
+    try {
+      // Set cache control headers to prevent browser caching
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      
+      const { firebaseUid } = req.params;
+      console.log(`Fetching withdrawals for Firebase UID: ${firebaseUid}`);
+      
+      // First get the database user by Firebase UID
+      const user = await storage.getUserByFirebaseUid(firebaseUid);
+      
+      if (!user) {
+        console.log(`User with Firebase UID ${firebaseUid} not found`);
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      console.log(`Found user with database ID: ${user.id} for Firebase UID: ${firebaseUid}`);
+      
+      // Now get withdrawal requests using the database user ID
+      const withdrawalRequests = await storage.getWithdrawalRequests({ userId: user.id });
+      console.log(`Found ${withdrawalRequests.length} withdrawal requests for user ${user.id} (Firebase UID: ${firebaseUid})`);
+      
+      // Return an empty array instead of null/undefined
+      res.json(withdrawalRequests || []);
+    } catch (error) {
+      console.error("Error fetching user withdrawal requests by Firebase UID:", error);
       res.status(500).json({ message: "Failed to fetch user withdrawal requests" });
     }
   });
