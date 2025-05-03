@@ -17,7 +17,10 @@ export default function WithdrawalsPage() {
 
   const { data: withdrawals = [], isLoading } = useQuery<WithdrawalRequestWithUser[]>({
     queryKey: [`/api/users/${currentUser?.id}/withdrawals`],
-    queryFn: () => apiRequest(`/api/users/${currentUser?.id}/withdrawals`),
+    queryFn: async () => {
+      const response = await apiRequest(`/api/users/${currentUser?.id}/withdrawals`);
+      return response || [];
+    },
     enabled: !!currentUser?.id,
   });
 
