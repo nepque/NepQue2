@@ -829,14 +829,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get withdrawal requests for a user
   app.get("/api/users/:userId/withdrawals", async (req, res) => {
     try {
+      // Set cache control headers to prevent browser caching
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      
+      console.log(`Fetching withdrawals for user ID: ${req.params.userId}`);
+      
       const userId = Number(req.params.userId);
       const user = await storage.getUser(userId);
       
       if (!user) {
+        console.log(`User ${userId} not found`);
         return res.status(404).json({ message: "User not found" });
       }
       
       const withdrawalRequests = await storage.getWithdrawalRequests({ userId });
+      console.log(`Found ${withdrawalRequests.length} withdrawal requests for user ${userId}:`, withdrawalRequests);
+      
       res.json(withdrawalRequests);
     } catch (error) {
       console.error("Error fetching user withdrawal requests:", error);

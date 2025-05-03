@@ -15,17 +15,31 @@ import { Button } from "@/components/ui/button";
 export default function WithdrawalsPage() {
   const { currentUser } = useAuth();
 
-  const { data: withdrawals = [], isLoading } = useQuery<WithdrawalRequestWithUser[]>({
+  const { data: withdrawals = [], isLoading, error } = useQuery<WithdrawalRequestWithUser[]>({
     queryKey: [`/api/users/${currentUser?.id}/withdrawals`],
     queryFn: async () => {
-      const response = await apiRequest(`/api/users/${currentUser?.id}/withdrawals`, {
-        method: 'GET'
-      });
-      console.log('Withdrawals response:', response);
-      return response || [];
+      try {
+        const response = await apiRequest(`/api/users/${currentUser?.id}/withdrawals`, {
+          method: 'GET'
+        });
+        console.log('Withdrawals response:', response);
+        // Make sure we return an array even if response is null/undefined or not an array
+        return Array.isArray(response) ? response : [];
+      } catch (err) {
+        console.error('Error fetching withdrawals:', err);
+        throw err;
+      }
     },
     enabled: !!currentUser?.id,
+    refetchOnWindowFocus: true,
+    staleTime: 0, // Don't cache the data
   });
+
+  useEffect(() => {
+    if (error) {
+      console.error('Withdrawal query error:', error);
+    }
+  }, [error]);
 
   if (!currentUser) {
     return null;
