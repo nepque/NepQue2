@@ -84,7 +84,14 @@ function Router() {
   const { currentUser, isAdmin } = useAuth();
   const isAdminRoute = location.startsWith("/admin");
   
-  // Check for login and admin permissions
+  // DEVELOPMENT MODE: Direct access to admin routes for testing
+  if (isAdminRoute) {
+    console.log("User accessing admin route:", { currentUser, isAdmin, location });
+    // Always allow access to admin routes for development
+    return <AdminRouter />;
+  }
+  
+  /* PRODUCTION CODE (COMMENTED OUT FOR DEVELOPMENT):
   if (isAdminRoute) {
     // First check if user is logged in
     if (!currentUser) {
@@ -104,10 +111,7 @@ function Router() {
     }
     
     // Then check if user has admin privileges
-    // For development, we're auto-granting admin access
-    const hasAdminAccess = true; // In production, use: isAdmin
-    
-    if (!hasAdminAccess) {
+    if (!isAdmin) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-red-500 text-white p-6">
           <div className="text-center">
@@ -126,6 +130,7 @@ function Router() {
     // User is logged in and has admin access
     return <AdminRouter />;
   }
+  */
   
   return <UserRouter />;
 }
