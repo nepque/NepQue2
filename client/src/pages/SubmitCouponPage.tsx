@@ -142,11 +142,13 @@ export default function SubmitCouponPage() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {stores.map(store => (
+                          {Array.isArray(stores) ? stores.map(store => (
                             <SelectItem key={store.id} value={store.id.toString()}>
                               {store.name}
                             </SelectItem>
-                          ))}
+                          )) : (
+                            <SelectItem value="loading">Loading stores...</SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                       <FormDescription>
@@ -173,11 +175,13 @@ export default function SubmitCouponPage() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {categories.map(category => (
+                          {Array.isArray(categories) ? categories.map(category => (
                             <SelectItem key={category.id} value={category.id.toString()}>
                               {category.name}
                             </SelectItem>
-                          ))}
+                          )) : (
+                            <SelectItem value="loading">Loading categories...</SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                       <FormDescription>

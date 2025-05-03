@@ -48,11 +48,19 @@ export const UserProfileOnboarding = ({ onComplete }: { onComplete: () => void }
 
   // Save preferences
   const savePreferences = async () => {
-    if (!currentUser?.id) return;
+    if (!currentUser) return;
     
     setIsSubmitting(true);
     try {
-      await apiRequest(`/api/users/${currentUser.id}/preferences`, {
+      // First, fetch the user from our DB using Firebase UID
+      const userData = await apiRequest(`/api/users/${currentUser.uid}`);
+      
+      if (!userData || !userData.id) {
+        throw new Error("Could not find user data");
+      }
+      
+      // Then update preferences using the database ID
+      await apiRequest(`/api/users/${userData.id}/preferences`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -63,7 +71,7 @@ export const UserProfileOnboarding = ({ onComplete }: { onComplete: () => void }
       });
       
       // Invalidate user query cache
-      queryClient.invalidateQueries({ queryKey: [`/api/users/${currentUser.firebaseUid}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${currentUser.uid}`] });
       
       toast({
         title: "Preferences saved!",
