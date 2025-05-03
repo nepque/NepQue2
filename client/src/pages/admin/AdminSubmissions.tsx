@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { UserSubmittedCouponWithRelations } from "@shared/schema";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -252,15 +252,21 @@ export default function AdminSubmissions() {
               <h3 className="font-semibold">{selectedCoupon?.title}</h3>
               <p className="text-sm text-muted-foreground">{selectedCoupon?.description}</p>
               <div className="flex items-center text-sm gap-2">
-                <img 
-                  src={selectedCoupon?.store.logo} 
-                  alt={selectedCoupon?.store.name}
-                  className="w-4 h-4 object-contain"
-                  onError={(e) => {
-                    e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedCoupon?.store.name || '')}&background=random&size=16`;
-                  }}
-                />
-                <span>{selectedCoupon?.store.name}</span>
+                {selectedCoupon?.store ? (
+                  <>
+                    <img 
+                      src={selectedCoupon.store.logo || ''} 
+                      alt={selectedCoupon.store.name || 'Store'}
+                      className="w-4 h-4 object-contain"
+                      onError={(e) => {
+                        e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedCoupon.store.name || 'Store')}&background=random&size=16`;
+                      }}
+                    />
+                    <span>{selectedCoupon.store.name || 'Unknown Store'}</span>
+                  </>
+                ) : (
+                  <span className="text-muted-foreground">Store information not available</span>
+                )}
               </div>
             </div>
             
@@ -319,15 +325,21 @@ export default function AdminSubmissions() {
               <h3 className="font-semibold">{selectedCoupon?.title}</h3>
               <p className="text-sm text-muted-foreground">{selectedCoupon?.description}</p>
               <div className="flex items-center text-sm gap-2">
-                <img 
-                  src={selectedCoupon?.store.logo} 
-                  alt={selectedCoupon?.store.name}
-                  className="w-4 h-4 object-contain"
-                  onError={(e) => {
-                    e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedCoupon?.store.name || '')}&background=random&size=16`;
-                  }}
-                />
-                <span>{selectedCoupon?.store.name}</span>
+                {selectedCoupon?.store ? (
+                  <>
+                    <img 
+                      src={selectedCoupon.store.logo || ''} 
+                      alt={selectedCoupon.store.name || 'Store'}
+                      className="w-4 h-4 object-contain"
+                      onError={(e) => {
+                        e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedCoupon.store.name || 'Store')}&background=random&size=16`;
+                      }}
+                    />
+                    <span>{selectedCoupon.store.name || 'Unknown Store'}</span>
+                  </>
+                ) : (
+                  <span className="text-muted-foreground">Store information not available</span>
+                )}
               </div>
             </div>
             
@@ -497,7 +509,7 @@ const SubmissionCard = ({ coupon, onApprove, onReject, showActions = false }: Su
           
           <div>
             <h4 className="text-sm font-medium mb-1">Expiration Date</h4>
-            <span>{format(new Date(coupon.expiresAt), 'MMM d, yyyy')}</span>
+            <span>{coupon.expiresAt ? format(new Date(coupon.expiresAt), 'MMM d, yyyy') : 'No expiration date'}</span>
           </div>
         </div>
         
