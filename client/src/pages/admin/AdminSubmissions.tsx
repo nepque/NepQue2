@@ -179,20 +179,29 @@ export default function AdminSubmissions() {
     },
     onSuccess: (data) => {
       console.log("Invalidating queries after successful delete");
-      // Force a refresh of all submission status tabs
-      queryClient.invalidateQueries({ queryKey: ['/api/user-submitted-coupons'] });
+      
+      // Invalidate specific query for current status tab
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/user-submitted-coupons', { status: selectedTab }] 
+      });
+      
+      // Also invalidate general queries to ensure all tabs are refreshed
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/user-submitted-coupons'] 
+      });
+      
       toast({
         title: "Coupon permanently deleted",
         description: "The coupon has been removed from the database."
       });
+      
       setShowDeleteDialog(false);
       setSelectedCoupon(null);
       
-      // Force refetch to ensure UI is updated
-      setTimeout(() => {
-        console.log("Forcing refetch after delete");
-        queryClient.refetchQueries({ queryKey: ['/api/user-submitted-coupons'] });
-      }, 100);
+      // Force immediate refetch of the current tab to ensure UI is updated
+      queryClient.refetchQueries({ 
+        queryKey: ['/api/user-submitted-coupons', { status: selectedTab }]
+      });
     },
     onError: (error) => {
       console.error("Error in delete mutation:", error);
