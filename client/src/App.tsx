@@ -23,6 +23,9 @@ import AdminCategories from "@/pages/admin/AdminCategories";
 import AdminCouponNew from "@/pages/admin/AdminCouponNew";
 import AdminStoreNew from "@/pages/admin/AdminStoreNew";
 import AdminCategoryNew from "@/pages/admin/AdminCategoryNew";
+import AdminCouponEdit from "@/pages/admin/AdminCouponEdit";
+import AdminStoreEdit from "@/pages/admin/AdminStoreEdit";
+import AdminCategoryEdit from "@/pages/admin/AdminCategoryEdit";
 
 function UserRouter() {
   return (
@@ -55,10 +58,10 @@ function AdminRouter() {
       <Route path="/admin/stores/new" component={AdminStoreNew} />
       <Route path="/admin/categories/new" component={AdminCategoryNew} />
       
-      {/* Edit routes - would need to be implemented */}
-      <Route path="/admin/coupons/edit/:id" component={AdminCoupons} />
-      <Route path="/admin/stores/edit/:id" component={AdminStores} />
-      <Route path="/admin/categories/edit/:id" component={AdminCategories} />
+      {/* Edit routes */}
+      <Route path="/admin/coupons/edit/:id" component={AdminCouponEdit} />
+      <Route path="/admin/stores/edit/:id" component={AdminStoreEdit} />
+      <Route path="/admin/categories/edit/:id" component={AdminCategoryEdit} />
       
       <Route component={NotFound} />
     </Switch>
