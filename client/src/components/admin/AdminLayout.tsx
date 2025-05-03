@@ -9,7 +9,8 @@ import {
   Bell,
   User,
   ChevronDown,
-  LogOut
+  LogOut,
+  Users
 } from "lucide-react";
 
 interface AdminLayoutProps {
@@ -42,7 +43,7 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
               <Link 
                 href="/admin" 
                 className={`flex items-center py-3 px-6 ${
-                  isActive("/admin") && !isActive("/admin/coupons") && !isActive("/admin/stores") && !isActive("/admin/categories") && !isActive("/admin/settings")
+                  isActive("/admin") && !isActive("/admin/coupons") && !isActive("/admin/stores") && !isActive("/admin/categories") && !isActive("/admin/users") && !isActive("/admin/settings")
                     ? "bg-white/15 border-l-4 border-white text-white"
                     : "text-gray-300 hover:text-white hover:bg-white/10"
                 } transition-colors`}
@@ -88,6 +89,19 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
               >
                 <Tag className="w-5 h-5 mr-3" />
                 <span>Categories</span>
+              </Link>
+            </li>
+            <li>
+              <Link 
+                href="/admin/users" 
+                className={`flex items-center py-3 px-6 ${
+                  isActive("/admin/users")
+                    ? "bg-white/15 border-l-4 border-white text-white"
+                    : "text-gray-300 hover:text-white hover:bg-white/10"
+                } transition-colors`}
+              >
+                <Users className="w-5 h-5 mr-3" />
+                <span>Users</span>
               </Link>
             </li>
             <li>
