@@ -51,6 +51,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all users with submission counts
   app.get("/api/admin/users", async (req, res) => {
     try {
+      // Set cache control headers to prevent browser caching
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      
       // Get all users
       const users = await storage.getAllUsers();
       
@@ -68,6 +73,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
       );
       
+      // Log the response being sent
+      console.log(`Sending ${usersWithSubmissionCounts.length} users with submission counts`);
+      
       res.json(usersWithSubmissionCounts);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -78,6 +86,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update user details
   app.patch("/api/admin/users/:id", async (req, res) => {
     try {
+      // Set cache control headers to prevent browser caching
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      
       const userId = Number(req.params.id);
       const user = await storage.getUser(userId);
       
@@ -90,6 +103,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body 
       });
       
+      console.log(`Updated user ${userId}:`, updatedUser);
       res.json(updatedUser);
     } catch (error) {
       console.error("Error updating user:", error);
@@ -100,6 +114,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Ban/unban user
   app.post("/api/admin/users/:id/ban", async (req, res) => {
     try {
+      // Set cache control headers to prevent browser caching
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      
       const userId = Number(req.params.id);
       const { isBanned } = req.body;
       
@@ -113,6 +132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isBanned
       });
       
+      console.log(`Changed ban status for user ${userId} to ${isBanned}:`, updatedUser);
       res.json(updatedUser);
     } catch (error) {
       console.error("Error updating user ban status:", error);

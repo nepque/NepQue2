@@ -52,7 +52,9 @@ const AdminUsers = () => {
     queryKey: ['/api/admin/users'],
     queryFn: async () => {
       try {
-        const response = await apiRequest('/api/admin/users');
+        // Add cache-busting parameter to avoid browser cache
+        const timestamp = new Date().getTime();
+        const response = await apiRequest(`/api/admin/users?_=${timestamp}`);
         console.log('API Response:', response); // Debug the response
         
         // Check if we actually got a response
@@ -86,7 +88,10 @@ const AdminUsers = () => {
         console.error('Error fetching users:', e);
         return [];
       }
-    }
+    },
+    // Disable caching to always get fresh data
+    staleTime: 0,
+    refetchInterval: 2000, // Automatically refresh every 2 seconds
   });
 
   // Ban/unban user mutation
