@@ -48,14 +48,36 @@ export default function SubmitCouponPage() {
   // Fetch categories and stores
   const { data: categoriesData, isLoading: isLoadingCategories } = useQuery({
     queryKey: ['/api/categories'],
-    queryFn: ({ signal }) => apiRequest('/api/categories', { signal }),
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/categories');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch categories: ${response.status}`);
+        }
+        return await response.json();
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        return [];
+      }
+    }
   });
   // Ensure categories is always an array
   const categories = Array.isArray(categoriesData) ? categoriesData : [];
 
   const { data: storesData, isLoading: isLoadingStores } = useQuery({
     queryKey: ['/api/stores'],
-    queryFn: ({ signal }) => apiRequest('/api/stores', { signal }),
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/stores');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch stores: ${response.status}`);
+        }
+        return await response.json();
+      } catch (error) {
+        console.error("Error fetching stores:", error);
+        return [];
+      }
+    }
   });
   // Ensure stores is always an array
   const stores = Array.isArray(storesData) ? storesData : [];

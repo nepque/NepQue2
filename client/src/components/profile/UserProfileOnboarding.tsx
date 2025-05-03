@@ -20,12 +20,34 @@ export const UserProfileOnboarding = ({ onComplete }: { onComplete: () => void }
   // Fetch categories and stores with counts
   const { data: categoriesWithCount = [], isLoading: isLoadingCategories } = useQuery({
     queryKey: ['/api/categories/with-counts'],
-    queryFn: ({ signal }) => apiRequest('/api/categories/with-counts', { signal })
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/categories/with-counts');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch categories: ${response.status}`);
+        }
+        return await response.json();
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        return [];
+      }
+    }
   });
 
   const { data: storesWithCount = [], isLoading: isLoadingStores } = useQuery({
     queryKey: ['/api/stores/with-counts'],
-    queryFn: ({ signal }) => apiRequest('/api/stores/with-counts', { signal })
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/stores/with-counts');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch stores: ${response.status}`);
+        }
+        return await response.json();
+      } catch (error) {
+        console.error("Error fetching stores:", error);
+        return [];
+      }
+    }
   });
 
   // Toggle category selection
