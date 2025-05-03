@@ -27,6 +27,7 @@ import AdminCategoryNew from "@/pages/admin/AdminCategoryNew";
 import AdminCouponEdit from "@/pages/admin/AdminCouponEdit";
 import AdminStoreEdit from "@/pages/admin/AdminStoreEdit";
 import AdminCategoryEdit from "@/pages/admin/AdminCategoryEdit";
+import AdminUsers from "@/pages/admin/AdminUsers";
 
 function UserRouter() {
   return (
@@ -53,6 +54,7 @@ function AdminRouter() {
       <Route path="/admin/coupons" component={AdminCoupons} />
       <Route path="/admin/stores" component={AdminStores} />
       <Route path="/admin/categories" component={AdminCategories} />
+      <Route path="/admin/users" component={AdminUsers} />
       
       {/* Create new item routes */}
       <Route path="/admin/coupons/new" component={AdminCouponNew} />

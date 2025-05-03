@@ -4,10 +4,12 @@ import {
   signInWithPopup, 
   GoogleAuthProvider, 
   createUserWithEmailAndPassword,
-  signInWithEmailAndPassword as firebaseSignInWithEmail,
+  signInWithEmailAndPassword as signInWithEmailPwd,
   signOut as firebaseSignOut,
-  onAuthStateChanged,
-  User
+  updateProfile,
+  User,
+  sendPasswordResetEmail,
+  UserCredential
 } from "firebase/auth";
 
 const firebaseConfig = {
@@ -24,7 +26,7 @@ const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
 // Sign in with Google
-export const signInWithGoogle = async () => {
+export const signInWithGoogle = async (): Promise<User> => {
   try {
     const result = await signInWithPopup(auth, googleProvider);
     return result.user;
@@ -35,10 +37,10 @@ export const signInWithGoogle = async () => {
 };
 
 // Sign up with email/password
-export const signUpWithEmail = async (email: string, password: string) => {
+export const signUpWithEmail = async (email: string, password: string): Promise<User> => {
   try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    return userCredential.user;
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    return result.user;
   } catch (error) {
     console.error("Error signing up with email: ", error);
     throw error;
@@ -46,10 +48,10 @@ export const signUpWithEmail = async (email: string, password: string) => {
 };
 
 // Sign in with email/password
-export const signInWithEmail = async (email: string, password: string) => {
+export const signInWithEmail = async (email: string, password: string): Promise<User> => {
   try {
-    const userCredential = await firebaseSignInWithEmail(auth, email, password);
-    return userCredential.user;
+    const result = await signInWithEmailPwd(auth, email, password);
+    return result.user;
   } catch (error) {
     console.error("Error signing in with email: ", error);
     throw error;
@@ -57,11 +59,38 @@ export const signInWithEmail = async (email: string, password: string) => {
 };
 
 // Sign out
-export const signOut = async () => {
+export const signOut = async (): Promise<void> => {
   try {
     await firebaseSignOut(auth);
   } catch (error) {
     console.error("Error signing out: ", error);
+    throw error;
+  }
+};
+
+// Update user profile
+export const updateUserProfile = async (
+  user: User, 
+  displayName?: string | null, 
+  photoURL?: string | null
+): Promise<void> => {
+  try {
+    await updateProfile(user, {
+      displayName: displayName || undefined,
+      photoURL: photoURL || undefined
+    });
+  } catch (error) {
+    console.error("Error updating profile: ", error);
+    throw error;
+  }
+};
+
+// Send password reset email
+export const sendPasswordReset = async (email: string): Promise<void> => {
+  try {
+    await sendPasswordResetEmail(auth, email);
+  } catch (error) {
+    console.error("Error sending password reset email: ", error);
     throw error;
   }
 };
@@ -71,9 +100,17 @@ export const getCurrentUser = (): User | null => {
   return auth.currentUser;
 };
 
-// Listen to auth state changes
+// Listen for auth state changes
 export const onAuthStateChange = (callback: (user: User | null) => void) => {
-  return onAuthStateChanged(auth, callback);
+  return auth.onAuthStateChanged(callback);
+};
+
+// Get all users (for admin only) - requires Firebase Admin SDK
+// Note: This is typically done on the server side with the Admin SDK
+// We'll mock this for now, but in a real app you would use server endpoints
+export const getAllUsers = async (): Promise<User[]> => {
+  // In a real app, you would call a server endpoint that uses the Firebase Admin SDK
+  throw new Error("This should be implemented on the server side with Firebase Admin SDK");
 };
 
 export { auth };
