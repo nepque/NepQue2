@@ -14,9 +14,15 @@ export async function apiRequest(
   // Set up default headers
   const headers = new Headers(options?.headers);
   
+  // Always set content type for JSON
+  if (!headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+  
   // Add admin auth token for admin-related endpoints
   if (url.includes('/api/admin') || url.includes('/api/stores/with-counts') || url.includes('/api/categories/with-counts')) {
     const adminToken = localStorage.getItem('adminToken');
+    console.log(`apiRequest: Adding admin token header for URL: ${url}, token exists: ${!!adminToken}`);
     if (adminToken) {
       headers.set('Authorization', `Bearer ${adminToken}`);
     }
@@ -49,8 +55,11 @@ export const getQueryFn: <T>(options: {
     
     // Include admin auth token for admin API requests
     const headers = new Headers();
+    headers.set('Content-Type', 'application/json');
+    
     if (url.includes('/api/admin') || url.includes('/api/stores/with-counts') || url.includes('/api/categories/with-counts')) {
       const adminToken = localStorage.getItem('adminToken');
+      console.log(`Adding admin token header for URL: ${url}, token exists: ${!!adminToken}`);
       if (adminToken) {
         headers.set('Authorization', `Bearer ${adminToken}`);
       }

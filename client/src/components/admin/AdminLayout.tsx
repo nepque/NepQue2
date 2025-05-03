@@ -13,6 +13,7 @@ import {
   Users,
   Inbox
 } from "lucide-react";
+import { queryClient } from "@/lib/queryClient";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -27,8 +28,16 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
     const adminToken = localStorage.getItem("adminToken");
     if (!adminToken) {
       setLocation("/admin/login");
+    } else {
+      // If we have a token, refresh admin-related queries
+      if (location.includes('/admin/stores')) {
+        queryClient.invalidateQueries({queryKey: ['/api/stores/with-counts']});
+      }
+      if (location.includes('/admin/categories')) {
+        queryClient.invalidateQueries({queryKey: ['/api/categories/with-counts']});
+      }
     }
-  }, [setLocation]);
+  }, [setLocation, location]);
   
   const isActive = (path: string) => {
     return location.startsWith(path);
