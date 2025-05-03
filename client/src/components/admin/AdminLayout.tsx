@@ -11,7 +11,7 @@ import {
   ChevronDown,
   LogOut,
   Users,
-  InboxIcon
+  Inbox
 } from "lucide-react";
 
 interface AdminLayoutProps {
@@ -103,6 +103,19 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
               >
                 <Users className="w-5 h-5 mr-3" />
                 <span>Users</span>
+              </Link>
+            </li>
+            <li>
+              <Link 
+                href="/admin/submissions" 
+                className={`flex items-center py-3 px-6 ${
+                  isActive("/admin/submissions")
+                    ? "bg-white/15 border-l-4 border-white text-white"
+                    : "text-gray-300 hover:text-white hover:bg-white/10"
+                } transition-colors`}
+              >
+                <Inbox className="w-5 h-5 mr-3" />
+                <span>Submissions</span>
               </Link>
             </li>
             <li>
