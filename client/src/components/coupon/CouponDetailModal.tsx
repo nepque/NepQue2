@@ -163,7 +163,7 @@ const CouponDetailModal = ({ coupon, onClose }: CouponDetailModalProps) => {
             href={coupon.store.website}
             target="_blank"
             rel="noopener noreferrer"
-            className="block w-full bg-secondary hover:bg-secondary/90 text-white font-medium py-3 px-4 rounded text-center transition-colors"
+            className="block w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded text-center transition-colors"
           >
             Shop Now at {coupon.store.name}
           </a>
