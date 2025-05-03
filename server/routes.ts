@@ -845,9 +845,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const withdrawalRequests = await storage.getWithdrawalRequests({ userId });
-      console.log(`Found ${withdrawalRequests.length} withdrawal requests for user ${userId}:`, withdrawalRequests);
+      console.log(`Found ${withdrawalRequests.length} withdrawal requests for user ${userId}`);
       
-      res.json(withdrawalRequests);
+      // Return an empty array instead of null/undefined
+      res.json(withdrawalRequests || []);
     } catch (error) {
       console.error("Error fetching user withdrawal requests:", error);
       res.status(500).json({ message: "Failed to fetch user withdrawal requests" });

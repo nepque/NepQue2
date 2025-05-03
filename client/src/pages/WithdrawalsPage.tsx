@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
@@ -8,14 +7,14 @@ import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Helmet } from "react-helmet";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, RefreshCcw } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 
 export default function WithdrawalsPage() {
   const { currentUser } = useAuth();
 
-  const { data: withdrawals = [], isLoading, error } = useQuery<WithdrawalRequestWithUser[]>({
+  const { data: withdrawals = [], isLoading, error, refetch } = useQuery<WithdrawalRequestWithUser[]>({
     queryKey: [`/api/users/${currentUser?.id}/withdrawals`],
     queryFn: async () => {
       try {
@@ -40,6 +39,10 @@ export default function WithdrawalsPage() {
       console.error('Withdrawal query error:', error);
     }
   }, [error]);
+
+  const handleRefresh = () => {
+    refetch();
+  }
 
   if (!currentUser) {
     return null;
@@ -72,6 +75,17 @@ export default function WithdrawalsPage() {
                   <div key={i} className="h-12 bg-gray-100 rounded" />
                 ))}
               </div>
+            </div>
+          ) : error ? (
+            <div className="p-6 text-center">
+              <h3 className="text-lg font-medium text-gray-900 mb-1">Error loading withdrawal history</h3>
+              <p className="text-gray-500 mb-4">
+                There was a problem fetching your withdrawal requests
+              </p>
+              <Button onClick={handleRefresh} variant="outline" size="sm">
+                <RefreshCcw className="h-4 w-4 mr-2" />
+                Try Again
+              </Button>
             </div>
           ) : withdrawals.length > 0 ? (
             <Table>
