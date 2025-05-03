@@ -113,10 +113,30 @@ const EarnPage = () => {
   
   // Format next check-in time
   const getNextCheckInTime = () => {
-    if (!streakInfo || !streakInfo.nextCheckInTime) return "Unknown";
-    const nextTime = new Date(streakInfo.nextCheckInTime);
-    if (streakInfo.canCheckInNow) return "Now";
-    return formatDistance(nextTime, new Date(), { addSuffix: true });
+    if (!streakInfo) return "Unknown";
+    
+    // Debug the value received
+    console.log("Next check-in time value:", streakInfo.nextCheckInTime);
+    
+    if (!streakInfo.nextCheckInTime) return "Unknown";
+    
+    try {
+      // Handle string dates from API
+      const nextTime = new Date(streakInfo.nextCheckInTime);
+      console.log("Parsed next check-in time:", nextTime);
+      
+      // Check if date is valid before formatting
+      if (isNaN(nextTime.getTime())) {
+        console.error("Invalid date format received:", streakInfo.nextCheckInTime);
+        return "Unknown";
+      }
+      
+      if (streakInfo.canCheckInNow) return "Now";
+      return formatDistance(nextTime, new Date(), { addSuffix: true });
+    } catch (error) {
+      console.error("Error parsing next check-in time:", error);
+      return "Unknown";
+    }
   };
 
   // Returns relevant badge color based on streak day
