@@ -57,13 +57,19 @@ export const UserProfileOnboarding = ({ onComplete }: { onComplete: () => void }
       
       try {
         // Try to fetch the user from our DB using Firebase UID
-        userData = await apiRequest(`/api/users/${currentUser.uid}`);
+        const response = await fetch(`/api/users/${currentUser.uid}`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch user: ${response.status}`);
+        }
+        userData = await response.json();
       } catch (err) {
+        console.log("User not found or error fetching, creating user...", err);
         // User doesn't exist, create them
-        console.log("User not found in database, creating user...");
-        userData = await apiRequest('/api/users', {
+        const createResponse = await fetch('/api/users', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+          },
           body: JSON.stringify({
             firebaseUid: currentUser.uid,
             email: currentUser.email,
@@ -71,14 +77,22 @@ export const UserProfileOnboarding = ({ onComplete }: { onComplete: () => void }
             photoURL: currentUser.photoURL,
           }),
         });
+        
+        if (!createResponse.ok) {
+          throw new Error(`Failed to create user: ${createResponse.status}`);
+        }
+        
+        userData = await createResponse.json();
       }
       
-      if (!userData || !userData.id) {
+      console.log("User data:", userData);
+      
+      if (!userData || typeof userData.id === 'undefined') {
         throw new Error("Could not find or create user data");
       }
       
       // Then update preferences using the database ID
-      await apiRequest(`/api/users/${userData.id}/preferences`, {
+      const updateResponse = await fetch(`/api/users/${userData.id}/preferences`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -87,6 +101,12 @@ export const UserProfileOnboarding = ({ onComplete }: { onComplete: () => void }
           hasCompletedOnboarding: true
         })
       });
+      
+      if (!updateResponse.ok) {
+        throw new Error(`Failed to update preferences: ${updateResponse.status}`);
+      }
+      
+      const updatedData = await updateResponse.json();
       
       // Invalidate user query cache
       queryClient.invalidateQueries({ queryKey: [`/api/users/${currentUser.uid}`] });

@@ -1,10 +1,10 @@
-import { Switch, Route, useLocation } from "wouter";
+import { Switch, Route, useLocation, Link } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
-import { AuthProvider } from "@/hooks/use-auth";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
 
 // User-facing components
 import Header from "@/components/layout/Header";
@@ -79,9 +79,28 @@ function AdminRouter() {
 
 function Router() {
   const [location] = useLocation();
-  const isAdmin = location.startsWith("/admin");
+  const { currentUser, isAdmin } = useAuth();
+  const isAdminRoute = location.startsWith("/admin");
   
-  if (isAdmin) {
+  // If trying to access admin routes but not an admin, show access denied message
+  if (isAdminRoute && !isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-red-500 text-white p-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
+          <p className="mb-4">You don't have permission to access this page.</p>
+          <Link href="/">
+            <button className="px-4 py-2 bg-white text-red-500 rounded shadow hover:bg-gray-100">
+              Go to Homepage
+            </button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+  
+  // Continue to the right router based on path
+  if (isAdminRoute) {
     return <AdminRouter />;
   }
   
