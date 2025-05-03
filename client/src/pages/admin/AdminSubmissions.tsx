@@ -264,6 +264,8 @@ export default function AdminSubmissions() {
                     <SubmissionCard 
                       key={coupon.id} 
                       coupon={coupon}
+                      onEdit={() => handleEdit(coupon)}
+                      onDelete={() => handleDelete(coupon)}
                       showActions={false}
                     />
                   ))}
@@ -286,6 +288,8 @@ export default function AdminSubmissions() {
                     <SubmissionCard 
                       key={coupon.id} 
                       coupon={coupon}
+                      onEdit={() => handleEdit(coupon)}
+                      onDelete={() => handleDelete(coupon)}
                       showActions={false}
                     />
                   ))}
@@ -413,7 +417,7 @@ export default function AdminSubmissions() {
                 className="min-h-[100px]"
               />
               <p className="mt-1 text-xs text-muted-foreground">
-                This will be shared with the user who submitted the coupon
+                These notes will be visible to the user who submitted the coupon
               </p>
             </div>
           </div>
@@ -422,7 +426,7 @@ export default function AdminSubmissions() {
               Cancel
             </Button>
             <Button 
-              variant="destructive" 
+              variant="destructive"
               onClick={confirmReject}
               disabled={rejectMutation.isPending || !reviewNotes.trim()}
               className="gap-1"
@@ -449,43 +453,17 @@ export default function AdminSubmissions() {
           <DialogHeader>
             <DialogTitle>Delete Coupon</DialogTitle>
             <DialogDescription>
-              This will permanently delete the coupon. This action cannot be undone.
+              This will permanently delete the coupon from the system. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <h3 className="font-semibold">{selectedCoupon?.title}</h3>
               <p className="text-sm text-muted-foreground">{selectedCoupon?.description}</p>
-              <div className="flex items-center text-sm gap-2">
-                {selectedCoupon?.store ? (
-                  <>
-                    <img 
-                      src={selectedCoupon.store.logo || ''} 
-                      alt={selectedCoupon.store.name || 'Store'}
-                      className="w-4 h-4 object-contain"
-                      onError={(e) => {
-                        e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedCoupon.store.name || 'Store')}&background=random&size=16`;
-                      }}
-                    />
-                    <span>{selectedCoupon.store.name || 'Unknown Store'}</span>
-                  </>
-                ) : (
-                  <span className="text-muted-foreground">Store information not available</span>
-                )}
-              </div>
-            </div>
-            
-            <div className="bg-yellow-50 p-4 rounded-md border border-yellow-200">
-              <div className="flex gap-2 text-yellow-700">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                  <line x1="12" y1="9" x2="12" y2="13"></line>
-                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                </svg>
-                <div>
-                  <h4 className="font-medium text-sm">Warning</h4>
-                  <p className="text-xs mt-1">This action is permanent and cannot be undone. The coupon will be completely removed from the system.</p>
-                </div>
+              
+              <div className="mt-4 p-3 bg-red-50 text-red-800 rounded-md">
+                <p className="text-sm font-medium">Warning:</p>
+                <p className="text-sm">Deleting this coupon will remove it permanently and all associated data will be lost.</p>
               </div>
             </div>
           </div>
@@ -494,7 +472,7 @@ export default function AdminSubmissions() {
               Cancel
             </Button>
             <Button 
-              variant="destructive" 
+              variant="destructive"
               onClick={confirmDelete}
               disabled={deleteMutation.isPending}
               className="gap-1"
@@ -601,31 +579,18 @@ const SubmissionCard = ({ coupon, onApprove, onReject, onEdit, onDelete, showAct
           </div>
           
           <div>
-            <h4 className="text-sm font-medium mb-1">Coupon Code</h4>
-            <code className="bg-muted px-2 py-1 rounded text-sm">{coupon.code}</code>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div>
             <h4 className="text-sm font-medium mb-1">Submitted By</h4>
             <div className="flex items-center">
               {coupon.user ? (
                 <>
-                  {coupon.user.photoURL ? (
-                    <img 
-                      src={coupon.user.photoURL} 
-                      alt="" 
-                      className="w-5 h-5 rounded-full mr-2"
-                      onError={(e) => {
-                        e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(coupon.user.displayName || coupon.user.email || 'User')}&background=random&size=20`;
-                      }}
-                    />
-                  ) : (
-                    <div className="w-5 h-5 rounded-full bg-gray-200 mr-2 flex items-center justify-center text-xs">
-                      {(coupon.user.displayName || coupon.user.email || 'U')[0]}
-                    </div>
-                  )}
+                  <img 
+                    src={coupon.user.photoURL || ''} 
+                    alt={coupon.user.displayName || 'User'}
+                    className="w-4 h-4 mr-2 rounded-full"
+                    onError={(e) => {
+                      e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(coupon.user.displayName || 'User')}&background=random&size=16`;
+                    }}
+                  />
                   <span>{coupon.user.displayName || coupon.user.email || 'Unknown User'}</span>
                 </>
               ) : (
