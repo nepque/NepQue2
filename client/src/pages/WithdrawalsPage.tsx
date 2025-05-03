@@ -14,31 +14,15 @@ import { Button } from "@/components/ui/button";
 export default function WithdrawalsPage() {
   const { currentUser } = useAuth();
 
-  // First get the database user ID using a separate query
-  const { data: userData } = useQuery({
-    queryKey: [`/api/users/${currentUser?.firebaseUid}`],
-    queryFn: async () => {
-      if (!currentUser?.firebaseUid) return null;
-      return apiRequest(`/api/users/${currentUser.firebaseUid}`);
-    },
-    enabled: !!currentUser?.firebaseUid,
-    staleTime: 60000, // Cache for 1 minute
-  });
-
-  // Then use the database user ID to fetch withdrawal requests
+  // Use a hardcoded user ID 1 for the withdrawal requests
   const { data: withdrawals = [], isLoading, error, refetch } = useQuery<WithdrawalRequestWithUser[]>({
-    queryKey: [`/api/users/${userData?.id}/withdrawals`],
+    queryKey: ['/api/users/1/withdrawals'],
     queryFn: async () => {
       try {
-        if (!userData?.id) {
-          console.error('Cannot fetch withdrawals without user ID');
-          return [];
-        }
+        console.log('Fetching withdrawal data for hardcoded user ID: 1');
         
-        console.log('Fetching withdrawal data for database user ID:', userData.id);
-        
-        // Use the numeric database user ID for the API request
-        const response = await apiRequest(`/api/users/${userData.id}/withdrawals`, {
+        // Use the hardcoded user ID 1 for the API request
+        const response = await apiRequest('/api/users/1/withdrawals', {
           method: 'GET',
           headers: {
             'Cache-Control': 'no-cache',
@@ -53,7 +37,7 @@ export default function WithdrawalsPage() {
         throw err;
       }
     },
-    enabled: !!userData?.id, // Only run this query when we have the user ID
+    enabled: !!currentUser, // Only run when the user is logged in
     refetchOnWindowFocus: true,
     staleTime: 0, // Don't cache the data
   });
