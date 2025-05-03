@@ -18,6 +18,11 @@ import CategoryPage from "@/pages/CategoryPage";
 import SearchResultsPage from "@/pages/SearchResultsPage";
 import ProfilePage from "@/pages/ProfilePage";
 import SubmitCouponPage from "@/pages/SubmitCouponPage";
+import AboutPage from "@/pages/AboutPage";
+import FAQPage from "@/pages/FAQPage";
+import ContactPage from "@/pages/ContactPage";
+import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
+import TermsOfServicePage from "@/pages/TermsOfServicePage";
 
 // Admin components
 import AdminLogin from "@/pages/admin/AdminLogin";
@@ -48,6 +53,11 @@ function UserRouter() {
         <Route path="/search" component={SearchResultsPage} />
         <Route path="/profile" component={ProfilePage} />
         <Route path="/submit-coupon" component={SubmitCouponPage} />
+        <Route path="/about" component={AboutPage} />
+        <Route path="/faq" component={FAQPage} />
+        <Route path="/contact" component={ContactPage} />
+        <Route path="/privacy-policy" component={PrivacyPolicyPage} />
+        <Route path="/terms-of-service" component={TermsOfServicePage} />
         <Route component={NotFound} />
       </Switch>
       <Footer />
