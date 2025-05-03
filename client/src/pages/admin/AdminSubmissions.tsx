@@ -24,11 +24,21 @@ export default function AdminSubmissions() {
   // Fetch user-submitted coupons based on the selected status tab
   const { data: coupons = [], isLoading } = useQuery({
     queryKey: ['/api/user-submitted-coupons', { status: selectedTab }],
-    queryFn: ({ signal }) => 
-      apiRequest<UserSubmittedCouponWithRelations[]>(
-        `/api/user-submitted-coupons?status=${selectedTab}&sortBy=newest`, 
-        { signal }
-      )
+    queryFn: async () => {
+      try {
+        console.log(`Fetching submissions with status: ${selectedTab}`);
+        const response = await fetch(`/api/user-submitted-coupons?status=${selectedTab}&sortBy=newest`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch user-submitted coupons: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log("Fetched user-submitted coupons:", data);
+        return data;
+      } catch (error) {
+        console.error("Error fetching user-submitted coupons:", error);
+        return [];
+      }
+    }
   });
   
   // Ensure coupons is always an array
@@ -36,12 +46,22 @@ export default function AdminSubmissions() {
   
   // Handle approving a coupon
   const approveMutation = useMutation({
-    mutationFn: (id: number) => 
-      apiRequest(`/api/user-submitted-coupons/${id}/status`, {
+    mutationFn: async (id: number) => {
+      console.log(`Approving coupon with id ${id}, notes: ${reviewNotes}`);
+      const response = await fetch(`/api/user-submitted-coupons/${id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'approved', reviewNotes })
-      }),
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Error approving coupon: ${response.status} - ${errorText}`);
+        throw new Error(`Failed to approve coupon: ${response.status}`);
+      }
+      
+      return await response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/user-submitted-coupons'] });
       toast({
@@ -52,7 +72,8 @@ export default function AdminSubmissions() {
       setReviewNotes("");
       setSelectedCoupon(null);
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Error in approve mutation:", error);
       toast({
         title: "Failed to approve coupon",
         description: "An error occurred while approving the coupon.",
@@ -63,12 +84,22 @@ export default function AdminSubmissions() {
   
   // Handle rejecting a coupon
   const rejectMutation = useMutation({
-    mutationFn: (id: number) => 
-      apiRequest(`/api/user-submitted-coupons/${id}/status`, {
+    mutationFn: async (id: number) => {
+      console.log(`Rejecting coupon with id ${id}, notes: ${reviewNotes}`);
+      const response = await fetch(`/api/user-submitted-coupons/${id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'rejected', reviewNotes })
-      }),
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Error rejecting coupon: ${response.status} - ${errorText}`);
+        throw new Error(`Failed to reject coupon: ${response.status}`);
+      }
+      
+      return await response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/user-submitted-coupons'] });
       toast({
@@ -79,7 +110,8 @@ export default function AdminSubmissions() {
       setReviewNotes("");
       setSelectedCoupon(null);
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Error in reject mutation:", error);
       toast({
         title: "Failed to reject coupon",
         description: "An error occurred while rejecting the coupon.",

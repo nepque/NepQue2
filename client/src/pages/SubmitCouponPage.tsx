@@ -397,26 +397,13 @@ export default function SubmitCouponPage() {
                   )}
                 />
                 
-                <div className="pt-4 flex flex-col space-y-2">
-                  <Button 
-                    type="submit" 
-                    className="w-full"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Submitting...
-                      </>
-                    ) : 'Submit Coupon (Form)'}
-                  </Button>
-                  
+                <div className="pt-4">
                   <Button 
                     type="button" 
                     className="w-full"
                     disabled={isSubmitting}
                     onClick={() => {
-                      console.log("Manual submit button clicked");
+                      console.log("Submit button clicked");
                       const formData = form.getValues();
                       console.log("Form data:", formData);
                       onSubmit(formData);
@@ -427,7 +414,7 @@ export default function SubmitCouponPage() {
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Submitting...
                       </>
-                    ) : 'Submit Coupon (Manual)'}
+                    ) : 'Submit Coupon'}
                   </Button>
                 </div>
               </form>
