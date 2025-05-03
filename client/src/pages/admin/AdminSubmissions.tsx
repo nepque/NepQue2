@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import { UserSubmittedCouponWithRelations } from "@shared/schema";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +16,7 @@ import { ArrowUpRight, CheckCircle, Clock, Edit, Loader2, Pencil, ThumbsDown, Th
 
 export default function AdminSubmissions() {
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
   const [selectedTab, setSelectedTab] = useState<'pending' | 'approved' | 'rejected'>('pending');
   const [selectedCoupon, setSelectedCoupon] = useState<UserSubmittedCouponWithRelations | null>(null);
   const [reviewNotes, setReviewNotes] = useState("");
@@ -146,6 +147,59 @@ export default function AdminSubmissions() {
     }
   };
   
+  // Handle editing a coupon
+  const handleEdit = (coupon: UserSubmittedCouponWithRelations) => {
+    // Navigate to a new edit page with the coupon ID
+    navigate(`/admin/edit-coupon/${coupon.id}`);
+  };
+  
+  // Handle deleting a coupon
+  const handleDelete = (coupon: UserSubmittedCouponWithRelations) => {
+    setSelectedCoupon(coupon);
+    setShowDeleteDialog(true);
+  };
+  
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      console.log(`Deleting coupon with id ${id}`);
+      const response = await fetch(`/api/user-submitted-coupons/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Error deleting coupon: ${response.status} - ${errorText}`);
+        throw new Error(`Failed to delete coupon: ${response.status}`);
+      }
+      
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/user-submitted-coupons'] });
+      toast({
+        title: "Coupon deleted",
+        description: "The coupon has been permanently deleted."
+      });
+      setShowDeleteDialog(false);
+      setSelectedCoupon(null);
+    },
+    onError: (error) => {
+      console.error("Error in delete mutation:", error);
+      toast({
+        title: "Failed to delete coupon",
+        description: "An error occurred while deleting the coupon.",
+        variant: "destructive"
+      });
+    }
+  });
+  
+  const confirmDelete = () => {
+    if (selectedCoupon) {
+      deleteMutation.mutate(selectedCoupon.id);
+    }
+  };
+  
   return (
     <AdminLayout title="Coupon Submissions">
       <Card>
@@ -186,6 +240,8 @@ export default function AdminSubmissions() {
                       coupon={coupon} 
                       onApprove={() => handleApprove(coupon)}
                       onReject={() => handleReject(coupon)}
+                      onEdit={() => handleEdit(coupon)}
+                      onDelete={() => handleDelete(coupon)}
                       showActions={true}
                     />
                   ))}
@@ -380,6 +436,78 @@ export default function AdminSubmissions() {
                 <>
                   <ThumbsDown className="h-4 w-4" /> 
                   Reject
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Delete Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Coupon</DialogTitle>
+            <DialogDescription>
+              This will permanently delete the coupon. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <h3 className="font-semibold">{selectedCoupon?.title}</h3>
+              <p className="text-sm text-muted-foreground">{selectedCoupon?.description}</p>
+              <div className="flex items-center text-sm gap-2">
+                {selectedCoupon?.store ? (
+                  <>
+                    <img 
+                      src={selectedCoupon.store.logo || ''} 
+                      alt={selectedCoupon.store.name || 'Store'}
+                      className="w-4 h-4 object-contain"
+                      onError={(e) => {
+                        e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedCoupon.store.name || 'Store')}&background=random&size=16`;
+                      }}
+                    />
+                    <span>{selectedCoupon.store.name || 'Unknown Store'}</span>
+                  </>
+                ) : (
+                  <span className="text-muted-foreground">Store information not available</span>
+                )}
+              </div>
+            </div>
+            
+            <div className="bg-yellow-50 p-4 rounded-md border border-yellow-200">
+              <div className="flex gap-2 text-yellow-700">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                  <line x1="12" y1="9" x2="12" y2="13"></line>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <div>
+                  <h4 className="font-medium text-sm">Warning</h4>
+                  <p className="text-xs mt-1">This action is permanent and cannot be undone. The coupon will be completely removed from the system.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={confirmDelete}
+              disabled={deleteMutation.isPending}
+              className="gap-1"
+            >
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" /> 
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash className="h-4 w-4" /> 
+                  Delete Permanently
                 </>
               )}
             </Button>
