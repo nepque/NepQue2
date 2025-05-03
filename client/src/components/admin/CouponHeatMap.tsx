@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { 
   ResponsiveContainer, 
   ScatterChart, 
@@ -15,13 +16,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { ChevronsUpDown, Info } from 'lucide-react';
+import { ChevronsUpDown, Info, AlertCircle } from 'lucide-react';
 import { 
   Tooltip as UITooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // Types for our heat map data
 interface HeatMapDataPoint {
@@ -46,40 +49,18 @@ interface TimeData {
   coupons: number;
 }
 
-// Sample data - In a real application, this would come from the API
-const sampleCategoryData: CategoryData[] = [
-  { category: 'Retail', usageCount: 250, coupons: 15 },
-  { category: 'Food & Drink', usageCount: 180, coupons: 12 },
-  { category: 'Travel', usageCount: 120, coupons: 8 },
-  { category: 'Electronics', usageCount: 300, coupons: 10 },
-  { category: 'Fashion', usageCount: 210, coupons: 14 },
-  { category: 'Beauty', usageCount: 90, coupons: 6 },
-  { category: 'Home & Garden', usageCount: 150, coupons: 9 },
-  { category: 'Sports', usageCount: 60, coupons: 5 }
-];
-
-const sampleTimeData: TimeData[] = [
-  { month: 'Jan', usageCount: 150, coupons: 10 },
-  { month: 'Feb', usageCount: 170, coupons: 12 },
-  { month: 'Mar', usageCount: 190, coupons: 13 },
-  { month: 'Apr', usageCount: 220, coupons: 14 },
-  { month: 'May', usageCount: 250, coupons: 15 },
-  { month: 'Jun', usageCount: 280, coupons: 16 },
-  { month: 'Jul', usageCount: 310, coupons: 18 },
-  { month: 'Aug', usageCount: 290, coupons: 17 },
-  { month: 'Sep', usageCount: 260, coupons: 15 },
-  { month: 'Oct', usageCount: 230, coupons: 14 },
-  { month: 'Nov', usageCount: 200, coupons: 12 },
-  { month: 'Dec', usageCount: 170, coupons: 10 }
-];
-
-// This generates our heat map data from the sample data
+// This generates our heat map data from the API data
 const generateHeatMapData = (
   type: 'category' | 'time',
-  metric: 'usageCount' | 'coupons'
+  metric: 'usageCount' | 'coupons',
+  data?: CategoryData[] | TimeData[]
 ): HeatMapDataPoint[] => {
+  if (!data || data.length === 0) {
+    return [];
+  }
+
   if (type === 'category') {
-    return sampleCategoryData.map((item, index) => ({
+    return (data as CategoryData[]).map((item, index) => ({
       x: index,
       y: 0,  // Fixed y position for category view
       z: item[metric],
@@ -88,7 +69,7 @@ const generateHeatMapData = (
       date: ''
     }));
   } else {
-    return sampleTimeData.map((item, index) => ({
+    return (data as TimeData[]).map((item, index) => ({
       x: index,
       y: 0,  // Fixed y position for time view
       z: item[metric],
@@ -107,8 +88,9 @@ const CustomTooltip = ({ active, payload }: any) => {
     return (
       <div className="bg-white p-3 border border-gray-200 rounded-md shadow-lg">
         <p className="font-medium">{data.name}</p>
-        <p className="text-sm text-gray-600">{`Usage Count: ${data.category ? sampleCategoryData.find(c => c.category === data.category)?.usageCount : sampleTimeData.find(t => t.month === data.date)?.usageCount}`}</p>
-        <p className="text-sm text-gray-600">{`Coupons: ${data.category ? sampleCategoryData.find(c => c.category === data.category)?.coupons : sampleTimeData.find(t => t.month === data.date)?.coupons}`}</p>
+        <p className="text-sm text-gray-600">{`Usage Count: ${data.z}`}</p>
+        {data.category && <p className="text-sm text-gray-600">Category: {data.category}</p>}
+        {data.date && <p className="text-sm text-gray-600">Month: {data.date}</p>}
       </div>
     );
   }
@@ -132,15 +114,67 @@ const CouponHeatMap = () => {
   const [data, setData] = useState<HeatMapDataPoint[]>([]);
   const [maxValue, setMaxValue] = useState<number>(0);
 
+  // Fetch data by category
+  const { 
+    data: categoryData, 
+    isLoading: isCategoryLoading, 
+    error: categoryError 
+  } = useQuery<CategoryData[]>({
+    queryKey: ['/api/heatmap/category'],
+    queryFn: async () => {
+      const response = await fetch('/api/heatmap/category');
+      if (!response.ok) {
+        throw new Error('Failed to fetch category heat map data');
+      }
+      return response.json();
+    },
+    staleTime: 5 * 60 * 1000 // 5 minutes
+  });
+
+  // Fetch data by time
+  const { 
+    data: timeData, 
+    isLoading: isTimeLoading, 
+    error: timeError 
+  } = useQuery<TimeData[]>({
+    queryKey: ['/api/heatmap/time'],
+    queryFn: async () => {
+      const response = await fetch('/api/heatmap/time');
+      if (!response.ok) {
+        throw new Error('Failed to fetch time heat map data');
+      }
+      return response.json();
+    },
+    staleTime: 5 * 60 * 1000 // 5 minutes
+  });
+
   useEffect(() => {
+    // Only process data if we have it
+    if (
+      (activeTab === 'category' && !categoryData) || 
+      (activeTab === 'time' && !timeData)
+    ) {
+      return;
+    }
+
     // Generate heat map data based on active tab and metric
-    const newData = generateHeatMapData(activeTab, metric);
+    const sourceData = activeTab === 'category' ? categoryData : timeData;
+    const newData = generateHeatMapData(activeTab, metric, sourceData);
     setData(newData);
     
     // Find the maximum value for color scaling
-    const max = Math.max(...newData.map(item => item.z));
-    setMaxValue(max);
-  }, [activeTab, metric]);
+    if (newData.length > 0) {
+      const max = Math.max(...newData.map(item => item.z));
+      setMaxValue(max);
+    }
+  }, [activeTab, metric, categoryData, timeData]);
+
+  // Determine if we're loading or have an error
+  const isLoading = (activeTab === 'category' && isCategoryLoading) || 
+                   (activeTab === 'time' && isTimeLoading);
+  
+  const error = (activeTab === 'category' && categoryError) || 
+               (activeTab === 'time' && timeError);
 
   return (
     <Card className="w-full">
@@ -197,62 +231,82 @@ const CouponHeatMap = () => {
       </CardHeader>
 
       <CardContent className="p-1">
-        <div className="w-full h-[350px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <ScatterChart
-              margin={{
-                top: 20,
-                right: 20,
-                bottom: 60,
-                left: 20,
-              }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                type="category" 
-                dataKey="name" 
-                name={activeTab === 'category' ? 'Category' : 'Month'} 
-                tickMargin={20}
-                tick={(props) => {
-                  const { x, y, payload } = props;
-                  return (
-                    <g transform={`translate(${x},${y})`}>
-                      <text 
-                        x={0} 
-                        y={0} 
-                        dy={16} 
-                        textAnchor="end" 
-                        fill="#666"
-                        fontSize={12}
-                        transform="rotate(-45)"
-                      >
-                        {payload.value}
-                      </text>
-                    </g>
-                  );
+        {error ? (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              {error instanceof Error ? error.message : 'Failed to load heat map data'}
+            </AlertDescription>
+          </Alert>
+        ) : isLoading ? (
+          <div className="w-full h-[350px] flex items-center justify-center">
+            <div className="space-y-4 w-full">
+              <Skeleton className="h-[350px] w-full" />
+            </div>
+          </div>
+        ) : data.length === 0 ? (
+          <div className="flex items-center justify-center h-[350px]">
+            <p className="text-gray-500 text-center">No data available for the selected view</p>
+          </div>
+        ) : (
+          <div className="w-full h-[350px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <ScatterChart
+                margin={{
+                  top: 20,
+                  right: 20,
+                  bottom: 60,
+                  left: 20,
                 }}
-              />
-              <YAxis type="number" dataKey="y" tick={false} axisLine={false} />
-              <ZAxis 
-                type="number" 
-                dataKey="z" 
-                range={[100, 1000]} 
-                name={metric === 'usageCount' ? 'Usage Count' : 'Number of Coupons'} 
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend />
-              <Scatter 
-                name={metric === 'usageCount' ? 'Usage Count' : 'Number of Coupons'} 
-                data={data} 
-                fill="#8884d8"
               >
-                {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={getColor(entry.z, maxValue)} />
-                ))}
-              </Scatter>
-            </ScatterChart>
-          </ResponsiveContainer>
-        </div>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  type="category" 
+                  dataKey="name" 
+                  name={activeTab === 'category' ? 'Category' : 'Month'} 
+                  tickMargin={20}
+                  tick={(props) => {
+                    const { x, y, payload } = props;
+                    return (
+                      <g transform={`translate(${x},${y})`}>
+                        <text 
+                          x={0} 
+                          y={0} 
+                          dy={16} 
+                          textAnchor="end" 
+                          fill="#666"
+                          fontSize={12}
+                          transform="rotate(-45)"
+                        >
+                          {payload.value}
+                        </text>
+                      </g>
+                    );
+                  }}
+                />
+                <YAxis type="number" dataKey="y" tick={false} axisLine={false} />
+                <ZAxis 
+                  type="number" 
+                  dataKey="z" 
+                  range={[100, 1000]} 
+                  name={metric === 'usageCount' ? 'Usage Count' : 'Number of Coupons'} 
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                <Scatter 
+                  name={metric === 'usageCount' ? 'Usage Count' : 'Number of Coupons'} 
+                  data={data} 
+                  fill="#8884d8"
+                >
+                  {data.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={getColor(entry.z, maxValue)} />
+                  ))}
+                </Scatter>
+              </ScatterChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
