@@ -11,7 +11,15 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User, PlusCircle, UserCircle } from "lucide-react";
+import { 
+  LogOut, 
+  User, 
+  PlusCircle, 
+  UserCircle, 
+  Ticket, 
+  Menu, 
+  UserCircle2 
+} from "lucide-react";
 
 const Header = () => {
   const [location] = useLocation();
@@ -41,14 +49,14 @@ const Header = () => {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center">
-              <i className="fas fa-ticket-alt text-secondary text-xl mr-2"></i>
+              <Ticket className="text-secondary h-6 w-6 mr-2" />
               <span className="text-xl font-bold text-primary">NepQue</span>
             </Link>
             <button 
               onClick={toggleMobileMenu} 
               className="md:hidden p-2 rounded-md hover:bg-gray-100"
             >
-              <i className="fas fa-bars text-neutral-600"></i>
+              <Menu className="text-neutral-600 h-5 w-5" />
             </button>
           </div>
           
@@ -124,7 +132,7 @@ const Header = () => {
                   className="bg-blue-600 hover:bg-blue-700"
                   onClick={() => setIsAuthModalOpen(true)}
                 >
-                  <i className="fas fa-user mr-2"></i> Sign In
+                  <UserCircle2 className="h-4 w-4 mr-2" /> Sign In
                 </Button>
               )}
             </div>

@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { Ticket, Facebook, Twitter, Instagram, PinOff, Pin } from "lucide-react";
 
 const Footer = () => {
   return (
@@ -7,22 +8,22 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           <div>
             <div className="flex items-center mb-4">
-              <i className="fas fa-ticket-alt text-secondary text-xl mr-2"></i>
+              <Ticket className="text-secondary h-6 w-6 mr-2" />
               <span className="text-xl font-bold text-white">NepQue</span>
             </div>
             <p className="text-neutral-400 mb-4">Your one-stop destination for the best coupons and deals online, helping you save on every purchase.</p>
             <div className="flex space-x-4">
               <a href="#" className="text-neutral-400 hover:text-white transition-colors">
-                <i className="fab fa-facebook-f"></i>
+                <Facebook className="h-5 w-5" />
               </a>
               <a href="#" className="text-neutral-400 hover:text-white transition-colors">
-                <i className="fab fa-twitter"></i>
+                <Twitter className="h-5 w-5" />
               </a>
               <a href="#" className="text-neutral-400 hover:text-white transition-colors">
-                <i className="fab fa-instagram"></i>
+                <Instagram className="h-5 w-5" />
               </a>
               <a href="#" className="text-neutral-400 hover:text-white transition-colors">
-                <i className="fab fa-pinterest-p"></i>
+                <Pin className="h-5 w-5" />
               </a>
             </div>
           </div>
