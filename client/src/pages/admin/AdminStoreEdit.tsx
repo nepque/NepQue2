@@ -37,6 +37,9 @@ const formSchema = z.object({
   slug: z.string().min(1, "Slug is required"),
   logo: z.string().optional(),
   website: z.string().url("Must be a valid URL").min(1, "Website URL is required"),
+  metaTitle: z.string().optional(),
+  metaDescription: z.string().optional(),
+  metaKeywords: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -73,6 +76,9 @@ const AdminStoreEdit = () => {
       slug: "",
       logo: "",
       website: "https://",
+      metaTitle: "",
+      metaDescription: "",
+      metaKeywords: "",
     },
   });
 
@@ -84,6 +90,9 @@ const AdminStoreEdit = () => {
         slug: store.slug,
         logo: store.logo || "",
         website: store.website,
+        metaTitle: store.metaTitle || "",
+        metaDescription: store.metaDescription || "",
+        metaKeywords: store.metaKeywords || "",
       });
     }
   }, [store, form]);
@@ -169,6 +178,9 @@ const AdminStoreEdit = () => {
       slug: data.slug,
       logo: data.logo || null,
       website: data.website,
+      metaTitle: data.metaTitle || null,
+      metaDescription: data.metaDescription || null,
+      metaKeywords: data.metaKeywords || null,
     };
     
     updateStore.mutate(storeData);
@@ -340,6 +352,59 @@ const AdminStoreEdit = () => {
                 </div>
               </div>
             )}
+
+            <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mt-8 mb-4">SEO Settings</h3>
+            
+            <FormField
+              control={form.control}
+              name="metaTitle"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Meta Title</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder={`${store.name} Coupons & Promo Codes - Save With NepQue`} 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="metaDescription"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Meta Description</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder={`Find the best ${store.name} coupons, promo codes, and deals to save on your next purchase.`} 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="metaKeywords"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Meta Keywords</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder={`${store.name}, promo codes, coupons, discount codes, deals, vouchers, offers`} 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="mt-6 flex justify-end space-x-4">
               <Button 
