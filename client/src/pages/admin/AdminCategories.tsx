@@ -11,7 +11,29 @@ import {
   Pencil,
   Trash,
   ExternalLink,
-  Tag
+  Tag,
+  // Import all possible category icons
+  ShoppingCart,
+  Shirt,
+  Laptop,
+  Utensils,
+  Plane,
+  Home,
+  ShoppingBag,
+  CreditCard,
+  Car,
+  Gift,
+  Heart,
+  BookOpen,
+  Music,
+  Tv,
+  Smartphone,
+  Baby,
+  DollarSign,
+  Percent,
+  Calendar,
+  LucideIcon,
+  Globe
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -30,6 +52,37 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+
+// Map of icon names to their corresponding Lucide components
+const iconMap: Record<string, LucideIcon> = {
+  'shopping-cart': ShoppingCart,
+  'shirt': Shirt,
+  'laptop': Laptop,
+  'utensils': Utensils,
+  'plane': Plane,
+  'home': Home,
+  'shopping-bag': ShoppingBag,
+  'credit-card': CreditCard,
+  'car': Car,
+  'gift': Gift,
+  'heart': Heart,
+  'book-open': BookOpen,
+  'music': Music,
+  'tv': Tv,
+  'smartphone': Smartphone,
+  'baby': Baby,
+  'dollar-sign': DollarSign,
+  'percent': Percent,
+  'calendar': Calendar,
+  'globe': Globe,
+  'tag': Tag
+};
+
+// Function to get the icon component for a given icon name
+const getIconComponent = (iconName: string) => {
+  const IconComponent = iconMap[iconName];
+  return IconComponent ? <IconComponent className="h-5 w-5" /> : iconName;
+};
 
 const AdminCategories = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -113,7 +166,7 @@ const AdminCategories = () => {
                           className="w-10 h-10 rounded-md flex items-center justify-center mr-3"
                           style={{ backgroundColor: category.color }}
                         >
-                          <span className="text-white text-lg">{category.icon}</span>
+                          <span className="text-white text-lg">{getIconComponent(category.icon)}</span>
                         </div>
                         <span className="font-medium">{category.name}</span>
                       </div>
@@ -124,9 +177,14 @@ const AdminCategories = () => {
                       </code>
                     </TableCell>
                     <TableCell>
-                      <code className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">
-                        {category.icon}
-                      </code>
+                      <div className="flex items-center gap-2">
+                        <span className="flex items-center justify-center bg-gray-100 p-1 rounded w-6 h-6">
+                          {getIconComponent(category.icon)}
+                        </span>
+                        <code className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">
+                          {category.icon}
+                        </code>
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center">
