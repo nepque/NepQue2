@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, Edit, PlusCircle, Clock, CheckCircle, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { User, UserSubmittedCouponWithRelations } from "@shared/schema";
 import { format } from "date-fns";
 import { Link } from "wouter";
