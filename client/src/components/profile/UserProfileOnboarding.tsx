@@ -163,7 +163,7 @@ export const UserProfileOnboarding = ({ onComplete }: { onComplete: () => void }
           <div>
             <h3 className="text-lg font-semibold mb-4">Stores you shop at</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {topStores.map(store => (
+              {topStores.map((store: any) => (
                 <div key={store.id} className="flex items-start space-x-2">
                   <Checkbox 
                     id={`store-${store.id}`}
