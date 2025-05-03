@@ -38,12 +38,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin auth check - for API routes that require admin rights
   app.get("/api/admin/check", (req, res) => {
     const authHeader = req.headers.authorization;
+    console.log("Auth check request headers:", req.headers);
     
     if (authHeader === "Bearer admin-development-token") {
+      console.log("Admin auth check passed");
       res.json({ isAdmin: true });
     } else {
+      console.log("Admin auth check failed, received:", authHeader);
       res.json({ isAdmin: false });
     }
+  });
+  
+  // Debug endpoint to verify token
+  app.get("/api/admin/debug-token", (req, res) => {
+    const authHeader = req.headers.authorization;
+    console.log("Debug token request received with auth header:", authHeader);
+    res.json({
+      authHeaderReceived: !!authHeader,
+      authHeader: authHeader,
+      isValid: authHeader === "Bearer admin-development-token"
+    });
   });
   
   // Admin user management endpoints
