@@ -112,17 +112,7 @@ const StorePage = () => {
       {/* Store Header */}
       <section className="bg-white border-b">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center mb-4">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate('/stores')}
-              className="text-primary hover:text-primary/80 px-0"
-            >
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              <span>Back to Stores</span>
-            </Button>
-          </div>
+
 
           {isLoadingStore ? (
             <div className="flex items-start gap-6">
