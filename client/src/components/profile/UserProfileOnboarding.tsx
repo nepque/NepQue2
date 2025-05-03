@@ -168,7 +168,7 @@ export const UserProfileOnboarding = ({ onComplete }: { onComplete: () => void }
     <div className="container mx-auto max-w-3xl py-8">
       <Card className="shadow-lg">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Welcome to CouponHub!</CardTitle>
+          <CardTitle className="text-2xl font-bold">Welcome to NepQue!</CardTitle>
           <CardDescription>Help us personalize your experience by selecting your preferences</CardDescription>
         </CardHeader>
         

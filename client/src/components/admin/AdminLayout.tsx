@@ -41,7 +41,7 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
         {/* Logo */}
         <div className="h-16 flex items-center px-6 border-b border-gray-700">
           <Link href="/admin" className="text-2xl font-['Pacifico'] text-white">
-            CouponHunt
+            NepQue
           </Link>
         </div>
         
@@ -179,7 +179,7 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
                 </div>
                 <div className="hidden md:block text-left">
                   <p className="text-sm font-medium text-gray-800">Admin User</p>
-                  <p className="text-xs text-gray-500">admin@example.com</p>
+                  <p className="text-xs text-gray-500">admin@nepque.com</p>
                 </div>
                 <ChevronDown className="h-4 w-4 text-gray-500" />
               </button>

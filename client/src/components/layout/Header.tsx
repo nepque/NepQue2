@@ -42,7 +42,7 @@ const Header = () => {
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center">
               <i className="fas fa-ticket-alt text-secondary text-xl mr-2"></i>
-              <span className="text-xl font-bold text-primary">CouponHub</span>
+              <span className="text-xl font-bold text-primary">NepQue</span>
             </Link>
             <button 
               onClick={toggleMobileMenu} 

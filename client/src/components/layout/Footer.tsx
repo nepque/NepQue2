@@ -8,7 +8,7 @@ const Footer = () => {
           <div>
             <div className="flex items-center mb-4">
               <i className="fas fa-ticket-alt text-secondary text-xl mr-2"></i>
-              <span className="text-xl font-bold text-white">CouponHub</span>
+              <span className="text-xl font-bold text-white">NepQue</span>
             </div>
             <p className="text-neutral-400 mb-4">Your one-stop destination for the best coupons and deals online, helping you save on every purchase.</p>
             <div className="flex space-x-4">
@@ -117,7 +117,7 @@ const Footer = () => {
         </div>
         
         <div className="border-t border-neutral-700 pt-6 mt-6 text-center">
-          <p className="text-neutral-400 text-sm">© {new Date().getFullYear()} CouponHub. All rights reserved.</p>
+          <p className="text-neutral-400 text-sm">© {new Date().getFullYear()} NepQue. All rights reserved.</p>
         </div>
       </div>
     </footer>
