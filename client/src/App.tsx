@@ -39,6 +39,7 @@ import AdminStoreEdit from "@/pages/admin/AdminStoreEdit";
 import AdminCategoryEdit from "@/pages/admin/AdminCategoryEdit";
 import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminSubmissions from "@/pages/admin/AdminSubmissions";
+import AdminWithdrawals from "@/pages/admin/AdminWithdrawals"; // Added import
 
 function UserRouter() {
   return (
@@ -77,18 +78,18 @@ function AdminRouter() {
       <Route path="/admin/categories" component={AdminCategories} />
       <Route path="/admin/users" component={AdminUsers} />
       <Route path="/admin/submissions" component={AdminSubmissions} />
-      
+
       {/* Create new item routes */}
       <Route path="/admin/coupons/new" component={AdminCouponNew} />
       <Route path="/admin/stores/new" component={AdminStoreNew} />
       <Route path="/admin/categories/new" component={AdminCategoryNew} />
-      
+
       {/* Edit routes */}
       <Route path="/admin/coupons/edit/:id" component={AdminCouponEdit} />
       <Route path="/admin/submissions/edit/:id" component={AdminSubmissionEdit} />
       <Route path="/admin/stores/edit/:id" component={AdminStoreEdit} />
       <Route path="/admin/categories/edit/:id" component={AdminCategoryEdit} />
-      
+      <Route path="/admin/withdrawals" component={AdminWithdrawals} /> {/* Added withdrawals route */}
       <Route component={NotFound} />
     </Switch>
   );
@@ -100,7 +101,7 @@ function Router() {
   const isAdminRoute = location.startsWith("/admin");
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-  
+
   // Check if admin token exists in localStorage
   useEffect(() => {
     const checkAdminToken = () => {
@@ -108,13 +109,13 @@ function Router() {
       setIsAdminLoggedIn(!!token);
       setIsCheckingAuth(false);
     };
-    
+
     // Don't check auth on login page
     if (location === "/admin/login") {
       setIsCheckingAuth(false);
       return;
     }
-    
+
     checkAdminToken();
   }, [location]);
 
@@ -122,7 +123,7 @@ function Router() {
   if (location === "/admin/login") {
     return <AdminLogin />;
   }
-  
+
   // Show loading state while checking auth
   if (isCheckingAuth) {
     return (
@@ -131,7 +132,7 @@ function Router() {
       </div>
     );
   }
-  
+
   // If this is an admin route, check for admin authentication
   if (isAdminRoute) {
     // If admin is logged in, allow access to admin routes
@@ -144,7 +145,7 @@ function Router() {
       return null;
     }
   }
-  
+
   // For all non-admin routes
   return <UserRouter />;
 }

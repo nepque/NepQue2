@@ -11,7 +11,8 @@ import {
   ChevronDown,
   LogOut,
   Users,
-  Inbox
+  Inbox,
+  CreditCard
 } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 
@@ -22,7 +23,7 @@ interface AdminLayoutProps {
 
 const AdminLayout = ({ children, title }: AdminLayoutProps) => {
   const [location, setLocation] = useLocation();
-  
+
   // Verify admin is logged in on component mount and redirect if not
   useEffect(() => {
     const adminToken = localStorage.getItem("adminToken");
@@ -38,11 +39,11 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
       }
     }
   }, [setLocation, location]);
-  
+
   const isActive = (path: string) => {
     return location.startsWith(path);
   };
-  
+
   return (
     <div className="min-h-screen flex bg-gray-50">
       {/* Sidebar */}
@@ -53,7 +54,7 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
             NepQue
           </Link>
         </div>
-        
+
         {/* Navigation */}
         <nav className="py-4">
           <ul>
@@ -61,7 +62,7 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
               <Link 
                 href="/admin" 
                 className={`flex items-center py-3 px-6 ${
-                  isActive("/admin") && !isActive("/admin/coupons") && !isActive("/admin/stores") && !isActive("/admin/categories") && !isActive("/admin/users") && !isActive("/admin/settings")
+                  isActive("/admin") && !isActive("/admin/coupons") && !isActive("/admin/stores") && !isActive("/admin/categories") && !isActive("/admin/users") && !isActive("/admin/settings") && !isActive("/admin/withdrawals")
                     ? "bg-white/15 border-l-4 border-white text-white"
                     : "text-gray-300 hover:text-white hover:bg-white/10"
                 } transition-colors`}
@@ -148,10 +149,23 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
                 <span>Settings</span>
               </Link>
             </li>
+            <li>
+              <Link
+                href="/admin/withdrawals"
+                className={`flex items-center py-3 px-6 ${
+                  isActive("/admin/withdrawals")
+                    ? "bg-white/15 border-l-4 border-white text-white"
+                    : "text-gray-300 hover:text-white hover:bg-white/10"
+                } transition-colors`}
+              >
+                <CreditCard className="w-5 h-5 mr-3" />
+                <span>Withdrawals</span>
+              </Link>
+            </li>
           </ul>
         </nav>
       </aside>
-      
+
       {/* Main content */}
       <div className="ml-64 flex-1">
         {/* Top header */}
@@ -167,7 +181,7 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
               placeholder="Search..."
             />
           </div>
-          
+
           {/* User menu */}
           <div className="flex items-center space-x-4">
             {/* Notifications */}
@@ -179,7 +193,7 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
                 </span>
               </button>
             </div>
-            
+
             {/* User dropdown */}
             <div className="relative group">
               <button className="flex items-center space-x-2">
@@ -192,7 +206,7 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
                 </div>
                 <ChevronDown className="h-4 w-4 text-gray-500" />
               </button>
-              
+
               <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg py-1 hidden group-hover:block z-20">
                 <Link href="/admin/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                   Your Profile
@@ -217,13 +231,13 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
             </div>
           </div>
         </header>
-        
+
         {/* Page content */}
         <main className="p-6">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
           </div>
-          
+
           {children}
         </main>
       </div>
