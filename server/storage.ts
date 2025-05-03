@@ -96,11 +96,13 @@ export class MemStorage implements IStorage {
   private stores: Map<number, Store>;
   private coupons: Map<number, Coupon>;
   private userSubmittedCoupons: Map<number, UserSubmittedCoupon>;
+  private withdrawalRequests: Map<number, WithdrawalRequest>;
   currentUserId: number;
   currentCategoryId: number;
   currentStoreId: number;
   currentCouponId: number;
   currentUserSubmittedCouponId: number;
+  currentWithdrawalRequestId: number;
 
   constructor() {
     this.users = new Map();
@@ -108,11 +110,13 @@ export class MemStorage implements IStorage {
     this.stores = new Map();
     this.coupons = new Map();
     this.userSubmittedCoupons = new Map();
+    this.withdrawalRequests = new Map();
     this.currentUserId = 1;
     this.currentCategoryId = 1;
     this.currentStoreId = 1;
     this.currentCouponId = 1;
     this.currentUserSubmittedCouponId = 1;
+    this.currentWithdrawalRequestId = 1;
   }
 
   // User operations
@@ -610,6 +614,105 @@ export class MemStorage implements IStorage {
       throw new Error(`User-submitted coupon with ID ${id} not found`);
     }
     this.userSubmittedCoupons.delete(id);
+  }
+
+  // Withdrawal request operations
+  async getWithdrawalRequests(options?: {
+    userId?: number,
+    status?: 'pending' | 'approved' | 'rejected'
+  }): Promise<WithdrawalRequestWithUser[]> {
+    let filteredRequests = Array.from(this.withdrawalRequests.values());
+    
+    if (options?.userId) {
+      filteredRequests = filteredRequests.filter(
+        request => request.userId === options.userId
+      );
+    }
+    
+    if (options?.status) {
+      filteredRequests = filteredRequests.filter(
+        request => request.status === options.status
+      );
+    }
+    
+    // Sort by newest first based on requestedAt
+    filteredRequests.sort((a, b) => {
+      return new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime();
+    });
+    
+    // Add user info to each request
+    return filteredRequests.map(request => {
+      const user = this.users.get(request.userId)!;
+      return { ...request, user };
+    });
+  }
+
+  async getWithdrawalRequestById(id: number): Promise<WithdrawalRequestWithUser | undefined> {
+    const request = this.withdrawalRequests.get(id);
+    if (!request) return undefined;
+    
+    const user = this.users.get(request.userId)!;
+    return { ...request, user };
+  }
+
+  async createWithdrawalRequest(insertRequest: InsertWithdrawalRequest): Promise<WithdrawalRequest> {
+    // Validate user exists and has enough points
+    const user = this.users.get(insertRequest.userId);
+    if (!user) {
+      throw new Error(`User with ID ${insertRequest.userId} not found`);
+    }
+    
+    if ((user.points || 0) < insertRequest.amount) {
+      throw new Error(`Insufficient points. User has ${user.points} points, requested ${insertRequest.amount}`);
+    }
+    
+    // Create the withdrawal request
+    const id = this.currentWithdrawalRequestId++;
+    const now = new Date();
+    
+    const request: WithdrawalRequest = {
+      ...insertRequest,
+      id,
+      status: 'pending',
+      requestedAt: now,
+      processedAt: null,
+      notes: null
+    };
+    
+    this.withdrawalRequests.set(id, request);
+    
+    // Deduct points from user
+    user.points = (user.points || 0) - insertRequest.amount;
+    this.users.set(user.id, user);
+    
+    return request;
+  }
+
+  async updateWithdrawalRequestStatus(id: number, status: 'approved' | 'rejected', notes?: string): Promise<WithdrawalRequest> {
+    const request = this.withdrawalRequests.get(id);
+    if (!request) {
+      throw new Error(`Withdrawal request with ID ${id} not found`);
+    }
+    
+    // If rejecting a previously non-rejected request, return points to user
+    if (status === 'rejected' && request.status !== 'rejected') {
+      const user = this.users.get(request.userId);
+      if (user) {
+        user.points = (user.points || 0) + request.amount;
+        this.users.set(user.id, user);
+      }
+    }
+    
+    // Update the request
+    const updatedRequest: WithdrawalRequest = {
+      ...request,
+      status,
+      processedAt: new Date(),
+      notes: notes || null
+    };
+    
+    this.withdrawalRequests.set(id, updatedRequest);
+    return updatedRequest;
   }
 }
 
@@ -1397,6 +1500,142 @@ export class DatabaseStorage implements IStorage {
       await db.delete(userSubmittedCoupons).where(eq(userSubmittedCoupons.id, id));
     } catch (error) {
       console.error("Error deleting user submitted coupon:", error);
+      throw error;
+    }
+  }
+
+  // Withdrawal requests implementation
+  async getWithdrawalRequests(options?: {
+    userId?: number,
+    status?: 'pending' | 'approved' | 'rejected'
+  }): Promise<WithdrawalRequestWithUser[]> {
+    try {
+      let query = db.select({
+        withdrawal: withdrawalRequests,
+        user: users
+      })
+      .from(withdrawalRequests)
+      .innerJoin(users, eq(withdrawalRequests.userId, users.id));
+      
+      if (options?.userId) {
+        query = query.where(eq(withdrawalRequests.userId, options.userId));
+      }
+      
+      if (options?.status) {
+        query = query.where(eq(withdrawalRequests.status, options.status));
+      }
+      
+      // Sort by newest first
+      query = query.orderBy(desc(withdrawalRequests.requestedAt));
+      
+      const results = await query;
+      
+      return results.map(({ withdrawal, user }) => ({
+        ...withdrawal,
+        user
+      }));
+    } catch (error) {
+      console.error("Error fetching withdrawal requests:", error);
+      return [];
+    }
+  }
+  
+  async getWithdrawalRequestById(id: number): Promise<WithdrawalRequestWithUser | undefined> {
+    try {
+      const [result] = await db.select({
+        withdrawal: withdrawalRequests,
+        user: users
+      })
+      .from(withdrawalRequests)
+      .innerJoin(users, eq(withdrawalRequests.userId, users.id))
+      .where(eq(withdrawalRequests.id, id));
+      
+      if (!result) return undefined;
+      
+      return {
+        ...result.withdrawal,
+        user: result.user
+      };
+    } catch (error) {
+      console.error("Error fetching withdrawal request:", error);
+      return undefined;
+    }
+  }
+  
+  async createWithdrawalRequest(request: InsertWithdrawalRequest): Promise<WithdrawalRequest> {
+    try {
+      // Ensure user exists and has sufficient points
+      const user = await this.getUser(request.userId);
+      if (!user) {
+        throw new Error(`User with ID ${request.userId} not found`);
+      }
+      
+      if ((user.points || 0) < request.amount) {
+        throw new Error(`Insufficient points. User has ${user.points} points, requested ${request.amount}`);
+      }
+      
+      // Insert the withdrawal request
+      const [withdrawalRequest] = await db
+        .insert(withdrawalRequests)
+        .values({
+          ...request,
+          status: 'pending',
+          requestedAt: new Date(),
+          processedAt: null,
+          notes: null
+        })
+        .returning();
+      
+      // Deduct points from user when request is created
+      await this.updateUser({
+        id: user.id,
+        points: (user.points || 0) - request.amount
+      });
+      
+      return withdrawalRequest;
+    } catch (error) {
+      console.error("Error creating withdrawal request:", error);
+      throw error;
+    }
+  }
+  
+  async updateWithdrawalRequestStatus(id: number, status: 'approved' | 'rejected', notes?: string): Promise<WithdrawalRequest> {
+    try {
+      const withdrawalRequest = await db
+        .select()
+        .from(withdrawalRequests)
+        .where(eq(withdrawalRequests.id, id))
+        .then(rows => rows[0]);
+      
+      if (!withdrawalRequest) {
+        throw new Error(`Withdrawal request with ID ${id} not found`);
+      }
+      
+      // If rejecting a request, return the points to the user
+      if (status === 'rejected' && withdrawalRequest.status !== 'rejected') {
+        const user = await this.getUser(withdrawalRequest.userId);
+        if (user) {
+          await this.updateUser({
+            id: user.id,
+            points: (user.points || 0) + withdrawalRequest.amount
+          });
+        }
+      }
+      
+      // Update the withdrawal request status
+      const [updatedRequest] = await db
+        .update(withdrawalRequests)
+        .set({
+          status,
+          processedAt: new Date(),
+          notes: notes || null
+        })
+        .where(eq(withdrawalRequests.id, id))
+        .returning();
+      
+      return updatedRequest;
+    } catch (error) {
+      console.error("Error updating withdrawal request status:", error);
       throw error;
     }
   }
