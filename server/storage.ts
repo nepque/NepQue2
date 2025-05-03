@@ -741,6 +741,138 @@ export class MemStorage implements IStorage {
     this.withdrawalRequests.set(id, updatedRequest);
     return updatedRequest;
   }
+  
+  // Check-in operations
+  async getUserCheckIns(userId: number): Promise<CheckIn[]> {
+    return Array.from(this.checkIns.values())
+      .filter(checkIn => checkIn.userId === userId)
+      .sort((a, b) => new Date(b.checkedInAt).getTime() - new Date(a.checkedInAt).getTime());
+  }
+  
+  async getUserCurrentStreak(userId: number): Promise<{
+    currentStreak: number;
+    lastCheckIn: Date | null;
+    canCheckInNow: boolean;
+    nextCheckInTime: Date | null;
+  }> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error(`User with ID ${userId} not found`);
+    }
+    
+    // Current streak is stored directly on the user
+    const currentStreak = user.currentStreak || 0;
+    const lastCheckIn = user.lastCheckIn ? new Date(user.lastCheckIn) : null;
+    
+    // Determine if user can check in now
+    const now = new Date();
+    let canCheckInNow = false;
+    let nextCheckInTime = null;
+    
+    if (!lastCheckIn) {
+      // If never checked in before, they can check in now
+      canCheckInNow = true;
+      nextCheckInTime = now;
+    } else {
+      // Calculate the time difference from last check-in
+      const hoursSinceLastCheckIn = (now.getTime() - lastCheckIn.getTime()) / (1000 * 60 * 60);
+      
+      if (hoursSinceLastCheckIn >= 24) {
+        // Can check in if at least 24 hours have passed
+        canCheckInNow = true;
+        nextCheckInTime = now;
+      } else {
+        // Need to wait longer
+        canCheckInNow = false;
+        nextCheckInTime = new Date(lastCheckIn.getTime() + (24 * 60 * 60 * 1000));
+      }
+    }
+    
+    return {
+      currentStreak,
+      lastCheckIn,
+      canCheckInNow,
+      nextCheckInTime
+    };
+  }
+  
+  async processUserCheckIn(userId: number): Promise<{
+    success: boolean;
+    points: number;
+    newStreak: number;
+    nextCheckInTime: Date;
+    message: string;
+  }> {
+    // Check if user exists
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error(`User with ID ${userId} not found`);
+    }
+    
+    // Get current streak info
+    const streakInfo = await this.getUserCurrentStreak(userId);
+    
+    // If can't check in now, return early
+    if (!streakInfo.canCheckInNow) {
+      return {
+        success: false,
+        points: 0,
+        newStreak: streakInfo.currentStreak,
+        nextCheckInTime: streakInfo.nextCheckInTime!, 
+        message: "You can't check in yet. Please try again later."
+      };
+    }
+    
+    // Determine new streak value and points to award
+    let newStreak = 1; // Start with 1 if streak is broken or no streak
+    const now = new Date();
+    
+    if (streakInfo.lastCheckIn) {
+      // Check if this is a continuation of a streak (less than 48 hours since last check-in)
+      const hoursSinceLastCheckIn = (now.getTime() - streakInfo.lastCheckIn.getTime()) / (1000 * 60 * 60);
+      
+      if (hoursSinceLastCheckIn < 48) {
+        // Continuing streak
+        newStreak = streakInfo.currentStreak + 1;
+      }
+    }
+    
+    // Determine points to award based on streak day
+    const streakDay = newStreak % 7 || 7; // Convert 0 to 7 for the 7th day
+    const points = streakDay === 7 ? 10 : 5; // 10 points on 7th day, 5 on other days
+    
+    // Create a record of this check-in
+    const checkIn: CheckIn = {
+      id: this.currentCheckInId++,
+      userId,
+      checkedInAt: now,
+      streakDay,
+      pointsEarned: points
+    };
+    
+    this.checkIns.set(checkIn.id, checkIn);
+    
+    // Update user's streak and points
+    const updatedUser: User = {
+      ...user,
+      currentStreak: newStreak,
+      lastCheckIn: now,
+      points: (user.points || 0) + points
+    };
+    
+    this.users.set(userId, updatedUser);
+    
+    // Calculate next check-in time (24 hours from now)
+    const nextCheckInTime = new Date(now.getTime() + (24 * 60 * 60 * 1000));
+    
+    return {
+      success: true,
+      points,
+      newStreak,
+      nextCheckInTime,
+      message: `You earned ${points} points! Your current streak is ${newStreak} day${newStreak !== 1 ? 's' : ''}.`
+    };
+  }
 }
 
 // Database-backed storage implementation
