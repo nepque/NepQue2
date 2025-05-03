@@ -547,6 +547,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
+      // Check if user is banned and deny access
+      if (user.isBanned) {
+        return res.status(403).json({ 
+          message: "Account has been banned",
+          banned: true
+        });
+      }
+      
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
