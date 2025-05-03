@@ -149,8 +149,8 @@ export default function AdminSubmissions() {
   
   // Handle editing a coupon
   const handleEdit = (coupon: UserSubmittedCouponWithRelations) => {
-    // Navigate to a new edit page with the coupon ID
-    navigate(`/admin/edit-coupon/${coupon.id}`);
+    // Navigate to the existing coupon edit page with the coupon ID
+    navigate(`/admin/coupons/edit/${coupon.id}`);
   };
   
   // Handle deleting a coupon
