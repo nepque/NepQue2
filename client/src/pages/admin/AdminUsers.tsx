@@ -91,7 +91,7 @@ const AdminUsers = () => {
     },
     // Disable caching to always get fresh data
     staleTime: 0,
-    refetchInterval: 2000, // Automatically refresh every 2 seconds
+    refetchInterval: 10000, // Automatically refresh every 10 seconds
   });
 
   // Ban/unban user mutation
