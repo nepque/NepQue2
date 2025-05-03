@@ -25,8 +25,8 @@ const BannedUserNotification = ({ onClose }: BannedUserNotificationProps) => {
           <AlertDialogTitle className="text-xl text-center">Account Suspended</AlertDialogTitle>
         </AlertDialogHeader>
         <AlertDialogDescription className="text-center text-base">
-          Your account has been suspended due to a violation of our terms of service. 
-          If you believe this is an error, please contact our support team for assistance.
+          Your NepQue account has been suspended due to a violation of our terms of service. 
+          If you believe this is an error, please contact the NepQue support team for assistance.
         </AlertDialogDescription>
         <AlertDialogFooter className="flex justify-center">
           <AlertDialogAction 
