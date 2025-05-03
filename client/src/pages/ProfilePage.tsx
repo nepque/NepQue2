@@ -9,7 +9,7 @@ import { WithdrawModal } from "@/components/profile/WithdrawModal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, Edit, PlusCircle, Clock, CheckCircle, XCircle, CreditCard } from "lucide-react";
+import { Loader2, Edit, PlusCircle, Clock, CheckCircle, XCircle, CreditCard, History } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { User, UserSubmittedCouponWithRelations, WithdrawalRequestWithUser } from "@shared/schema";
@@ -171,21 +171,35 @@ export default function ProfilePage() {
               </div>
               
               <div className="pt-4">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full"
-                  asChild
-                >
-                  <Link to="/submit-coupon">
-                    <PlusCircle className="w-4 h-4 mr-2" />
-                    Submit new coupon
-                  </Link>
-                </Button>
+                <div className="flex flex-col space-y-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full"
+                    asChild
+                  >
+                    <Link to="/withdrawals">
+                      <History className="h-4 w-4 mr-2" />
+                      View Withdrawal History
+                    </Link>
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full"
+                    asChild
+                  >
+                    <Link to="/submit-coupon">
+                      <PlusCircle className="w-4 h-4 mr-2" />
+                      Submit new coupon
+                    </Link>
+                  </Button>
+                </div>
               </div>
             </div>
           </CardContent>
-          
+
           <Card className="mt-4">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">Points Balance</CardTitle>

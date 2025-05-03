@@ -15,11 +15,27 @@ export default function WithdrawalsPage() {
   const { currentUser } = useAuth();
 
   const { data: withdrawals = [], isLoading, error, refetch } = useQuery<WithdrawalRequestWithUser[]>({
-    queryKey: [`/api/users/${currentUser?.id}/withdrawals`],
+    queryKey: [`/api/users/${currentUser?.firebaseUid}/withdrawals`],
     queryFn: async () => {
       try {
-        const response = await apiRequest(`/api/users/${currentUser?.id}/withdrawals`, {
-          method: 'GET'
+        console.log('Fetching withdrawal data for user:', currentUser?.id, 'firebase uid:', currentUser?.firebaseUid);
+        // Get the database user id first
+        const userResponse = await apiRequest(`/api/users/${currentUser?.firebaseUid}`);
+        if (!userResponse || !userResponse.id) {
+          console.error('Could not find user ID in database');
+          return [];
+        }
+        
+        const userId = userResponse.id;
+        console.log('Found user ID in database:', userId);
+        
+        // Now get the withdrawal requests using the database user ID
+        const response = await apiRequest(`/api/users/${userId}/withdrawals`, {
+          method: 'GET',
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
         });
         console.log('Withdrawals response:', response);
         // Make sure we return an array even if response is null/undefined or not an array
@@ -29,7 +45,7 @@ export default function WithdrawalsPage() {
         throw err;
       }
     },
-    enabled: !!currentUser?.id,
+    enabled: !!currentUser?.firebaseUid,
     refetchOnWindowFocus: true,
     staleTime: 0, // Don't cache the data
   });
