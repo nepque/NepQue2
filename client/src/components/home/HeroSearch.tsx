@@ -50,7 +50,7 @@ const HeroSearch = () => {
               </div>
               <Button 
                 type="submit" 
-                className="bg-secondary hover:bg-secondary/90 text-white font-medium py-3 px-6 h-auto"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 h-auto"
               >
                 <i className="fas fa-search mr-2"></i> Find Savings
               </Button>
