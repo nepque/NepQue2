@@ -175,9 +175,13 @@ const AdminUsers = () => {
   });
 
   const handleBanUser = (user: UserWithSubmissionCount) => {
+    // Make sure isBanned is a boolean (not undefined)
+    const currentIsBanned = user.isBanned === true;
+    console.log(`Attempting to change ban status from ${currentIsBanned} to ${!currentIsBanned}`);
+    
     banUserMutation.mutate({
       userId: user.id,
-      isBanned: !user.isBanned
+      isBanned: !currentIsBanned
     });
   };
 
@@ -190,11 +194,19 @@ const AdminUsers = () => {
     e.preventDefault();
     if (!editingUser) return;
 
+    // Log what we're sending to the server
+    console.log('Updating user with data:', {
+      id: editingUser.id,
+      displayName: editingUser.displayName || '',
+      email: editingUser.email || '',
+      photoURL: editingUser.photoURL || '',
+    });
+
     updateUserMutation.mutate({
       id: editingUser.id,
-      displayName: editingUser.displayName,
-      email: editingUser.email,
-      photoURL: editingUser.photoURL,
+      displayName: editingUser.displayName || '',
+      email: editingUser.email || '',
+      photoURL: editingUser.photoURL || '',
     });
   };
 

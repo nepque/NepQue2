@@ -102,13 +102,27 @@ export class MemStorage implements IStorage {
 
   // User operations
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const user = this.users.get(id);
+    
+    // Ensure isBanned is always a boolean
+    if (user && user.isBanned === undefined) {
+      user.isBanned = false;
+    }
+    
+    return user;
   }
 
   async getUserByFirebaseUid(firebaseUid: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
+    const user = Array.from(this.users.values()).find(
       (user) => user.firebaseUid === firebaseUid,
     );
+    
+    // Ensure isBanned is always a boolean
+    if (user && user.isBanned === undefined) {
+      user.isBanned = false;
+    }
+    
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
@@ -167,7 +181,16 @@ export class MemStorage implements IStorage {
   }
   
   async getAllUsers(): Promise<User[]> {
-    return Array.from(this.users.values());
+    const users = Array.from(this.users.values());
+    
+    // Ensure isBanned is always a boolean for all users
+    for (const user of users) {
+      if (user.isBanned === undefined) {
+        user.isBanned = false;
+      }
+    }
+    
+    return users;
   }
 
   async deleteUser(id: number): Promise<void> {

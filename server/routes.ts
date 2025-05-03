@@ -65,6 +65,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Get user submissions
           const userSubmissions = await storage.getUserSubmittedCoupons({ userId: user.id });
           
+          // Ensure isBanned is always a boolean
+          if (user.isBanned === undefined) {
+            user.isBanned = false;
+          }
+          
           // Return user with submission count
           return {
             ...user,
@@ -98,9 +103,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
+      // Log the incoming request body
+      console.log("Updating user with request body:", req.body);
+      
+      // Clean up undefined or null values from request body
+      const cleanBody = Object.fromEntries(
+        Object.entries(req.body).filter(([key, value]) => value !== undefined)
+      );
+      
       const updatedUser = await storage.updateUser({ 
         id: userId,
-        ...req.body 
+        ...cleanBody 
       });
       
       console.log(`Updated user ${userId}:`, updatedUser);
@@ -120,7 +133,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.set('Expires', '0');
       
       const userId = Number(req.params.id);
-      const { isBanned } = req.body;
+      
+      // Safely extract isBanned, ensuring it's a boolean
+      let isBanned;
+      if (req.body.isBanned === true || req.body.isBanned === "true") {
+        isBanned = true;
+      } else if (req.body.isBanned === false || req.body.isBanned === "false") {
+        isBanned = false;
+      } else {
+        console.log("Invalid isBanned value:", req.body.isBanned);
+        return res.status(400).json({ message: "isBanned must be a boolean value" });
+      }
+      
+      console.log(`Attempting to set ban status for user ${userId} to ${isBanned}`);
       
       const user = await storage.getUser(userId);
       if (!user) {
