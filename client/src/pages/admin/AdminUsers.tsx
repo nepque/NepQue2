@@ -52,8 +52,17 @@ const AdminUsers = () => {
     queryKey: ['/api/admin/users'],
     queryFn: async () => {
       const response = await apiRequest('/api/admin/users');
-      // Make sure we always return an array
-      return Array.isArray(response) ? response : [];
+      console.log('API Response:', response); // Debug the response
+      
+      // Make sure we always return an array with the expected structure
+      if (Array.isArray(response)) {
+        // Add submissionCount if it doesn't exist
+        return response.map(user => ({
+          ...user,
+          submissionCount: user.submissionCount || 0
+        }));
+      }
+      return [];
     }
   });
 
