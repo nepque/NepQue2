@@ -38,6 +38,9 @@ const AdminStoreNew = () => {
       slug: "",
       logo: "",
       website: "https://",
+      metaTitle: "",
+      metaDescription: "",
+      metaKeywords: "",
     },
   });
 
