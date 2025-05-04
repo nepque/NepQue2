@@ -1257,6 +1257,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get spin status for a user by Firebase UID
+  app.get("/api/users/firebase/:firebaseUid/spin-status", async (req, res) => {
+    try {
+      // Set cache control headers to prevent browser caching
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      
+      const firebaseUid = req.params.firebaseUid;
+      console.log(`Fetching spin status for Firebase UID: ${firebaseUid}`);
+      
+      const user = await storage.getUserByFirebaseUid(firebaseUid);
+      
+      if (!user) {
+        console.log(`User not found for Firebase UID: ${firebaseUid}`);
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Determine if user can spin
+      const now = new Date();
+      let canSpin = true;
+      let nextSpinTime = now.toISOString();
+      
+      if (user.lastSpin) {
+        const lastSpinDate = new Date(user.lastSpin);
+        const hoursSinceLastSpin = (now.getTime() - lastSpinDate.getTime()) / (1000 * 60 * 60);
+        
+        if (hoursSinceLastSpin < 24) {
+          canSpin = false;
+          nextSpinTime = new Date(lastSpinDate.getTime() + (24 * 60 * 60 * 1000)).toISOString();
+        }
+      }
+      
+      res.json({
+        success: canSpin,
+        points: 0, // No points awarded for status check
+        nextSpinTime,
+        message: canSpin ? "You can spin now!" : "You can't spin yet. Please try again later."
+      });
+    } catch (error) {
+      console.error("Error getting spin status:", error);
+      res.status(500).json({ message: "Failed to fetch spin status" });
+    }
+  });
+  
   // Spin the wheel for points
   app.post("/api/users/firebase/:firebaseUid/spin", async (req, res) => {
     try {
