@@ -913,8 +913,7 @@ export class MemStorage implements IStorage {
       userId,
       points,
       action,
-      description,
-      createdAt: now
+      description
     });
     
     // Update user's streak and last check-in (points are handled by addPointsLog)
@@ -2037,7 +2036,21 @@ export class DatabaseStorage implements IStorage {
           pointsEarned: points
         });
         
-        // Update user's streak and points
+        // Add to points log
+        const action = streakDay === 7 ? 'streak_complete' : 'daily_check_in';
+        const description = streakDay === 7 
+          ? `Completed 7-day streak` 
+          : `Daily check-in (day ${streakDay})`;
+        
+        await tx.insert(pointsLog).values({
+          userId,
+          points,
+          action,
+          description
+        });
+        
+        // Update user's streak and last check-in
+        // Points are updated through the transaction via the points log entry
         await tx.update(users)
           .set({
             currentStreak: newStreak,
