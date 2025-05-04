@@ -24,6 +24,9 @@ export default function ProfilePage() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   
+  // Always use the points log hook - don't use it conditionally
+  const { pointsBalance, balanceLoading } = usePointsLog();
+  
   // Fetch user data from API to get the latest preferences
   const { data: userData, isLoading: isLoadingUser, error: userError } = useQuery({
     queryKey: currentUser?.uid ? [`/api/users/${currentUser.uid}`] : ['no-user'],
@@ -98,6 +101,10 @@ export default function ProfilePage() {
     setShowOnboarding(false);
   };
   
+  // Prepare display variables regardless of loading state
+  const preferredCategories = userData?.preferredCategories || [];
+  const preferredStores = userData?.preferredStores || [];
+  
   if (!currentUser) {
     return (
       <div className="container mx-auto py-12 text-center">
@@ -118,13 +125,6 @@ export default function ProfilePage() {
   if (showOnboarding) {
     return <UserProfileOnboarding onComplete={handleOnboardingComplete} />;
   }
-  
-  // Parse stored preferences
-  const preferredCategories = userData?.preferredCategories || [];
-  const preferredStores = userData?.preferredStores || [];
-  
-  // Get points data from the usePointsLog hook
-  const { pointsBalance, balanceLoading } = usePointsLog();
   
   // Count submitted coupons by status
   const pendingCount = Array.isArray(userCoupons) ? userCoupons.filter(c => c.status === 'pending').length : 0;
