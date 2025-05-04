@@ -5,7 +5,6 @@ import {
   Tag, 
   Store, 
   Settings, 
-  Search,
   Bell,
   User,
   ChevronDown,
@@ -186,16 +185,9 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
       <div className="ml-64 flex-1">
         {/* Top header */}
         <header className="bg-white h-16 px-6 flex items-center justify-between border-b border-gray-200 sticky top-0 z-10">
-          {/* Search */}
-          <div className="relative w-96">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
-            </div>
-            <input 
-              type="search" 
-              className="pl-10 pr-4 py-2 w-full rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              placeholder="Search..."
-            />
+          {/* Page title */}
+          <div className="text-lg font-semibold text-gray-800">
+            NepQue Admin
           </div>
 
           {/* User menu */}
