@@ -178,13 +178,13 @@ const SpinPage = () => {
       {/* Background inspired by PHP example */}
       <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-indigo-700 -z-10"></div>
       
-      <div className="container py-8 max-w-4xl relative z-10">
+      <div className="container py-8 max-w-4xl mx-auto relative z-10">
         <Helmet>
           <title>Spin the Wheel - NepQue</title>
           <meta name="description" content="Spin the wheel to earn points at NepQue!" />
         </Helmet>
 
-        <div className="bg-white p-8 rounded-2xl shadow-xl">
+        <div className="bg-white p-8 rounded-2xl shadow-xl mx-auto">
           <div className="text-center mb-6">
             <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
               🎡 Spin the Wheel
