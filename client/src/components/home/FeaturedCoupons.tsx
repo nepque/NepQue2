@@ -13,6 +13,7 @@ import CouponCard from "@/components/coupon/CouponCard";
 import CouponDetailModal from "@/components/coupon/CouponDetailModal";
 import { CouponWithRelations } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BannerAd } from "@/components/banner/BannerAd";
 
 interface SortOption {
   value: string;
@@ -112,6 +113,11 @@ const FeaturedCoupons = () => {
           <Link href="/coupons" className="inline-flex items-center text-primary hover:text-primary/80 font-medium">
             View All Coupons <i className="fas fa-chevron-right ml-2 text-sm"></i>
           </Link>
+        </div>
+        
+        {/* Banner Ad */}
+        <div className="mt-10 mx-auto flex justify-center">
+          <BannerAd location="homepage" className="shadow-md rounded-md overflow-hidden" />
         </div>
       </div>
       

@@ -19,7 +19,7 @@ export const BannerAd: React.FC<BannerAdProps> = ({ location, className = '' }) 
   // Fetch active banner ads for this location
   const { data: bannerAds, isLoading, isError } = useQuery({
     queryKey: ['/api/banner-ads', location],
-    queryFn: () => apiRequest<BannerAdType[]>(`/api/banner-ads?location=${location}&isActive=true`),
+    queryFn: () => apiRequest(`/api/banner-ads?location=${location}&isActive=true`),
     // Cache for 15 minutes to prevent too frequent refetching
     staleTime: 15 * 60 * 1000,
   });
@@ -51,7 +51,7 @@ export const BannerAd: React.FC<BannerAdProps> = ({ location, className = '' }) 
   // Loading state
   if (isLoading) {
     return (
-      <div className={`w-full h-[90px] rounded overflow-hidden ${className}`}>
+      <div className={`w-[700px] h-[90px] rounded overflow-hidden ${className}`}>
         <Skeleton className="w-full h-full" />
       </div>
     );
@@ -64,7 +64,7 @@ export const BannerAd: React.FC<BannerAdProps> = ({ location, className = '' }) 
 
   return (
     <div 
-      className={`relative w-full h-[90px] rounded overflow-hidden shadow-md ${className}`}
+      className={`relative w-[700px] h-[90px] rounded overflow-hidden shadow-md ${className}`}
       onClick={handleBannerClick}
       style={{ cursor: randomBanner.linkUrl ? 'pointer' : 'default' }}
     >
