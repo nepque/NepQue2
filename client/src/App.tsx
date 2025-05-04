@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { useEffect, useState } from "react";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 // User-facing components
 import Header from "@/components/layout/Header";
@@ -54,15 +55,39 @@ function UserRouter() {
         <Route path="/store/:slug" component={StorePage} />
         <Route path="/category/:slug" component={CategoryPage} />
         <Route path="/search" component={SearchResultsPage} />
-        <Route path="/profile" component={ProfilePage} />
-        <Route path="/submit-coupon" component={SubmitCouponPage} />
+        <Route path="/profile">
+          {() => (
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          )}
+        </Route>
+        <Route path="/submit-coupon">
+          {() => (
+            <ProtectedRoute>
+              <SubmitCouponPage />
+            </ProtectedRoute>
+          )}
+        </Route>
         <Route path="/about" component={AboutPage} />
         <Route path="/faq" component={FAQPage} />
         <Route path="/contact" component={ContactPage} />
         <Route path="/privacy-policy" component={PrivacyPolicyPage} />
         <Route path="/terms-of-service" component={TermsOfServicePage} />
-        <Route path="/withdrawals" component={WithdrawalsPage} /> {/* Added withdrawals route */}
-        <Route path="/earn" component={EarnPage} /> {/* Added earn points route */}
+        <Route path="/withdrawals">
+          {() => (
+            <ProtectedRoute>
+              <WithdrawalsPage />
+            </ProtectedRoute>
+          )}
+        </Route>
+        <Route path="/earn">
+          {() => (
+            <ProtectedRoute>
+              <EarnPage />
+            </ProtectedRoute>
+          )}
+        </Route>
         <Route component={NotFound} />
       </Switch>
       <Footer />
