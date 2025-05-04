@@ -977,12 +977,14 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getUserPointsBalance(userId: number): Promise<number> {
-    const [result] = await db
-      .select({ total: sql`sum(${pointsLog.points})` })
-      .from(pointsLog)
-      .where(eq(pointsLog.userId, userId));
+    // Get the user's points from the users table
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId));
     
-    return result?.total || 0;
+    // Return the points value from the user record
+    return user?.points || 0;
   }
   // User operations
   async getUser(id: number): Promise<User | undefined> {
