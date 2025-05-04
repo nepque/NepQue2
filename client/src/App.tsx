@@ -7,6 +7,7 @@ import NotFound from "@/pages/not-found";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { useEffect, useState } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import GoogleAnalytics from "@/components/common/GoogleAnalytics";
 
 // User-facing components
 import Header from "@/components/layout/Header";
@@ -195,6 +196,8 @@ function App() {
       <AuthProvider>
         <TooltipProvider>
           <Toaster />
+          {/* Add Google Analytics - exclude admin pages inside the component */}
+          <GoogleAnalytics measurementId="G-BSDGYC7X1J" />
           <Router />
         </TooltipProvider>
       </AuthProvider>
