@@ -14,7 +14,7 @@ import { usePointsLog } from "@/hooks/use-points-log";
 import { Loader2, Edit, PlusCircle, Clock, CheckCircle, XCircle, CreditCard, History, CoinsIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { User, UserSubmittedCouponWithRelations, WithdrawalRequestWithUser } from "@shared/schema";
+import { User, UserSubmittedCouponWithRelations, WithdrawalRequestWithUser, Category, Store } from "@shared/schema";
 import { format } from "date-fns";
 import { Link } from "wouter";
 import SEO from "@/components/common/SEO";
@@ -102,6 +102,30 @@ export default function ProfilePage() {
     setShowOnboarding(false);
   };
   
+  // Fetch categories data
+  const { data: categories = [] } = useQuery({
+    queryKey: ['/api/categories'],
+    queryFn: async () => {
+      const response = await fetch('/api/categories');
+      if (!response.ok) {
+        throw new Error('Failed to fetch categories');
+      }
+      return await response.json();
+    }
+  });
+
+  // Fetch stores data
+  const { data: stores = [] } = useQuery({
+    queryKey: ['/api/stores'],
+    queryFn: async () => {
+      const response = await fetch('/api/stores');
+      if (!response.ok) {
+        throw new Error('Failed to fetch stores');
+      }
+      return await response.json();
+    }
+  });
+
   // Prepare display variables regardless of loading state
   const preferredCategories = userData?.preferredCategories || [];
   const preferredStores = userData?.preferredStores || [];
@@ -372,10 +396,14 @@ export default function ProfilePage() {
                         <p className="text-muted-foreground text-sm">No preferred categories selected</p>
                       ) : (
                         <div className="flex flex-wrap gap-2">
-                          {/* We'd need to fetch full category details to display names */}
-                          {preferredCategories.map((id: number) => (
-                            <Badge key={id} variant="secondary">Category #{id}</Badge>
-                          ))}
+                          {preferredCategories.map((id: number) => {
+                            const category = categories.find((cat: Category) => cat.id === id);
+                            return (
+                              <Badge key={id} variant="secondary">
+                                {category ? category.name : `Category #${id}`}
+                              </Badge>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
@@ -387,10 +415,14 @@ export default function ProfilePage() {
                         <p className="text-muted-foreground text-sm">No preferred stores selected</p>
                       ) : (
                         <div className="flex flex-wrap gap-2">
-                          {/* We'd need to fetch full store details to display names */}
-                          {preferredStores.map((id: number) => (
-                            <Badge key={id} variant="secondary">Store #{id}</Badge>
-                          ))}
+                          {preferredStores.map((id: number) => {
+                            const store = stores.find((s: Store) => s.id === id);
+                            return (
+                              <Badge key={id} variant="secondary">
+                                {store ? store.name : `Store #${id}`}
+                              </Badge>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
