@@ -1,0 +1,184 @@
+<?php
+session_start();
+include('db.php');
+
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
+
+$user_id = $_SESSION['user_id'];
+$now = date('Y-m-d H:i:s');
+
+$user = $conn->query("SELECT last_spin FROM users WHERE id = $user_id")->fetch_assoc();
+$last_spin = $user['last_spin'];
+$can_spin = !$last_spin || strtotime($last_spin) <= strtotime('-24 hours');
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Spin Wheel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    * {
+      padding: 0; margin: 0; box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, #c3a3f1, #6414e9);
+    }
+    .wrapper {
+      width: 90%;
+      max-width: 34.37em;
+      margin: 5rem auto;
+      background-color: #ffffff;
+      padding: 3em;
+      border-radius: 1em;
+      box-shadow: 0 4em 5em rgba(27, 8, 53, 0.2);
+      text-align: center;
+    }
+    .container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    #wheel {
+      width: 100%;
+      height: auto;
+    }
+    #spin-btn {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      top: 50%;
+      left: 50%;
+      height: 26%;
+      width: 26%;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 0;
+      background: radial-gradient(#fdcf3b 50%, #d88a40 85%);
+      color: #c66e16;
+      text-transform: uppercase;
+      font-size: 1.8em;
+      letter-spacing: 0.1em;
+      font-weight: 600;
+    }
+    .arrow-pointer {
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 15px solid transparent;
+      border-right: 15px solid transparent;
+      border-bottom: 25px solid #ffcc00;
+      z-index: 10;
+    }
+    #final-value {
+      font-size: 1.5em;
+      text-align: center;
+      margin-top: 1.5em;
+      color: #202020;
+      font-weight: 500;
+    }
+    @media screen and (max-width: 768px) {
+      .wrapper { font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<?php include('includes/header.php'); ?>
+
+<div class="wrapper">
+  <h3 class="mb-4">🎯 Spin the Wheel</h3>
+  <div class="container">
+    <canvas id="wheel"></canvas>
+    <div class="arrow-pointer"></div>
+    <?php if ($can_spin): ?>
+      <button id="spin-btn">Spin</button>
+    <?php endif; ?>
+  </div>
+  <div id="final-value">
+    <p><?= $can_spin ? 'Click Spin to Try Your Luck!' : 'You already spun today.' ?></p>
+  </div>
+  <a href="profile.php" class="btn btn-secondary mt-4">⬅ Back to Profile</a>
+</div>
+
+<?php include('includes/footer.php'); ?>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.1.0/chartjs-plugin-datalabels.min.js"></script>
+<script>
+const wheelCanvas = document.getElementById("wheel");
+const spinBtn = document.getElementById("spin-btn");
+const finalValue = document.getElementById("final-value");
+
+const rewards = [10, 20, 5, 50, 15, 25];
+const sliceAngle = 360 / rewards.length;
+const pieColors = ["#8b35bc", "#b163da", "#8b35bc", "#b163da", "#8b35bc", "#b163da"];
+
+let wheelChart = new Chart(wheelCanvas, {
+  plugins: [ChartDataLabels],
+  type: "pie",
+  data: {
+    labels: rewards,
+    datasets: [{ backgroundColor: pieColors, data: Array(rewards.length).fill(16) }],
+  },
+  options: {
+    responsive: true,
+    animation: { duration: 0 },
+    plugins: {
+      tooltip: false,
+      legend: { display: false },
+      datalabels: {
+        color: "#ffffff",
+        formatter: (_, ctx) => ctx.chart.data.labels[ctx.dataIndex],
+        font: { size: 18 },
+      },
+    },
+  },
+});
+
+spinBtn?.addEventListener("click", () => {
+  spinBtn.disabled = true;
+  finalValue.innerHTML = `<p>Good Luck!</p>`;
+
+  const rewardIndex = Math.floor(Math.random() * rewards.length);
+  const reward = rewards[rewardIndex];
+  const targetRotation = 360 * 5 + (360 - (sliceAngle * rewardIndex) - sliceAngle / 2);
+
+  let currentRotation = 0;
+  let speed = 20;
+
+  const spinInterval = setInterval(() => {
+    currentRotation += speed;
+    wheelChart.options.rotation = currentRotation;
+    wheelChart.update();
+
+    if (currentRotation >= targetRotation) {
+      clearInterval(spinInterval);
+      finalValue.innerHTML = `<p>You won ${reward} points! 🎉</p>`;
+      fetch(`spin.php?save=1&reward=${reward}`);
+    }
+
+    if (speed > 1 && currentRotation > 360 * 3) speed -= 0.2;
+  }, 10);
+});
+</script>
+
+<?php
+if (isset($_GET['save']) && isset($_GET['reward']) && $can_spin) {
+    $reward = intval($_GET['reward']);
+    $conn->query("UPDATE users SET points = points + $reward, last_spin = '$now' WHERE id = $user_id");
+    $conn->query("INSERT INTO points_log (user_id, points, action, description) 
+                  VALUES ($user_id, $reward, 'spin_wheel', 'Earned from spin the wheel')");
+    exit();
+}
+?>
+</body>
+</html>
