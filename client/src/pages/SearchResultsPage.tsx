@@ -46,7 +46,8 @@ const SearchResultsPage = () => {
   // Get search query from URL
   useEffect(() => {
     const searchParams = new URLSearchParams(location.split("?")[1]);
-    const query = searchParams.get("q");
+    // Check for both "q" and "search" parameters
+    const query = searchParams.get("q") || searchParams.get("search");
     if (query) {
       setSearchQuery(query);
     }
@@ -106,7 +107,7 @@ const SearchResultsPage = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      navigate(`/search?search=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 

@@ -22,12 +22,12 @@ const HeroSearch = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchTerm.trim()) {
-      navigate(`/coupons?search=${encodeURIComponent(searchTerm.trim())}`);
+      navigate(`/search?search=${encodeURIComponent(searchTerm.trim())}`);
     }
   };
 
   const handlePopularSearch = (search: string) => {
-    navigate(`/coupons?search=${encodeURIComponent(search)}`);
+    navigate(`/search?search=${encodeURIComponent(search)}`);
   };
 
   return (
