@@ -186,17 +186,29 @@ const SpinPage = () => {
 
         <div className="bg-white p-8 rounded-2xl shadow-xl mx-auto">
           <div className="text-center mb-6">
-            <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-              🎡 Spin the Wheel
+            <h1 className="text-5xl font-bold mb-2 text-purple-600 flex items-center justify-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <circle cx="12" cy="12" r="6"></circle>
+                <line x1="12" y1="2" x2="12" y2="4"></line>
+                <line x1="12" y1="20" x2="12" y2="22"></line>
+                <line x1="4.93" y1="4.93" x2="6.34" y2="6.34"></line>
+                <line x1="17.66" y1="17.66" x2="19.07" y2="19.07"></line>
+                <line x1="2" y1="12" x2="4" y2="12"></line>
+                <line x1="20" y1="12" x2="22" y2="12"></line>
+                <line x1="4.93" y1="19.07" x2="6.34" y2="17.66"></line>
+                <line x1="17.66" y1="6.34" x2="19.07" y2="4.93"></line>
+              </svg>
+              Spin the Wheel
             </h1>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-xl text-gray-500 mb-8">
               Spin the wheel once every 24 hours to earn 1-5 points!
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="flex flex-col items-center justify-center max-w-3xl mx-auto">
             <div className="flex flex-col items-center justify-center">
-              <div className="relative w-[340px] h-[340px] bg-white p-5 rounded-full shadow-xl">
+              <div className="relative w-[380px] h-[380px] bg-white p-5 rounded-full shadow-[0_10px_50px_rgba(88,28,135,0.2)] border-[8px] border-white">
                 {/* Background gradient similar to PHP example */}
                 <div className="absolute -inset-12 -z-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-[48px] opacity-30 blur-xl"></div>
                 
@@ -243,12 +255,18 @@ const SpinPage = () => {
                         }}
                       >
                         <div 
-                          className="absolute flex items-center justify-center w-full text-white font-bold text-2xl
-                                   drop-shadow-md"
+                          className="absolute text-white font-bold text-4xl drop-shadow-md"
                           style={{ 
-                            transform: `rotate(${-rotation + segmentDegrees/2}deg)`,
-                            top: '15%',
-                            height: '20px'
+                            transform: `rotate(${-rotation}deg)`,
+                            top: '50%',
+                            left: '50%',
+                            height: '40px',
+                            width: '40px',
+                            marginLeft: '-20px',
+                            marginTop: '-100px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
                           }}
                         >
                           {point}
@@ -277,7 +295,7 @@ const SpinPage = () => {
               </div>
               
               <Button 
-                className="mt-8 px-8 py-6 text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                className="mt-12 px-12 py-6 text-xl font-medium rounded-full shadow-lg bg-gradient-to-r from-indigo-400 to-purple-500 hover:from-indigo-500 hover:to-purple-600 border-0 w-[90%] max-w-[400px]"
                 onClick={handleSpin}
                 disabled={!canSpin || isSpinning}
               >
@@ -288,78 +306,34 @@ const SpinPage = () => {
                 ) : !currentUser ? (
                   "Login to Spin"
                 ) : !spinStatus?.success ? (
-                  `Spin Again ${getTimeUntilNextSpin()}`
+                  `Spin Again in about ${getTimeUntilNextSpin().replace('in ', '')}`
                 ) : (
                   "Click Spin to Try Your Luck!"
                 )}
               </Button>
-            </div>
-            
-            <div>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Gift className="h-5 w-5" /> Spin Rewards
-                  </CardTitle>
-                  <CardDescription>
-                    Spin the wheel for a chance to win points every 24 hours
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <h3 className="font-semibold">How it works:</h3>
-                    <ul className="list-disc pl-5 space-y-1">
-                      <li>Spin the wheel once every 24 hours</li>
-                      <li>Win between 1-5 points with each spin</li>
-                      <li>Points are automatically added to your account</li>
-                      <li>Use your points to withdraw rewards or get special offers</li>
-                    </ul>
-                  </div>
-                  
-                  {result && (
-                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-5 rounded-lg border border-green-200 animate-[pulse_0.5s_ease-in-out]">
-                      <h3 className="font-semibold text-emerald-700 flex items-center gap-2">
-                        <Target className="h-5 w-5 text-emerald-600" /> Your last spin result:
+              
+              {/* Show result overlay if there is a result */}
+              {result && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
+                  <div className="bg-white p-8 rounded-xl shadow-2xl max-w-md mx-auto text-center">
+                    <h3 className="text-2xl font-bold text-purple-600 mb-4">Congratulations!</h3>
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-lg border border-green-200 animate-[pulse_0.5s_ease-in-out] mb-6">
+                      <h3 className="font-semibold text-emerald-700 flex items-center justify-center gap-2 mb-2">
+                        <Target className="h-6 w-6 text-emerald-600" /> Your spin result:
                       </h3>
-                      <p className="text-3xl font-bold mt-2 bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
+                      <p className="text-5xl font-bold mt-2 bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
                         {result} points!
                       </p>
                     </div>
-                  )}
-                  
-                  {/* Only show the sign-in message if actually not logged in */}
-                  {authLoading === false && !currentUser && (
-                    <div className="bg-gradient-to-r from-amber-50 to-yellow-50 p-5 rounded-lg border border-amber-200 shadow-sm">
-                      <p className="text-amber-700 flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500">
-                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"></path>
-                        </svg>
-                        Please sign in to spin the wheel and earn points.
-                      </p>
-                    </div>
-                  )}
-                  
-                  {currentUser && spinStatus && !spinStatus.success && (
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-5 rounded-lg border border-blue-200 shadow-sm">
-                      <h3 className="font-semibold text-blue-700 flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500">
-                          <circle cx="12" cy="12" r="10"></circle>
-                          <polyline points="12 6 12 12 16 14"></polyline>
-                        </svg>
-                        Next spin available:
-                      </h3>
-                      <p className="text-xl font-semibold mt-2 bg-gradient-to-r from-blue-700 to-indigo-600 bg-clip-text text-transparent">
-                        {getTimeUntilNextSpin()}
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-                <CardFooter>
-                  <p className="text-sm text-muted-foreground">
-                    Earn points daily to increase your reward balance faster!
-                  </p>
-                </CardFooter>
-              </Card>
+                    <Button 
+                      className="px-8 py-3 text-lg font-medium rounded-full shadow-lg bg-gradient-to-r from-indigo-400 to-purple-500 hover:from-indigo-500 hover:to-purple-600 border-0 w-full"
+                      onClick={() => setResult(null)}
+                    >
+                      Continue
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
