@@ -16,6 +16,7 @@ import {
   Filter,
   Star,
   CheckCircle2,
+  ExternalLink,
 } from "lucide-react";
 
 const StoreLogoPlaceholder = ({ name }: { name: string }) => (
@@ -176,9 +177,22 @@ const StorePage = () => {
                   <span>{coupons?.length || 0} Active Coupons</span>
                   <span>Last Updated: {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                 </div>
-                <p className="text-gray-600">
-                  Find the best {store.name} coupons, promo codes, and deals to save on your next purchase.
-                </p>
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                  <p className="text-gray-600">
+                    Find the best {store.name} coupons, promo codes, and deals to save on your next purchase.
+                  </p>
+                  {store.website && (
+                    <a 
+                      href={store.website.startsWith('http') ? store.website : `https://${store.website}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors whitespace-nowrap"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      Visit Store
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
           ) : (
