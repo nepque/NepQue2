@@ -758,9 +758,15 @@ export class MemStorage implements IStorage {
     
     this.withdrawalRequests.set(id, request);
     
-    // Deduct points from user
-    user.points = (user.points || 0) - insertRequest.amount;
-    this.users.set(user.id, user);
+    // Create a points log entry (negative points for withdrawal)
+    this.addPointsLog({
+      userId: user.id,
+      points: -insertRequest.amount, // Use negative value for deduction
+      action: 'withdrawal_request',
+      description: `Withdrawal request for ${insertRequest.amount} points (${insertRequest.method})`
+    });
+    
+    // Note: No need to manually update user points as addPointsLog handles that already
     
     return request;
   }
@@ -775,8 +781,15 @@ export class MemStorage implements IStorage {
     if (status === 'rejected' && request.status !== 'rejected') {
       const user = this.users.get(request.userId);
       if (user) {
-        user.points = (user.points || 0) + request.amount;
-        this.users.set(user.id, user);
+        // Add points log entry for the returned points
+        this.addPointsLog({
+          userId: user.id,
+          points: request.amount, // Positive value for points returned
+          action: 'withdrawal_rejected',
+          description: `Returned points from rejected withdrawal: ${request.amount} points (${request.method})`
+        });
+        
+        // Note: No need to manually update user points as addPointsLog handles that already
       }
     }
     
@@ -1850,11 +1863,15 @@ export class DatabaseStorage implements IStorage {
         })
         .returning();
       
-      // Deduct points from user when request is created
-      await this.updateUser({
-        id: user.id,
-        points: (user.points || 0) - request.amount
+      // Create a points log entry (negative points for withdrawal)
+      await this.addPointsLog({
+        userId: user.id,
+        points: -request.amount, // Use negative value for deduction
+        action: 'withdrawal_request',
+        description: `Withdrawal request for ${request.amount} points (${request.method})`
       });
+      
+      // Note: No need to manually deduct points as addPointsLog already updates the user's points balance
       
       return withdrawalRequest;
     } catch (error) {
@@ -1879,10 +1896,15 @@ export class DatabaseStorage implements IStorage {
       if (status === 'rejected' && withdrawalRequest.status !== 'rejected') {
         const user = await this.getUser(withdrawalRequest.userId);
         if (user) {
-          await this.updateUser({
-            id: user.id,
-            points: (user.points || 0) + withdrawalRequest.amount
+          // Add points log entry for the points being returned
+          await this.addPointsLog({
+            userId: user.id,
+            points: withdrawalRequest.amount, // Positive value for points returned
+            action: 'withdrawal_rejected',
+            description: `Returned points from rejected withdrawal: ${withdrawalRequest.amount} points (${withdrawalRequest.method})`
           });
+          
+          // Note: The addPointsLog method already updates the user's points balance
         }
       }
       
