@@ -239,18 +239,22 @@ export type PointsLog = typeof pointsLog.$inferSelect;
 // Banner Ads schema
 export const bannerAds = pgTable("banner_ads", {
   id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  location: text("location").notNull(), // e.g., 'homepage_top', 'spin_wheel_bottom', 'coupon_popup'
-  bannerHtml: text("banner_html").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  location: text("location").notNull(), // e.g., 'spin-page', 'homepage', 'earn-page'
+  imageUrl: text("image_url"),
+  linkUrl: text("link_url"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const insertBannerAdSchema = createInsertSchema(bannerAds).pick({
-  name: true,
+  title: true,
+  description: true,
   location: true,
-  bannerHtml: true,
+  imageUrl: true,
+  linkUrl: true,
   isActive: true,
 });
 

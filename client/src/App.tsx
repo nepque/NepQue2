@@ -43,7 +43,8 @@ import AdminStoreEdit from "@/pages/admin/AdminStoreEdit";
 import AdminCategoryEdit from "@/pages/admin/AdminCategoryEdit";
 import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminSubmissions from "@/pages/admin/AdminSubmissions";
-import AdminWithdrawals from "@/pages/admin/AdminWithdrawals"; // Added import
+import AdminWithdrawals from "@/pages/admin/AdminWithdrawals";
+import AdminBannerAds from "@/pages/admin/AdminBannerAds"; // Added import for banner ads
 
 function UserRouter() {
   return (
@@ -126,7 +127,8 @@ function AdminRouter() {
       <Route path="/admin/submissions/edit/:id" component={AdminSubmissionEdit} />
       <Route path="/admin/stores/edit/:id" component={AdminStoreEdit} />
       <Route path="/admin/categories/edit/:id" component={AdminCategoryEdit} />
-      <Route path="/admin/withdrawals" component={AdminWithdrawals} /> {/* Added withdrawals route */}
+      <Route path="/admin/withdrawals" component={AdminWithdrawals} />
+      <Route path="/admin/banner-ads" component={AdminBannerAds} /> {/* Added banner ads route */}
       <Route component={NotFound} />
     </Switch>
   );

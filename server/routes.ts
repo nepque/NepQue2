@@ -212,6 +212,183 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Banner Ad Management endpoints (admin only)
+  
+  // Get all banner ads
+  app.get("/api/admin/banner-ads", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to access banner ads");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Set cache control headers to prevent browser caching
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      
+      const location = req.query.location as string | undefined;
+      const isActive = req.query.isActive === 'true' ? true : undefined;
+      
+      const bannerAds = await storage.getBannerAds({ location, isActive });
+      console.log(`Sending ${bannerAds.length} banner ads`);
+      
+      res.json(bannerAds);
+    } catch (error) {
+      console.error("Error fetching banner ads:", error);
+      res.status(500).json({ message: "Failed to fetch banner ads" });
+    }
+  });
+  
+  // Get a specific banner ad by ID
+  app.get("/api/admin/banner-ads/:id", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to access banner ad details");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const id = Number(req.params.id);
+      const bannerAd = await storage.getBannerAdById(id);
+      
+      if (!bannerAd) {
+        return res.status(404).json({ message: "Banner ad not found" });
+      }
+      
+      res.json(bannerAd);
+    } catch (error) {
+      console.error("Error fetching banner ad:", error);
+      res.status(500).json({ message: "Failed to fetch banner ad" });
+    }
+  });
+  
+  // Create a new banner ad
+  app.post("/api/admin/banner-ads", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to create banner ad");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const bannerAd = await storage.createBannerAd(req.body);
+      console.log("Created new banner ad:", bannerAd);
+      
+      res.status(201).json(bannerAd);
+    } catch (error) {
+      console.error("Error creating banner ad:", error);
+      res.status(500).json({ message: "Failed to create banner ad" });
+    }
+  });
+  
+  // Update a banner ad
+  app.put("/api/admin/banner-ads/:id", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to update banner ad");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const id = Number(req.params.id);
+      const bannerAd = await storage.getBannerAdById(id);
+      
+      if (!bannerAd) {
+        return res.status(404).json({ message: "Banner ad not found" });
+      }
+      
+      const updatedBannerAd = await storage.updateBannerAd({
+        ...bannerAd,
+        ...req.body,
+        id
+      });
+      
+      console.log("Updated banner ad:", updatedBannerAd);
+      res.json(updatedBannerAd);
+    } catch (error) {
+      console.error("Error updating banner ad:", error);
+      res.status(500).json({ message: "Failed to update banner ad" });
+    }
+  });
+  
+  // Toggle banner ad status (active/inactive)
+  app.post("/api/admin/banner-ads/:id/toggle", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to toggle banner ad status");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const id = Number(req.params.id);
+      const bannerAd = await storage.getBannerAdById(id);
+      
+      if (!bannerAd) {
+        return res.status(404).json({ message: "Banner ad not found" });
+      }
+      
+      const updatedBannerAd = await storage.toggleBannerAdStatus(id);
+      console.log(`Toggled banner ad ${id} status to ${updatedBannerAd.isActive}`);
+      
+      res.json(updatedBannerAd);
+    } catch (error) {
+      console.error("Error toggling banner ad status:", error);
+      res.status(500).json({ message: "Failed to toggle banner ad status" });
+    }
+  });
+  
+  // Delete a banner ad
+  app.delete("/api/admin/banner-ads/:id", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to delete banner ad");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const id = Number(req.params.id);
+      const bannerAd = await storage.getBannerAdById(id);
+      
+      if (!bannerAd) {
+        return res.status(404).json({ message: "Banner ad not found" });
+      }
+      
+      await storage.deleteBannerAd(id);
+      console.log(`Deleted banner ad ${id}`);
+      
+      res.json({ success: true, message: "Banner ad deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting banner ad:", error);
+      res.status(500).json({ message: "Failed to delete banner ad" });
+    }
+  });
+  
+  // Public route to get active banner ads for a specific location
+  app.get("/api/banner-ads", async (req, res) => {
+    try {
+      const location = req.query.location as string | undefined;
+      
+      // Only return active banner ads for public API
+      const bannerAds = await storage.getBannerAds({ 
+        location, 
+        isActive: true 
+      });
+      
+      res.json(bannerAds);
+    } catch (error) {
+      console.error("Error fetching banner ads:", error);
+      res.status(500).json({ message: "Failed to fetch banner ads" });
+    }
+  });
+  
   // API Routes
   app.get("/api/coupons", async (req, res) => {
     try {
