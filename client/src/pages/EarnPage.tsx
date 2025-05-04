@@ -121,6 +121,7 @@ const EarnPage = () => {
     // Debug the value received
     console.log("Next check-in time value:", streakInfo.nextCheckInTime);
     console.log("Can check in:", streakInfo.canCheckInNow);
+    console.log("Full streak info:", streakInfo);
 
     if (!streakInfo.nextCheckInTime) return "Unknown";
 
