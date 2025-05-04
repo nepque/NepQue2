@@ -2628,24 +2628,24 @@ export class DatabaseStorage implements IStorage {
 
   // Newsletter Subscribers operations
   
-  async getAllSubscribers(): Promise<schema.Subscriber[]> {
+  async getAllSubscribers(): Promise<Subscriber[]> {
     try {
       return await db
         .select()
-        .from(schema.subscribers)
-        .orderBy(desc(schema.subscribers.createdAt));
+        .from(subscribers)
+        .orderBy(desc(subscribers.createdAt));
     } catch (error) {
       console.error("Error getting all subscribers:", error);
       return [];
     }
   }
 
-  async getSubscriberByEmail(email: string): Promise<schema.Subscriber | undefined> {
+  async getSubscriberByEmail(email: string): Promise<Subscriber | undefined> {
     try {
       const [subscriber] = await db
         .select()
-        .from(schema.subscribers)
-        .where(eq(schema.subscribers.email, email));
+        .from(subscribers)
+        .where(eq(subscribers.email, email));
       return subscriber;
     } catch (error) {
       console.error(`Error getting subscriber with email ${email}:`, error);
@@ -2653,10 +2653,10 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async createSubscriber(data: schema.InsertSubscriber): Promise<schema.Subscriber | undefined> {
+  async createSubscriber(data: InsertSubscriber): Promise<Subscriber | undefined> {
     try {
       const [subscriber] = await db
-        .insert(schema.subscribers)
+        .insert(subscribers)
         .values(data)
         .returning();
       return subscriber;
@@ -2666,15 +2666,15 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async updateSubscriber(id: number, data: Partial<schema.InsertSubscriber>): Promise<schema.Subscriber | undefined> {
+  async updateSubscriber(id: number, data: Partial<InsertSubscriber>): Promise<Subscriber | undefined> {
     try {
       const [subscriber] = await db
-        .update(schema.subscribers)
+        .update(subscribers)
         .set({
           ...data,
           updatedAt: new Date(),
         })
-        .where(eq(schema.subscribers.id, id))
+        .where(eq(subscribers.id, id))
         .returning();
       return subscriber;
     } catch (error) {
@@ -2686,8 +2686,8 @@ export class DatabaseStorage implements IStorage {
   async deleteSubscriber(id: number): Promise<boolean> {
     try {
       const result = await db
-        .delete(schema.subscribers)
-        .where(eq(schema.subscribers.id, id))
+        .delete(subscribers)
+        .where(eq(subscribers.id, id))
         .returning();
       return result.length > 0;
     } catch (error) {
