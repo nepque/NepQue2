@@ -22,12 +22,16 @@ const HeroSearch = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchTerm.trim()) {
-      navigate(`/coupons?search=${encodeURIComponent(searchTerm.trim())}`);
+      // Redirect to search results page with search parameter
+      navigate(`/search?search=${encodeURIComponent(searchTerm.trim())}`);
+      console.log(`Redirecting to search page with query: ${searchTerm.trim()}`);
     }
   };
 
   const handlePopularSearch = (search: string) => {
-    navigate(`/coupons?search=${encodeURIComponent(search)}`);
+    // Update to use the search page with consistent parameter
+    navigate(`/search?search=${encodeURIComponent(search)}`);
+    console.log(`Redirecting to search page with popular search: ${search}`);
   };
 
   return (
