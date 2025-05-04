@@ -51,7 +51,7 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="text-2xl text-center">
-            Welcome to CouponHub
+            Welcome to NepQue
           </DialogTitle>
           <DialogDescription className="text-center">
             Sign in or create an account to access exclusive deals
