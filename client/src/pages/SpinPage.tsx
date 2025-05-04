@@ -243,9 +243,13 @@ const SpinPage = () => {
                         }}
                       >
                         <div 
-                          className="absolute top-[20%] left-1/2 -translate-x-1/2 text-white font-bold text-2xl
+                          className="absolute flex items-center justify-center w-full text-white font-bold text-2xl
                                    drop-shadow-md"
-                          style={{ transform: `rotate(${-rotation + segmentDegrees/2}deg)` }}
+                          style={{ 
+                            transform: `rotate(${-rotation + segmentDegrees/2}deg)`,
+                            top: '15%',
+                            height: '20px'
+                          }}
                         >
                           {point}
                         </div>
