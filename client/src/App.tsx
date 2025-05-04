@@ -26,6 +26,7 @@ import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
 import TermsOfServicePage from "@/pages/TermsOfServicePage";
 import WithdrawalsPage from "@/pages/WithdrawalsPage";
 import EarnPage from "@/pages/EarnPage"; // Added import for new EarnPage
+import SpinPage from "@/pages/SpinPage"; // Added import for SpinPage
 
 // Admin components
 import AdminLogin from "@/pages/admin/AdminLogin";
@@ -85,6 +86,13 @@ function UserRouter() {
           {() => (
             <ProtectedRoute>
               <EarnPage />
+            </ProtectedRoute>
+          )}
+        </Route>
+        <Route path="/spin">
+          {() => (
+            <ProtectedRoute>
+              <SpinPage />
             </ProtectedRoute>
           )}
         </Route>

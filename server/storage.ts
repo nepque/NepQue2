@@ -2168,6 +2168,79 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
+  
+  async processUserSpin(userId: number): Promise<{
+    success: boolean;
+    points: number;
+    nextSpinTime: string;
+    message: string;
+  }> {
+    try {
+      // Get user data
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      if (!user) {
+        throw new Error(`User with ID ${userId} not found`);
+      }
+      
+      const now = new Date();
+      
+      // Check if user can spin (if they have lastSpin field and it's less than 24 hours ago, they can't spin)
+      if (user.lastSpin) {
+        const lastSpinDate = new Date(user.lastSpin);
+        const hoursSinceLastSpin = (now.getTime() - lastSpinDate.getTime()) / (1000 * 60 * 60);
+        
+        if (hoursSinceLastSpin < 24) {
+          // User needs to wait before spinning again
+          const nextSpinTime = new Date(lastSpinDate.getTime() + (24 * 60 * 60 * 1000));
+          return {
+            success: false,
+            points: 0,
+            nextSpinTime: nextSpinTime.toISOString(),
+            message: "You can't spin yet. Please try again later."
+          };
+        }
+      }
+      
+      // User can spin! Determine random points award (1-5)
+      const points = Math.floor(Math.random() * 5) + 1; // Random integer between 1 and 5
+      
+      // Use transaction to ensure atomicity
+      await db.transaction(async (tx) => {
+        // Add to points log
+        await tx.insert(pointsLog).values({
+          userId,
+          points,
+          action: 'spin_wheel',
+          description: `Spin the wheel reward: ${points} points`
+        });
+        
+        // Update user's last spin time and points
+        await tx.update(users)
+          .set({
+            lastSpin: now,
+            points: (user.points || 0) + points
+          })
+          .where(eq(users.id, userId));
+      });
+      
+      // Calculate next spin time (24 hours from now)
+      const nextSpinTime = new Date(now.getTime() + (24 * 60 * 60 * 1000));
+      
+      return {
+        success: true,
+        points,
+        nextSpinTime: nextSpinTime.toISOString(),
+        message: `Congratulations! You spun the wheel and earned ${points} points!`
+      };
+    } catch (error) {
+      console.error("Error processing spin:", error);
+      throw error;
+    }
+  }
 }
 
 // Use the database storage implementation

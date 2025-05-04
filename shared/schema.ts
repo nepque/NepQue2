@@ -20,6 +20,8 @@ export const users = pgTable("users", {
   // Daily streak fields
   currentStreak: integer("current_streak").default(0),
   lastCheckIn: timestamp("last_check_in"),
+  // Spin wheel tracker
+  lastSpin: timestamp("last_spin"),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
