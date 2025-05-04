@@ -29,6 +29,16 @@ import {
   type BannerAd,
   type InsertBannerAd
 } from "@shared/schema";
+import {
+  contentPages,
+  type ContentPage,
+  type InsertContentPage
+} from "@shared/schema";
+import {
+  siteSettings,
+  type SiteSetting,
+  type InsertSiteSetting
+} from "@shared/schema";
 
 // Storage interface
 export interface IStorage {
