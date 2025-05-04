@@ -12,7 +12,8 @@ import {
   Users,
   Inbox,
   CreditCard,
-  Image
+  Image,
+  File
 } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import SEO from "@/components/common/SEO";
@@ -162,6 +163,19 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
               >
                 <Image className="w-5 h-5 mr-3" />
                 <span>Banner Ads</span>
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/admin/pages"
+                className={`flex items-center py-3 px-6 ${
+                  isActive("/admin/pages")
+                    ? "bg-white/15 border-l-4 border-white text-white"
+                    : "text-gray-300 hover:text-white hover:bg-white/10"
+                } transition-colors`}
+              >
+                <File className="w-5 h-5 mr-3" />
+                <span>Pages</span>
               </Link>
             </li>
             <li>

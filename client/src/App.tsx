@@ -25,6 +25,7 @@ import FAQPage from "@/pages/FAQPage";
 import ContactPage from "@/pages/ContactPage";
 import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
 import TermsOfServicePage from "@/pages/TermsOfServicePage";
+import ContentPage from "@/pages/ContentPage";
 import WithdrawalsPage from "@/pages/WithdrawalsPage";
 import EarnPage from "@/pages/EarnPage"; // Added import for new EarnPage
 import SpinPage from "@/pages/SpinPage"; // Added import for SpinPage
@@ -47,6 +48,7 @@ import AdminSubmissions from "@/pages/admin/AdminSubmissions";
 import AdminWithdrawals from "@/pages/admin/AdminWithdrawals";
 import AdminBannerAds from "@/pages/admin/AdminBannerAds"; // Added import for banner ads
 import AdminSettings from "@/pages/admin/AdminSettings"; // Added import for admin settings
+import AdminPages from "@/pages/admin/AdminPages"; // Added import for content pages management
 
 function UserRouter() {
   return (
@@ -132,6 +134,7 @@ function AdminRouter() {
       <Route path="/admin/withdrawals" component={AdminWithdrawals} />
       <Route path="/admin/banner-ads" component={AdminBannerAds} /> {/* Added banner ads route */}
       <Route path="/admin/settings" component={AdminSettings} /> {/* Added settings route */}
+      <Route path="/admin/pages" component={AdminPages} /> {/* Added content pages route */}
       <Route component={NotFound} />
     </Switch>
   );
