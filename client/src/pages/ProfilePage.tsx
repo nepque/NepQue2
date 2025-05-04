@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserProfileOnboarding } from "@/components/profile/UserProfileOnboarding";
 import { WithdrawModal } from "@/components/profile/WithdrawModal";
+import { PointsHistory } from "@/components/PointsHistory";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, Edit, PlusCircle, Clock, CheckCircle, XCircle, CreditCard, History } from "lucide-react";
+import { Loader2, Edit, PlusCircle, Clock, CheckCircle, XCircle, CreditCard, History, CoinIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { User, UserSubmittedCouponWithRelations, WithdrawalRequestWithUser } from "@shared/schema";
@@ -235,8 +236,9 @@ export default function ProfilePage() {
         {/* Tabs container for content */}
         <div className="md:col-span-2">
           <Tabs defaultValue="submitted" className="w-full">
-            <TabsList className="grid grid-cols-2 mb-6">
+            <TabsList className="grid grid-cols-3 mb-6">
               <TabsTrigger value="submitted">My Submissions</TabsTrigger>
+              <TabsTrigger value="points">Points History</TabsTrigger>
               <TabsTrigger value="preferences">My Preferences</TabsTrigger>
             </TabsList>
             
@@ -327,6 +329,11 @@ export default function ProfilePage() {
                   )}
                 </CardContent>
               </Card>
+            </TabsContent>
+            
+            {/* Points History tab */}
+            <TabsContent value="points" className="space-y-4">
+              {userData?.id && <PointsHistory />}
             </TabsContent>
             
             {/* Preferences tab */}
