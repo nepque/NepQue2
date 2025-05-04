@@ -1256,6 +1256,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch points balance" });
     }
   });
+  
+  // Spin the wheel for points
+  app.post("/api/users/firebase/:firebaseUid/spin", async (req, res) => {
+    try {
+      // Set cache control headers to prevent browser caching
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      
+      const { firebaseUid } = req.params;
+      console.log(`Spin wheel request for Firebase UID: ${firebaseUid}`);
+      
+      // Get the database user by Firebase UID
+      const user = await storage.getUserByFirebaseUid(firebaseUid);
+      
+      if (!user) {
+        console.log(`User with Firebase UID ${firebaseUid} not found`);
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      console.log(`Found user with database ID: ${user.id} for Firebase UID: ${firebaseUid}`);
+      
+      // Process the spin request
+      const result = await storage.processUserSpin(user.id);
+      res.json(result);
+    } catch (error) {
+      console.error("Error processing spin:", error);
+      res.status(500).json({ 
+        success: false,
+        message: error instanceof Error ? error.message : "Failed to process spin"
+      });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
