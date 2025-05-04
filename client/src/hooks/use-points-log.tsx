@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "./use-auth";
+import { useAuth } from "@/hooks/use-auth";
 
 export interface PointsLogEntry {
   id: number;
@@ -11,60 +11,65 @@ export interface PointsLogEntry {
 }
 
 export function usePointsLog() {
-  const { user } = useAuth();
+  const { currentUser } = useAuth();
   
-  const {
-    data: pointsLog,
-    isLoading: pointsLogLoading,
-    error: pointsLogError,
-    refetch: refetchPointsLog
-  } = useQuery({
-    queryKey: ["api", "points-log", user?.uid],
+  // Fetch the points log
+  const { data: pointsLog = [], isLoading: pointsLogLoading, error: pointsLogError } = useQuery({
+    queryKey: currentUser?.uid ? ['/api/users/firebase', currentUser.uid, 'points-log'] : ['no-points-log'],
     queryFn: async () => {
-      if (!user) return [];
+      if (!currentUser?.uid) return [];
       
-      const response = await fetch(`/api/users/firebase/${user.uid}/points-log`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch points log");
+      try {
+        const response = await fetch(`/api/users/firebase/${currentUser.uid}/points-log`);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch points log: ${response.status}`);
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error("Error fetching points log:", error);
+        return [];
       }
-      
-      return response.json();
     },
-    enabled: !!user,
+    retry: 1,
+    refetchOnWindowFocus: false,
   });
   
-  const {
-    data: pointsBalance,
-    isLoading: balanceLoading,
-    error: balanceError,
-    refetch: refetchBalance
-  } = useQuery({
-    queryKey: ["api", "points-balance", user?.uid],
+  // Fetch the points balance
+  const { data: balanceData, isLoading: balanceLoading, error: balanceError } = useQuery({
+    queryKey: currentUser?.uid ? ['/api/users/firebase', currentUser.uid, 'points-balance'] : ['no-balance'],
     queryFn: async () => {
-      if (!user) return { balance: 0 };
+      if (!currentUser?.uid) return { balance: 0 };
       
-      const response = await fetch(`/api/users/firebase/${user.uid}/points-balance`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch points balance");
+      try {
+        const response = await fetch(`/api/users/firebase/${currentUser.uid}/points-balance`);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch points balance: ${response.status}`);
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error("Error fetching points balance:", error);
+        return { balance: 0 };
       }
-      
-      return response.json();
     },
-    enabled: !!user,
+    retry: 1,
+    refetchOnWindowFocus: false,
   });
   
-  const refreshPointsData = () => {
-    refetchPointsLog();
-    refetchBalance();
-  };
+  // Sort points log entries by createdAt in descending order (newest first)
+  const sortedPointsLog = [...pointsLog].sort((a, b) => {
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
   
   return {
-    pointsLog: pointsLog || [],
+    pointsLog: sortedPointsLog as PointsLogEntry[],
     pointsLogLoading,
     pointsLogError,
-    pointsBalance: pointsBalance?.balance || 0,
+    pointsBalance: balanceData?.balance || 0,
     balanceLoading,
     balanceError,
-    refreshPointsData
   };
 }

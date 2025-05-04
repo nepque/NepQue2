@@ -113,6 +113,9 @@ const EarnPage = () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users", user?.uid, "streak"] });
       queryClient.invalidateQueries({ queryKey: ["/api/users", user?.uid, "check-ins"] });
       queryClient.invalidateQueries({ queryKey: ["/api/users", user?.uid] });
+      // Also invalidate points log queries
+      queryClient.invalidateQueries({ queryKey: ['/api/users/firebase', user?.uid, 'points-log'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users/firebase', user?.uid, 'points-balance'] });
 
       setCheckingIn(false);
     },
