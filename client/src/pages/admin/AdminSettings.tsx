@@ -1,30 +1,23 @@
-import { useState, useEffect } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useQuery } from "@tanstack/react-query";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Loader2, Save } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Loader2 } from 'lucide-react';
 
+import AdminLayout from '@/components/admin/AdminLayout';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
+// Schema for site settings form
 const settingsSchema = z.object({
-  header_verification_code: z.string().optional(),
+  header_verification_code: z.string(),
   header_verification_description: z.string().optional(),
 });
 
@@ -33,6 +26,7 @@ type FormData = z.infer<typeof settingsSchema>;
 const AdminSettings = () => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const queryClient = useQueryClient();
 
   const form = useForm<FormData>({
     resolver: zodResolver(settingsSchema),
@@ -72,11 +66,11 @@ const AdminSettings = () => {
         title: "Settings updated",
         description: "Your site settings have been updated successfully.",
       });
-
-      // Invalidate the settings query to refresh the data
+      
+      // Invalidate queries to refresh the data
       queryClient.invalidateQueries({ queryKey: ["/api/admin/settings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/site-verification"] });
     } catch (error) {
-      console.error("Failed to update settings:", error);
       toast({
         title: "Error",
         description: "Failed to update settings. Please try again.",
@@ -88,94 +82,74 @@ const AdminSettings = () => {
   };
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Site Settings</h1>
-          <p className="text-muted-foreground">
-            Manage site-wide settings and verification codes for search engines.
-          </p>
-        </div>
-
+    <AdminLayout title="Site Settings">
+      <div className="space-y-8">
         <Card>
           <CardHeader>
-            <CardTitle>Search Engine Verification</CardTitle>
+            <CardTitle>SEO Verification</CardTitle>
             <CardDescription>
-              Add verification codes for Google Search Console, Bing Webmaster Tools, etc.
-              These codes will be added to the <code>&lt;head&gt;</code> section of your website.
+              Add verification codes for search engines like Google Search Console and Bing Webmaster Tools
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
-              <div className="space-y-4">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-24 w-full" />
-                <Skeleton className="h-10 w-28" />
-              </div>
-            ) : (
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="header_verification_code"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Verification Code</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="<meta name='google-site-verification' content='your_verification_code' />"
-                            className="font-mono"
-                            rows={5}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Paste the full HTML meta tag or script provided by the search engine. 
-                          This code will be inserted in the website&apos;s head section.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="header_verification_code"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Verification Code</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="<meta name='google-site-verification' content='YOUR_CODE' />"
+                          className="font-mono text-sm"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Paste the full HTML verification code provided by the search engine.
+                        This will be added to the <code>&lt;head&gt;</code> section of your website.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <FormField
-                    control={form.control}
-                    name="header_verification_description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Google Search Console verification"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Add a description to help remember what this code is for
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <FormField
+                  control={form.control}
+                  name="header_verification_description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description (Optional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., Google Search Console verification code"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Add a note to help you remember what this code is for.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="mr-2 h-4 w-4" />
-                        Save Settings
-                      </>
-                    )}
-                  </Button>
-                </form>
-              </Form>
-            )}
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Save Settings
+                </Button>
+              </form>
+            </Form>
           </CardContent>
         </Card>
+
+        {isLoading ? (
+          <div className="flex justify-center p-8">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : null}
 
         {settings && settings.length > 0 && (
           <Card>
