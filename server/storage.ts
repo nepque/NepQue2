@@ -391,6 +391,8 @@ export class MemStorage implements IStorage {
     search?: string,
     sortBy?: 'newest' | 'expiring' | 'popular'
   }): Promise<CouponWithRelations[]> {
+    console.log("MemStorage getCoupons called with options:", options);
+    
     let filteredCoupons = Array.from(this.coupons.values());
 
     // Apply filters
@@ -413,21 +415,40 @@ export class MemStorage implements IStorage {
     }
 
     if (options?.search) {
+      console.log(`MemStorage: Searching for "${options.search}"`);
       const searchLower = options.search.toLowerCase();
       filteredCoupons = filteredCoupons.filter(
         (coupon) => {
           const couponTitle = coupon.title.toLowerCase();
           const couponDesc = coupon.description.toLowerCase();
+          const couponCode = coupon.code.toLowerCase();
           const store = this.stores.get(coupon.storeId);
           const storeName = store ? store.name.toLowerCase() : '';
           
-          return (
-            couponTitle.includes(searchLower) || 
-            couponDesc.includes(searchLower) ||
-            storeName.includes(searchLower)
-          );
+          const titleMatch = couponTitle.includes(searchLower);
+          const descMatch = couponDesc.includes(searchLower);
+          const codeMatch = couponCode.includes(searchLower);
+          const storeMatch = storeName.includes(searchLower);
+          
+          // Log matches for debugging
+          if (titleMatch || descMatch || codeMatch || storeMatch) {
+            console.log(`Found match for "${options.search}" in coupon ID ${coupon.id}:`, {
+              title: couponTitle,
+              titleMatch,
+              desc: couponDesc,
+              descMatch,
+              code: couponCode,
+              codeMatch,
+              store: storeName,
+              storeMatch
+            });
+          }
+          
+          return titleMatch || descMatch || codeMatch || storeMatch;
         }
       );
+      
+      console.log(`MemStorage: Search for "${options.search}" returned ${filteredCoupons.length} results`);
     }
 
     // Apply sorting
@@ -1308,6 +1329,8 @@ export class DatabaseStorage implements IStorage {
         .leftJoin(stores, eq(coupons.storeId, stores.id))
         .leftJoin(categories, eq(coupons.categoryId, categories.id));
       
+      console.log("Database search options:", options);
+      
       // Apply filters
       const filters = [];
       
@@ -1324,11 +1347,13 @@ export class DatabaseStorage implements IStorage {
       }
       
       if (options?.search) {
+        console.log(`Searching for "${options.search}" in database`);
         filters.push(
           or(
             like(coupons.title, `%${options.search}%`),
             like(coupons.description, `%${options.search}%`),
-            like(coupons.code, `%${options.search}%`)
+            like(coupons.code, `%${options.search}%`),
+            like(stores.name, `%${options.search}%`) // Also search in store names
           )
         );
       }

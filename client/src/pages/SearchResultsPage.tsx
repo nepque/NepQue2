@@ -46,7 +46,11 @@ const SearchResultsPage = () => {
   // Get search query from URL
   useEffect(() => {
     const searchParams = new URLSearchParams(location.split("?")[1]);
-    const query = searchParams.get("q");
+    
+    // Check for both "q" and "search" parameters to support both URL formats
+    const query = searchParams.get("q") || searchParams.get("search");
+    console.log("URL search params:", location, "Extracted query:", query);
+    
     if (query) {
       setSearchQuery(query);
     }
@@ -54,14 +58,18 @@ const SearchResultsPage = () => {
 
   // Fetch coupons based on search query
   const { data: coupons, isLoading: isLoadingCoupons } = useQuery<CouponWithRelations[]>({
-    queryKey: ["/api/coupons", { q: searchQuery, sortBy }],
+    queryKey: ["/api/coupons", { search: searchQuery, sortBy }],
     queryFn: async () => {
       if (!searchQuery) return [];
       
-      let url = `/api/coupons?q=${encodeURIComponent(searchQuery)}`;
+      // Use "search" parameter consistently for API calls
+      let url = `/api/coupons?search=${encodeURIComponent(searchQuery)}`;
       if (sortBy) {
         url += `&sortBy=${sortBy}`;
       }
+      
+      console.log("Fetching search results from URL:", url);
+      
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error("Failed to fetch coupons");
@@ -106,7 +114,7 @@ const SearchResultsPage = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      navigate(`/search?search=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 

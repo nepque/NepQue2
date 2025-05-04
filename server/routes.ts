@@ -217,6 +217,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { categoryId, storeId, featured, search, q, sortBy } = req.query;
       
+      // Debug log all query parameters to troubleshoot search issues
+      console.log("GET /api/coupons - Query parameters:", {
+        categoryId,
+        storeId,
+        featured,
+        search,
+        q,
+        sortBy,
+        fullQuery: req.query
+      });
+      
       const options: any = {};
       
       if (categoryId) {
@@ -234,6 +245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Support both "search" and "q" parameters for backward compatibility
       if (search || q) {
         options.search = (search || q) as string;
+        console.log(`Search term detected: "${options.search}"`);
       }
       
       if (sortBy) {
