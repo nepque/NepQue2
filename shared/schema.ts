@@ -213,3 +213,23 @@ export const insertCheckInSchema = createInsertSchema(checkIns).pick({
 
 export type InsertCheckIn = z.infer<typeof insertCheckInSchema>;
 export type CheckIn = typeof checkIns.$inferSelect;
+
+// Points Log schema
+export const pointsLog = pgTable("points_log", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  points: integer("points").notNull(), // Positive or negative delta
+  action: text("action").notNull(), // e.g., 'daily_checkin', 'coupon_approved', 'withdrawal'
+  description: text("description").notNull(), // Human-readable reason
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertPointsLogSchema = createInsertSchema(pointsLog).pick({
+  userId: true,
+  points: true,
+  action: true,
+  description: true,
+});
+
+export type InsertPointsLog = z.infer<typeof insertPointsLogSchema>;
+export type PointsLog = typeof pointsLog.$inferSelect;

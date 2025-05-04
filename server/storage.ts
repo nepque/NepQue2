@@ -19,6 +19,11 @@ import {
   type CheckIn,
   type InsertCheckIn
 } from "@shared/schema";
+import {
+  pointsLog,
+  type PointsLog,
+  type InsertPointsLog
+} from "@shared/schema";
 
 // Storage interface
 export interface IStorage {
@@ -34,6 +39,11 @@ export interface IStorage {
     preferredStores?: number[],
     hasCompletedOnboarding?: boolean
   }): Promise<User>;
+  
+  // Points log operations
+  getPointsLog(userId: number): Promise<PointsLog[]>;
+  addPointsLog(log: InsertPointsLog): Promise<PointsLog>;
+  getUserPointsBalance(userId: number): Promise<number>;
 
   // Category operations
   getCategories(): Promise<Category[]>;
@@ -119,6 +129,7 @@ export class MemStorage implements IStorage {
   private userSubmittedCoupons: Map<number, UserSubmittedCoupon>;
   private withdrawalRequests: Map<number, WithdrawalRequest>;
   private checkIns: Map<number, CheckIn>;
+  private pointsLogs: Map<number, PointsLog>;
   
   currentUserId: number;
   currentCategoryId: number;
@@ -127,6 +138,7 @@ export class MemStorage implements IStorage {
   currentUserSubmittedCouponId: number;
   currentWithdrawalRequestId: number;
   currentCheckInId: number;
+  currentPointsLogId: number;
 
   constructor() {
     this.users = new Map();
@@ -136,6 +148,7 @@ export class MemStorage implements IStorage {
     this.userSubmittedCoupons = new Map();
     this.withdrawalRequests = new Map();
     this.checkIns = new Map();
+    this.pointsLogs = new Map();
     
     this.currentUserId = 1;
     this.currentCategoryId = 1;
@@ -144,6 +157,7 @@ export class MemStorage implements IStorage {
     this.currentUserSubmittedCouponId = 1;
     this.currentWithdrawalRequestId = 1;
     this.currentCheckInId = 1;
+    this.currentPointsLogId = 1;
   }
 
   // User operations
@@ -245,6 +259,42 @@ export class MemStorage implements IStorage {
       throw new Error(`User with ID ${id} not found`);
     }
     this.users.delete(id);
+  }
+  
+  // Points log operations
+  async getPointsLog(userId: number): Promise<PointsLog[]> {
+    const logs = Array.from(this.pointsLogs.values());
+    return logs.filter(log => log.userId === userId);
+  }
+  
+  async addPointsLog(insertLog: InsertPointsLog): Promise<PointsLog> {
+    const id = this.currentPointsLogId++;
+    const now = new Date();
+    const log: PointsLog = {
+      ...insertLog,
+      id,
+      createdAt: now
+    };
+    this.pointsLogs.set(id, log);
+    
+    // Update the user's points balance
+    const user = await this.getUser(insertLog.userId);
+    if (user) {
+      const currentPoints = user.points || 0;
+      user.points = currentPoints + insertLog.points;
+      this.users.set(user.id, user);
+    }
+    
+    return log;
+  }
+  
+  async getUserPointsBalance(userId: number): Promise<number> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error(`User with ID ${userId} not found`);
+    }
+    
+    return user.points || 0;
   }
 
   // Category operations
