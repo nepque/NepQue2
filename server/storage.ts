@@ -438,13 +438,20 @@ export class MemStorage implements IStorage {
         (coupon) => {
           const couponTitle = coupon.title.toLowerCase();
           const couponDesc = coupon.description.toLowerCase();
+          const couponCode = coupon.code ? coupon.code.toLowerCase() : '';
+          const couponSubtitle = coupon.subtitle ? coupon.subtitle.toLowerCase() : '';
           const store = this.stores.get(coupon.storeId);
           const storeName = store ? store.name.toLowerCase() : '';
+          const category = this.categories.get(coupon.categoryId);
+          const categoryName = category ? category.name.toLowerCase() : '';
           
           return (
             couponTitle.includes(searchLower) || 
             couponDesc.includes(searchLower) ||
-            storeName.includes(searchLower)
+            couponCode.includes(searchLower) ||
+            couponSubtitle.includes(searchLower) ||
+            storeName.includes(searchLower) ||
+            categoryName.includes(searchLower)
           );
         }
       );
@@ -1423,11 +1430,16 @@ export class DatabaseStorage implements IStorage {
       }
       
       if (options?.search) {
+        // Implement more comprehensive fuzzy search across multiple fields
+        const searchTerm = `%${options.search}%`;
         filters.push(
           or(
-            like(coupons.title, `%${options.search}%`),
-            like(coupons.description, `%${options.search}%`),
-            like(coupons.code, `%${options.search}%`)
+            like(coupons.title, searchTerm),
+            like(coupons.description, searchTerm),
+            like(coupons.code, searchTerm),
+            like(coupons.subtitle, searchTerm),
+            like(stores.name, searchTerm),
+            like(categories.name, searchTerm)
           )
         );
       }
