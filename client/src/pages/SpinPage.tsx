@@ -262,7 +262,7 @@ const SpinPage = () => {
                             left: '50%',
                             height: '40px',
                             width: '40px',
-                            marginLeft: '-20px',
+                            marginLeft: '20px',
                             marginTop: '-100px',
                             display: 'flex',
                             alignItems: 'center',
