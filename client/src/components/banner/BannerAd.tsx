@@ -19,7 +19,13 @@ export const BannerAd: React.FC<BannerAdProps> = ({ location, className = '' }) 
   // Fetch active banner ads for this location
   const { data: bannerAds, isLoading, isError } = useQuery({
     queryKey: ['/api/banner-ads', location],
-    queryFn: () => apiRequest(`/api/banner-ads?location=${location}&isActive=true`),
+    queryFn: async () => {
+      const response = await fetch(`/api/banner-ads?location=${location}&isActive=true`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch banner ads');
+      }
+      return response.json();
+    },
     // Cache for 15 minutes to prevent too frequent refetching
     staleTime: 15 * 60 * 1000,
   });
@@ -29,10 +35,12 @@ export const BannerAd: React.FC<BannerAdProps> = ({ location, className = '' }) 
     if (bannerAds && bannerAds.length > 0) {
       const randomIndex = Math.floor(Math.random() * bannerAds.length);
       setRandomBanner(bannerAds[randomIndex]);
+      console.log("Selected banner ad:", bannerAds[randomIndex]);
     } else {
       setRandomBanner(null);
+      console.log("No banner ads available for location:", location);
     }
-  }, [bannerAds]);
+  }, [bannerAds, location]);
 
   // Track banner ad click
   const handleBannerClick = () => {
@@ -51,7 +59,7 @@ export const BannerAd: React.FC<BannerAdProps> = ({ location, className = '' }) 
   // Loading state
   if (isLoading) {
     return (
-      <div className={`w-[700px] h-[90px] rounded overflow-hidden ${className}`}>
+      <div className={`w-full max-w-[700px] h-[90px] rounded overflow-hidden ${className}`}>
         <Skeleton className="w-full h-full" />
       </div>
     );
@@ -59,24 +67,41 @@ export const BannerAd: React.FC<BannerAdProps> = ({ location, className = '' }) 
 
   // Error or no banners available
   if (isError || !randomBanner) {
+    console.log("Banner ad not displayed due to error or no banner available");
     return null;
   }
 
+  // If banner has an image URL, display just the image
+  if (randomBanner.imageUrl) {
+    return (
+      <div 
+        className={`relative w-full max-w-[700px] h-[90px] rounded overflow-hidden shadow-md ${className}`}
+        onClick={handleBannerClick}
+        style={{ cursor: randomBanner.linkUrl ? 'pointer' : 'default' }}
+      >
+        <img 
+          src={randomBanner.imageUrl} 
+          alt={randomBanner.title} 
+          className="w-full h-full object-fill" 
+        />
+        
+        {/* Ad indicator */}
+        <div className="absolute top-1 right-1 bg-black/40 text-white text-xs px-1 rounded">
+          Ad
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback to gradient background with text overlay
   return (
     <div 
-      className={`relative w-[700px] h-[90px] rounded overflow-hidden shadow-md ${className}`}
+      className={`relative w-full max-w-[700px] h-[90px] rounded overflow-hidden shadow-md ${className}`}
       onClick={handleBannerClick}
       style={{ cursor: randomBanner.linkUrl ? 'pointer' : 'default' }}
     >
-      {/* Banner background - either use image or gradient */}
-      <div 
-        className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-500"
-        style={{ 
-          backgroundImage: randomBanner.imageUrl ? `url(${randomBanner.imageUrl})` : undefined,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        }}
-      />
+      {/* Banner background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-500" />
       
       {/* Content overlay */}
       <div className="absolute inset-0 flex flex-col justify-center p-4 text-white">

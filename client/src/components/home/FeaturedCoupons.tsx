@@ -116,8 +116,8 @@ const FeaturedCoupons = () => {
         </div>
         
         {/* Banner Ad */}
-        <div className="mt-10 mx-auto flex justify-center">
-          <BannerAd location="homepage" className="shadow-md rounded-md overflow-hidden" />
+        <div className="mt-12 mx-auto flex justify-center max-w-full overflow-hidden p-2">
+          <BannerAd location="homepage" className="shadow-lg rounded-md overflow-hidden max-w-full" />
         </div>
       </div>
       
