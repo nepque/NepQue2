@@ -42,30 +42,62 @@ const EarnPage = () => {
   const [checkingIn, setCheckingIn] = useState(false);
 
   // Get user's current streak info
-  const { data: streakInfo, isLoading: loadingStreak } = useQuery<StreakInfo>({
+  const { data: streakInfo, isLoading: loadingStreak, error: streakError } = useQuery<StreakInfo>({
     queryKey: ["/api/users", user?.uid, "streak"],
     queryFn: async () => {
-      if (!user?.uid) return null;
-      return apiRequest(`/api/users/${user.uid}/streak`);
+      if (!user?.uid) {
+        console.log("No user UID available for streak info request");
+        return null;
+      }
+      console.log(`Making streak API request for user: ${user.uid}`);
+      try {
+        const result = await apiRequest(`/api/users/firebase/${user.uid}/streak`);
+        console.log("Streak API response:", result);
+        return result;
+      } catch (error) {
+        console.error("Error fetching streak info:", error);
+        throw error;
+      }
     },
     enabled: !!user?.uid,
   });
+  
+  console.log("Current user:", user);
+  console.log("Streak info data:", streakInfo);
+  console.log("Streak loading:", loadingStreak);
+  console.log("Streak error:", streakError);
 
   // Get user's check-in history
-  const { data: checkInHistory, isLoading: loadingHistory } = useQuery<CheckIn[]>({
+  const { data: checkInHistory, isLoading: loadingHistory, error: historyError } = useQuery<CheckIn[]>({
     queryKey: ["/api/users", user?.uid, "check-ins"],
     queryFn: async () => {
-      if (!user?.uid) return [];
-      return apiRequest(`/api/users/${user.uid}/check-ins`);
+      if (!user?.uid) {
+        console.log("No user UID available for check-in history request");
+        return [];
+      }
+      console.log(`Making check-in history API request for user: ${user.uid}`);
+      try {
+        const result = await apiRequest(`/api/users/firebase/${user.uid}/check-ins`);
+        console.log("Check-in history API response:", result);
+        return result;
+      } catch (error) {
+        console.error("Error fetching check-in history:", error);
+        throw error;
+      }
     },
     enabled: !!user?.uid,
   });
+  
+  console.log("Check-in history data:", checkInHistory);
+  console.log("Check-in history loading:", loadingHistory);
+  console.log("Check-in history error:", historyError);
 
   // Process a check-in
   const checkInMutation = useMutation<CheckInResponse>({
     mutationFn: async () => {
       if (!user?.uid) throw new Error("User not logged in");
-      return apiRequest(`/api/users/${user.uid}/check-in`, {
+      console.log("Initiating check-in for user:", user.uid);
+      return apiRequest(`/api/users/firebase/${user.uid}/check-in`, {
         method: "POST",
       });
     },
@@ -238,7 +270,7 @@ const EarnPage = () => {
                       <Button 
                         className="w-full" 
                         size="lg"
-                        disabled={!user?.uid || checkingIn || (streakInfo && !streakInfo.canCheckInNow)}
+                        disabled={!user?.uid || checkingIn}
                         onClick={handleCheckIn}
                       >
                         {!user?.uid ? (

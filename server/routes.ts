@@ -1037,7 +1037,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       try {
         const streakInfo = await storage.getUserCurrentStreak(user.id);
-        console.log(`Streak info for user ${user.id}:`, streakInfo);
+        console.log(`STREAK DEBUG - Streak info for user ${user.id}:`, JSON.stringify(streakInfo));
         res.json(streakInfo);
       } catch (error) {
         console.error("Error getting user streak info:", error);
