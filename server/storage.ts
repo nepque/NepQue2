@@ -2693,11 +2693,14 @@ export class DatabaseStorage implements IStorage {
 
   async getSubscriberByEmail(email: string): Promise<Subscriber | undefined> {
     try {
-      const [subscriber] = await db
+      console.log("Looking up subscriber with email:", email);
+      const result = await db
         .select()
         .from(subscribers)
-        .where(eq(subscribers.email, email));
-      return subscriber;
+        .where(eq(subscribers.email, email.toLowerCase()));
+      
+      console.log("Subscriber lookup result:", result);
+      return result[0];
     } catch (error) {
       console.error(`Error getting subscriber with email ${email}:`, error);
       return undefined;
@@ -2706,14 +2709,22 @@ export class DatabaseStorage implements IStorage {
 
   async createSubscriber(data: InsertSubscriber): Promise<Subscriber | undefined> {
     try {
-      const [subscriber] = await db
+      console.log("Creating new subscriber with data:", data);
+      const result = await db
         .insert(subscribers)
-        .values(data)
+        .values({
+          ...data,
+          email: data.email.toLowerCase(),
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
         .returning();
-      return subscriber;
+      
+      console.log("Create subscriber result:", result);
+      return result[0];
     } catch (error) {
       console.error("Error creating subscriber:", error);
-      return undefined;
+      throw error;
     }
   }
 

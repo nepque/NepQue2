@@ -1713,8 +1713,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Email is required" });
       }
       
+      console.log("Attempting to subscribe email:", email);
+      
       // Check if email already exists
       const existingSubscriber = await storage.getSubscriberByEmail(email);
+      console.log("Existing subscriber check:", existingSubscriber);
       
       if (existingSubscriber) {
         if (existingSubscriber.subscribed) {
@@ -1722,6 +1725,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } else {
           // Re-subscribe if previously unsubscribed
           const updated = await storage.updateSubscriber(existingSubscriber.id, { subscribed: true });
+          console.log("Re-subscribed user:", updated);
           return res.status(200).json(updated);
         }
       }
@@ -1731,6 +1735,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email,
         subscribed: true
       });
+      
+      console.log("Created new subscriber:", newSubscriber);
+      
+      if (!newSubscriber) {
+        throw new Error("Failed to create subscriber");
+      }
       
       res.status(201).json(newSubscriber);
     } catch (error) {
