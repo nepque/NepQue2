@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Helmet } from "react-helmet";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
@@ -12,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Award, Calendar, Star, Check, Clock, Gift, Coins } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import BannerAd from "@/components/banner/BannerAd";
+import SEO from "@/components/common/SEO";
 
 interface CheckInResponse {
   success: boolean;
@@ -189,11 +189,12 @@ const EarnPage = () => {
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-5xl">
-      <Helmet>
-        <title>Earn Points | NepQue</title>
-        <meta name="description" content="Earn points by checking in daily and maintaining your streak on NepQue." />
-        <meta name="keywords" content="points, rewards, check-in, streak, daily" />
-      </Helmet>
+      <SEO 
+        title="Earn Points" 
+        description="Earn points by checking in daily and maintaining your streak on NepQue." 
+        keywords="points, rewards, check-in, streak, daily"
+        noIndex={true}
+      />
 
       <h1 className="text-3xl font-bold mb-6">Earn Points</h1>
 

@@ -230,7 +230,8 @@ const AdminStoreNew = () => {
                   <FormControl>
                     <Input 
                       placeholder={`${form.getValues("name")}, promo codes, coupons, discount codes, deals, vouchers, offers`} 
-                      {...field} 
+                      {...field}
+                      value={field.value || ''}
                     />
                   </FormControl>
                   <FormMessage />
