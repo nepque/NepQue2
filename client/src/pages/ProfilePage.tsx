@@ -10,6 +10,7 @@ import { PointsHistory } from "@/components/PointsHistory";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
+import { usePointsLog } from "@/hooks/use-points-log";
 import { Loader2, Edit, PlusCircle, Clock, CheckCircle, XCircle, CreditCard, History, CoinIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -122,6 +123,9 @@ export default function ProfilePage() {
   const preferredCategories = userData?.preferredCategories || [];
   const preferredStores = userData?.preferredStores || [];
   
+  // Get points data from the usePointsLog hook
+  const { pointsBalance, balanceLoading } = usePointsLog();
+  
   // Count submitted coupons by status
   const pendingCount = Array.isArray(userCoupons) ? userCoupons.filter(c => c.status === 'pending').length : 0;
   const approvedCount = Array.isArray(userCoupons) ? userCoupons.filter(c => c.status === 'approved').length : 0;
@@ -209,7 +213,13 @@ export default function ProfilePage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <p className="text-muted-foreground">Current Points</p>
-                  <p className="text-2xl font-bold text-primary">{userData?.points || 0}</p>
+                  {balanceLoading ? (
+                    <div className="flex justify-center">
+                      <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+                    </div>
+                  ) : (
+                    <p className="text-2xl font-bold text-primary">{pointsBalance}</p>
+                  )}
                 </div>
                 <Separator className="my-2" />
                 <div className="space-y-1 text-sm text-muted-foreground">
@@ -223,10 +233,10 @@ export default function ProfilePage() {
                   className="w-full mt-2"
                   variant="outline"
                   size="sm"
-                  disabled={(userData?.points || 0) < 1000}
+                  disabled={pointsBalance < 1000}
                 >
                   <CreditCard className="w-4 h-4 mr-2" />
-                  {(userData?.points || 0) >= 1000 ? "Withdraw Points" : "Insufficient Points"}
+                  {pointsBalance >= 1000 ? "Withdraw Points" : "Insufficient Points"}
                 </Button>
               </div>
             </CardContent>
