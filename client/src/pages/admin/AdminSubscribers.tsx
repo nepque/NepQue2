@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -11,238 +10,198 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { toast } from "@/hooks/use-toast";
-import { format } from "date-fns";
-import { Switch } from "@/components/ui/switch";
-import { Trash2, Download } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
-import { Subscriber } from "@shared/schema";
-import AdminLayout from "@/components/admin/AdminLayout";
+import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Download, Search, Trash2 } from "lucide-react";
+import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
+
+type Subscriber = {
+  id: number;
+  email: string;
+  createdAt: string;
+};
 
 const AdminSubscribers = () => {
-  const queryClient = useQueryClient();
-  const [subscriberToDelete, setSubscriberToDelete] = useState<number | null>(null);
+  const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // Fetch subscribers
-  const { data: subscribers, isLoading } = useQuery<Subscriber[]>({
-    queryKey: ["/api/admin/subscribers"],
-    enabled: true,
-  });
-
-  // Update subscriber subscription status
-  const updateSubscriberMutation = useMutation({
-    mutationFn: async ({ id, subscribed }: { id: number; subscribed: boolean }) => {
-      return await apiRequest(`/api/admin/subscribers/${id}`, {
-        method: "PUT",
+  // Fetch all subscribers
+  const { data: subscribers, isLoading } = useQuery({
+    queryKey: ["/api/subscribers"],
+    queryFn: async () => {
+      const response = await fetch("/api/subscribers", {
         headers: {
-          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
         },
-        body: JSON.stringify({ subscribed }),
       });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/subscribers"] });
-      toast({
-        title: "Success",
-        description: "Subscriber status updated successfully",
-      });
-    },
-    onError: (error) => {
-      console.error("Error updating subscriber:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update subscriber status",
-        variant: "destructive",
-      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch subscribers");
+      }
+      
+      return response.json() as Promise<Subscriber[]>;
     },
   });
 
-  // Delete subscriber
-  const deleteSubscriberMutation = useMutation({
-    mutationFn: async (id: number) => {
-      return await apiRequest(`/api/admin/subscribers/${id}`, {
+  // Filter subscribers based on search term
+  const filteredSubscribers = subscribers?.filter(
+    (subscriber) => subscriber.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Handle delete subscriber
+  const handleDeleteSubscriber = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this subscriber?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/subscribers/${id}`, {
         method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+        },
       });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/subscribers"] });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete subscriber");
+      }
+
       toast({
-        title: "Success",
-        description: "Subscriber deleted successfully",
+        title: "Subscriber deleted",
+        description: "The subscriber has been successfully deleted.",
       });
-      setSubscriberToDelete(null);
-    },
-    onError: (error) => {
-      console.error("Error deleting subscriber:", error);
+
+      // Invalidate subscribers query to refresh the list
+      queryClient.invalidateQueries({ queryKey: ["/api/subscribers"] });
+    } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to delete subscriber",
+        description: "Failed to delete subscriber. Please try again.",
         variant: "destructive",
       });
-      setSubscriberToDelete(null);
-    },
-  });
-
-  // Handle subscription status change
-  const handleSubscriptionChange = (id: number, currentStatus: boolean) => {
-    updateSubscriberMutation.mutate({
-      id,
-      subscribed: !currentStatus,
-    });
-  };
-
-  // Handle delete confirmation
-  const handleConfirmDelete = () => {
-    if (subscriberToDelete) {
-      deleteSubscriberMutation.mutate(subscriberToDelete);
     }
   };
 
-  // Handle CSV export
-  const handleExportCsv = () => {
-    // Create a link to download the CSV and click it
-    const link = document.createElement("a");
-    link.href = "/api/admin/subscribers/export";
-    link.setAttribute("download", "subscribers.csv");
-    link.setAttribute("target", "_blank");
-    
-    // Add authorization header via fetch
-    fetch("/api/admin/subscribers/export", {
-      headers: {
-        "Authorization": "Bearer admin-development-token",
-      },
-    })
-      .then(response => response.blob())
-      .then(blob => {
-        const url = window.URL.createObjectURL(blob);
-        link.href = url;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-        
-        toast({
-          title: "Success",
-          description: "Subscribers exported successfully",
-        });
-      })
-      .catch(error => {
-        console.error("Error exporting subscribers:", error);
-        toast({
-          title: "Error",
-          description: "Failed to export subscribers",
-          variant: "destructive",
-        });
+  // Export subscribers to CSV
+  const exportToCSV = () => {
+    if (!subscribers || subscribers.length === 0) {
+      toast({
+        title: "No subscribers",
+        description: "There are no subscribers to export.",
+        variant: "destructive",
       });
+      return;
+    }
+
+    // Create CSV content
+    const headers = ["ID", "Email", "Subscription Date"];
+    
+    const csvContent = [
+      headers.join(","),
+      ...subscribers.map((subscriber) => [
+        subscriber.id,
+        subscriber.email,
+        format(new Date(subscriber.createdAt), "yyyy-MM-dd HH:mm:ss"),
+      ].join(",")),
+    ].join("\n");
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `subscribers_${format(new Date(), "yyyy-MM-dd")}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Export successful",
+      description: `${subscribers.length} subscribers exported to CSV.`,
+    });
   };
 
   return (
-    <AdminLayout>
-      <Card className="w-full">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Newsletter Subscribers</CardTitle>
-            <CardDescription>
-              Manage newsletter subscribers and export subscriber data
-            </CardDescription>
+    <AdminLayout title="Newsletter Subscribers">
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="Search subscribers..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 w-full"
+            />
           </div>
-          <Button
-            onClick={handleExportCsv}
-            className="flex items-center gap-2"
-            variant="outline"
-          >
-            <Download className="h-4 w-4" /> Export CSV
+          <Button onClick={exportToCSV} className="gap-2">
+            <Download className="h-4 w-4" />
+            Export to CSV
           </Button>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center p-8">
-              <Spinner />
-            </div>
-          ) : subscribers && subscribers.length > 0 ? (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Subscribed</TableHead>
-                    <TableHead>Created At</TableHead>
-                    <TableHead>Updated At</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {subscribers.map((subscriber) => (
+        </div>
+
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <Spinner size="lg" />
+          </div>
+        ) : (
+          <div className="rounded-md border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Subscription Date</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredSubscribers && filteredSubscribers.length > 0 ? (
+                  filteredSubscribers.map((subscriber) => (
                     <TableRow key={subscriber.id}>
-                      <TableCell>{subscriber.id}</TableCell>
+                      <TableCell className="font-medium">{subscriber.id}</TableCell>
                       <TableCell>{subscriber.email}</TableCell>
                       <TableCell>
-                        <Switch
-                          checked={subscriber.subscribed}
-                          onCheckedChange={() => handleSubscriptionChange(subscriber.id, subscriber.subscribed)}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        {subscriber.createdAt
-                          ? format(new Date(subscriber.createdAt), "MMM d, yyyy h:mm a")
-                          : "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        {subscriber.updatedAt
-                          ? format(new Date(subscriber.updatedAt), "MMM d, yyyy h:mm a")
-                          : "N/A"}
+                        {format(new Date(subscriber.createdAt), "PPP")}
                       </TableCell>
                       <TableCell className="text-right">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-destructive hover:bg-destructive/10"
-                              onClick={() => setSubscriberToDelete(subscriber.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This will permanently delete the subscriber from the database.
-                                This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel
-                                onClick={() => setSubscriberToDelete(null)}
-                              >
-                                Cancel
-                              </AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={handleConfirmDelete}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => handleDeleteSubscriber(subscriber.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <div className="text-center p-8 text-muted-foreground">
-              No subscribers found
-            </div>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-6 text-gray-500">
+                      {searchTerm
+                        ? "No subscribers match your search."
+                        : "No subscribers found."}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+
+        <div className="mt-4 text-sm text-gray-500">
+          {filteredSubscribers && (
+            <p>
+              Showing {filteredSubscribers.length} of {subscribers?.length}{" "}
+              subscribers
+            </p>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </AdminLayout>
   );
 };
