@@ -20,8 +20,11 @@ interface SocialMediaLinkData {
 
 // Helper function to dynamically get Lucide icon component
 const getDynamicIcon = (iconName: string): LucideIcon => {
+  // Capitalize the first letter to match Lucide component naming convention
+  const capitalizedIconName = iconName.charAt(0).toUpperCase() + iconName.slice(1);
+  
   // Default to the Pin icon if the requested icon doesn't exist
-  return (LucideIcons as any)[iconName] || Pin;
+  return (LucideIcons as any)[capitalizedIconName] || Pin;
 };
 
 const Footer = () => {
