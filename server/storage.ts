@@ -119,6 +119,14 @@ export interface IStorage {
   // Heat map data
   getCouponUsageByCategory(): Promise<{ category: string; usageCount: number; coupons: number }[]>;
   getCouponUsageByMonth(): Promise<{ month: string; usageCount: number; coupons: number }[]>;
+  
+  // Spin the wheel operations
+  processUserSpin(userId: number): Promise<{
+    success: boolean;
+    points: number;
+    nextSpinTime: string;
+    message: string;
+  }>;
 }
 
 export class MemStorage implements IStorage {
@@ -947,6 +955,67 @@ export class MemStorage implements IStorage {
       newStreak,
       nextCheckInTime: nextCheckInTime.toISOString(),
       message: `You earned ${points} points! Your current streak is ${newStreak} day${newStreak !== 1 ? 's' : ''}.`
+    };
+  }
+  
+  async processUserSpin(userId: number): Promise<{
+    success: boolean;
+    points: number;
+    nextSpinTime: string;
+    message: string;
+  }> {
+    // Check if user exists
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error(`User with ID ${userId} not found`);
+    }
+    
+    const now = new Date();
+    
+    // Check if user can spin (if they have lastSpin field and it's less than 24 hours ago, they can't spin)
+    if (user.lastSpin) {
+      const lastSpinDate = new Date(user.lastSpin);
+      const hoursSinceLastSpin = (now.getTime() - lastSpinDate.getTime()) / (1000 * 60 * 60);
+      
+      if (hoursSinceLastSpin < 24) {
+        // User needs to wait before spinning again
+        const nextSpinTime = new Date(lastSpinDate.getTime() + (24 * 60 * 60 * 1000));
+        return {
+          success: false,
+          points: 0,
+          nextSpinTime: nextSpinTime.toISOString(),
+          message: "You can't spin yet. Please try again later."
+        };
+      }
+    }
+    
+    // User can spin! Determine random points award (1-5)
+    const points = Math.floor(Math.random() * 5) + 1; // Random integer between 1 and 5
+    
+    // Add entry to points log
+    await this.addPointsLog({
+      userId,
+      points,
+      action: 'spin_wheel',
+      description: `Spin the wheel reward: ${points} points`
+    });
+    
+    // Update user's last spin time
+    const updatedUser: User = {
+      ...user,
+      lastSpin: now
+    };
+    
+    this.users.set(userId, updatedUser);
+    
+    // Calculate next spin time (24 hours from now)
+    const nextSpinTime = new Date(now.getTime() + (24 * 60 * 60 * 1000));
+    
+    return {
+      success: true,
+      points,
+      nextSpinTime: nextSpinTime.toISOString(),
+      message: `Congratulations! You spun the wheel and earned ${points} points!`
     };
   }
 }
