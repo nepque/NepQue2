@@ -46,8 +46,7 @@ const SearchResultsPage = () => {
   // Get search query from URL
   useEffect(() => {
     const searchParams = new URLSearchParams(location.split("?")[1]);
-    // Check for both "q" and "search" parameters
-    const query = searchParams.get("q") || searchParams.get("search");
+    const query = searchParams.get("q");
     if (query) {
       setSearchQuery(query);
     }
@@ -55,11 +54,11 @@ const SearchResultsPage = () => {
 
   // Fetch coupons based on search query
   const { data: coupons, isLoading: isLoadingCoupons } = useQuery<CouponWithRelations[]>({
-    queryKey: ["/api/coupons", { search: searchQuery, sortBy }],
+    queryKey: ["/api/coupons", { q: searchQuery, sortBy }],
     queryFn: async () => {
       if (!searchQuery) return [];
       
-      let url = `/api/coupons?search=${encodeURIComponent(searchQuery)}`;
+      let url = `/api/coupons?q=${encodeURIComponent(searchQuery)}`;
       if (sortBy) {
         url += `&sortBy=${sortBy}`;
       }
@@ -107,7 +106,7 @@ const SearchResultsPage = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/search?search=${encodeURIComponent(searchQuery.trim())}`);
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
