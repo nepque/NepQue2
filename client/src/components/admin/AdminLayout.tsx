@@ -12,7 +12,8 @@ import {
   LogOut,
   Users,
   Inbox,
-  CreditCard
+  CreditCard,
+  Image
 } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 
@@ -160,6 +161,19 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
               >
                 <CreditCard className="w-5 h-5 mr-3" />
                 <span>Withdrawals</span>
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/admin/banner-ads"
+                className={`flex items-center py-3 px-6 ${
+                  isActive("/admin/banner-ads")
+                    ? "bg-white/15 border-l-4 border-white text-white"
+                    : "text-gray-300 hover:text-white hover:bg-white/10"
+                } transition-colors`}
+              >
+                <Image className="w-5 h-5 mr-3" />
+                <span>Banner Ads</span>
               </Link>
             </li>
           </ul>
