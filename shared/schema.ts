@@ -260,3 +260,22 @@ export const insertBannerAdSchema = createInsertSchema(bannerAds).pick({
 
 export type InsertBannerAd = z.infer<typeof insertBannerAdSchema>;
 export type BannerAd = typeof bannerAds.$inferSelect;
+
+// Site settings schema - for storing verification codes and other site-wide settings
+export const siteSettings = pgTable("site_settings", {
+  id: serial("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  value: text("value"),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertSiteSettingSchema = createInsertSchema(siteSettings).pick({
+  key: true,
+  value: true,
+  description: true,
+});
+
+export type InsertSiteSetting = z.infer<typeof insertSiteSettingSchema>;
+export type SiteSetting = typeof siteSettings.$inferSelect;
