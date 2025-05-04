@@ -432,6 +432,7 @@ const AdminBannerAds = () => {
                 <option value="homepage">Homepage</option>
                 <option value="earn-page">Earn Page</option>
                 <option value="profile-page">Profile Page</option>
+                <option value="coupon-popup">Coupon Popup</option>
               </select>
             </div>
             

@@ -7,6 +7,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { CouponWithRelations } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
+import BannerAd from "@/components/banner/BannerAd";
 
 interface CouponDetailModalProps {
   coupon: CouponWithRelations;
@@ -52,7 +53,9 @@ const CouponDetailModal = ({ coupon, onClose }: CouponDetailModalProps) => {
       setIsCopied(true);
       
       // Record usage
-      await apiRequest("POST", `/api/coupons/${coupon.id}/use`, {});
+      await apiRequest(`/api/coupons/${coupon.id}/use`, {
+        method: 'POST'
+      });
       
       // Invalidate queries to refetch with updated usage count
       queryClient.invalidateQueries({ queryKey: ["/api/coupons"] });
@@ -167,6 +170,9 @@ const CouponDetailModal = ({ coupon, onClose }: CouponDetailModalProps) => {
           >
             Shop Now at {coupon.store.name}
           </a>
+          
+          {/* Banner Ad - Coupon Popup */}
+          <BannerAd location="coupon-popup" className="mt-4 shadow-sm rounded overflow-hidden" />
           
           <div className="mt-4 text-center">
             <button 
