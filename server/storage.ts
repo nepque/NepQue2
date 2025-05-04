@@ -24,9 +24,25 @@ import {
   type PointsLog,
   type InsertPointsLog
 } from "@shared/schema";
+import {
+  bannerAds,
+  type BannerAd,
+  type InsertBannerAd
+} from "@shared/schema";
 
 // Storage interface
 export interface IStorage {
+  // Banner ad operations
+  getBannerAds(options?: { 
+    location?: string,
+    isActive?: boolean 
+  }): Promise<BannerAd[]>;
+  getBannerAdById(id: number): Promise<BannerAd | undefined>;
+  createBannerAd(bannerAd: InsertBannerAd): Promise<BannerAd>;
+  updateBannerAd(bannerAd: BannerAd): Promise<BannerAd>;
+  toggleBannerAdStatus(id: number): Promise<BannerAd>;
+  deleteBannerAd(id: number): Promise<void>;
+  
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByFirebaseUid(firebaseUid: string): Promise<User | undefined>;
@@ -138,6 +154,7 @@ export class MemStorage implements IStorage {
   private withdrawalRequests: Map<number, WithdrawalRequest>;
   private checkIns: Map<number, CheckIn>;
   private pointsLogs: Map<number, PointsLog>;
+  private bannerAds: Map<number, BannerAd>;
   
   currentUserId: number;
   currentCategoryId: number;
@@ -147,6 +164,7 @@ export class MemStorage implements IStorage {
   currentWithdrawalRequestId: number;
   currentCheckInId: number;
   currentPointsLogId: number;
+  currentBannerAdId: number;
 
   constructor() {
     this.users = new Map();
@@ -157,6 +175,7 @@ export class MemStorage implements IStorage {
     this.withdrawalRequests = new Map();
     this.checkIns = new Map();
     this.pointsLogs = new Map();
+    this.bannerAds = new Map();
     
     this.currentUserId = 1;
     this.currentCategoryId = 1;
@@ -166,6 +185,7 @@ export class MemStorage implements IStorage {
     this.currentWithdrawalRequestId = 1;
     this.currentCheckInId = 1;
     this.currentPointsLogId = 1;
+    this.currentBannerAdId = 1;
   }
 
   // User operations

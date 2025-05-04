@@ -235,3 +235,24 @@ export const insertPointsLogSchema = createInsertSchema(pointsLog).pick({
 
 export type InsertPointsLog = z.infer<typeof insertPointsLogSchema>;
 export type PointsLog = typeof pointsLog.$inferSelect;
+
+// Banner Ads schema
+export const bannerAds = pgTable("banner_ads", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  location: text("location").notNull(), // e.g., 'homepage_top', 'spin_wheel_bottom', 'coupon_popup'
+  bannerHtml: text("banner_html").notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertBannerAdSchema = createInsertSchema(bannerAds).pick({
+  name: true,
+  location: true,
+  bannerHtml: true,
+  isActive: true,
+});
+
+export type InsertBannerAd = z.infer<typeof insertBannerAdSchema>;
+export type BannerAd = typeof bannerAds.$inferSelect;
