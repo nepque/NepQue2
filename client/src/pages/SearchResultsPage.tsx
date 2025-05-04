@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { CouponWithRelations } from "@shared/schema";
 import { Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import CouponCard from "@/components/coupon/CouponCard";
 import CouponDetailModal from "@/components/coupon/CouponDetailModal";
 import { useQuery } from "@tanstack/react-query";
+import { Category, Store, CouponWithRelations } from "@shared/schema";
 
 const SearchResultsPage = () => {
   const [location, navigate] = useLocation();
@@ -20,27 +21,67 @@ const SearchResultsPage = () => {
 
   // Get search query from URL
   useEffect(() => {
-    const params = new URLSearchParams(location.split("?")[1]);
-    const query = params.get("search");
+    const searchParams = new URLSearchParams(location.split("?")[1]);
+    // Check for both "q" and "search" parameters to support both URL formats
+    const query = searchParams.get("q") || searchParams.get("search");
+    console.log("URL search params:", location, "Extracted query:", query);
+    
     if (query) {
       setSearchTerm(query);
     }
   }, [location]);
 
-  // Fetch coupons
-  const { data: coupons = [], isLoading } = useQuery<CouponWithRelations[]>({
-    queryKey: ["/api/coupons", { search: searchTerm, sortBy, category: selectedCategory, store: selectedStore, featured }],
+  // Fetch categories for filtering
+  const { data: categories } = useQuery<Category[]>({
+    queryKey: ["/api/categories"],
     queryFn: async () => {
-      const params = new URLSearchParams({
-        search: searchTerm,
-        sortBy,
-        ...(selectedCategory !== "all" && { categoryId: selectedCategory }),
-        ...(selectedStore !== "all" && { storeId: selectedStore }),
-        ...(featured && { featured: "true" })
-      });
+      const response = await fetch("/api/categories");
+      if (!response.ok) {
+        throw new Error("Failed to fetch categories");
+      }
+      return response.json();
+    }
+  });
 
-      const response = await fetch(`/api/coupons/search?${params}`);
-      if (!response.ok) throw new Error("Failed to fetch coupons");
+  // Fetch stores for filtering
+  const { data: stores } = useQuery<Store[]>({
+    queryKey: ["/api/stores"],
+    queryFn: async () => {
+      const response = await fetch("/api/stores");
+      if (!response.ok) {
+        throw new Error("Failed to fetch stores");
+      }
+      return response.json();
+    }
+  });
+
+  // Fetch coupons based on search term
+  const { data: coupons = [], isLoading } = useQuery<CouponWithRelations[]>({
+    queryKey: ["/api/coupons", { search: searchTerm, sortBy }],
+    queryFn: async () => {
+      if (!searchTerm) return [];
+      
+      // Use "search" parameter consistently for API calls
+      let url = `/api/coupons?search=${encodeURIComponent(searchTerm)}`;
+      if (sortBy) {
+        url += `&sortBy=${sortBy}`;
+      }
+      if (selectedCategory !== "all") {
+        url += `&categoryId=${selectedCategory}`;
+      }
+      if (selectedStore !== "all") {
+        url += `&storeId=${selectedStore}`;
+      }
+      if (featured) {
+        url += `&featured=true`;
+      }
+      
+      console.log("Fetching search results from URL:", url);
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Failed to fetch coupons");
+      }
       return response.json();
     },
     enabled: !!searchTerm
@@ -60,6 +101,20 @@ const SearchResultsPage = () => {
     setFeatured(false);
   };
 
+  const filteredCoupons = coupons?.filter(coupon => {
+    // Apply additional client-side filters if needed
+    if (selectedCategory !== "all" && coupon.categoryId.toString() !== selectedCategory) {
+      return false;
+    }
+    if (selectedStore !== "all" && coupon.storeId.toString() !== selectedStore) {
+      return false;
+    }
+    if (featured && !coupon.featured) {
+      return false;
+    }
+    return true;
+  });
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="py-8 px-4">
@@ -67,16 +122,24 @@ const SearchResultsPage = () => {
           <h1 className="text-2xl font-bold mb-2">Search Results for "{searchTerm}"</h1>
           <p className="text-gray-600 mb-6">Find the best deals and save with our verified coupon codes</p>
 
-          <form onSubmit={handleSearch} className="mb-6">
-            <div className="flex gap-2">
-              <Input
+          <form onSubmit={handleSearch}>
+            <div className="relative mb-6">
+              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search for stores, brands or coupons..."
-                className="flex-grow"
+                placeholder="Search for coupons, stores, or categories"
+                className="w-full pl-10 pr-20 py-2 border border-gray-300 rounded-lg"
               />
-              <Button type="submit">Search</Button>
+              <button
+                type="submit"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-600 text-white px-4 py-1 rounded-md"
+              >
+                Search
+              </button>
             </div>
           </form>
 
@@ -87,7 +150,11 @@ const SearchResultsPage = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                {/* Add categories dynamically */}
+                {categories?.map(category => (
+                  <SelectItem key={category.id} value={category.id.toString()}>
+                    {category.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
@@ -97,47 +164,53 @@ const SearchResultsPage = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Stores</SelectItem>
-                {/* Add stores dynamically */}
+                {stores?.map(store => (
+                  <SelectItem key={store.id} value={store.id.toString()}>
+                    {store.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Sort By" />
+                <SelectValue placeholder="Newest First" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="newest">Newest First</SelectItem>
                 <SelectItem value="expiring">Expiring Soon</SelectItem>
-                <SelectItem value="popularity">Most Popular</SelectItem>
+                <SelectItem value="popular">Most Popular</SelectItem>
               </SelectContent>
             </Select>
 
-            <Button
-              variant="outline"
-              className="flex items-center gap-2"
-              onClick={() => setFeatured(!featured)}
-            >
-              {featured ? "★ Featured" : "Featured"}
-            </Button>
+            <div className="ml-auto flex items-center space-x-2">
+              <Button
+                variant={featured ? "default" : "outline"}
+                className="flex items-center gap-2"
+                onClick={() => setFeatured(!featured)}
+              >
+                Featured
+              </Button>
 
-            <Button
-              variant="ghost"
-              className="flex items-center gap-2"
-              onClick={clearFilters}
-            >
-              <X className="h-4 w-4" /> Clear Filters
-            </Button>
+              <Button
+                variant="outline"
+                className="flex items-center gap-2"
+                onClick={clearFilters}
+              >
+                <X className="h-4 w-4" /> Clear Filters
+              </Button>
+            </div>
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-4">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-64 bg-gray-200 animate-pulse rounded-lg"></div>
+                <div key={i} className="h-24 bg-gray-200 animate-pulse rounded-lg"></div>
               ))}
             </div>
-          ) : coupons.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {coupons.map((coupon) => (
+          ) : filteredCoupons.length > 0 ? (
+            <div className="grid grid-cols-1 gap-4">
+              {filteredCoupons.map((coupon) => (
                 <CouponCard
                   key={coupon.id}
                   coupon={coupon}
@@ -146,13 +219,19 @@ const SearchResultsPage = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <Search className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium mb-2">No Coupons Found</h3>
-              <p className="text-gray-600">
+            <div className="text-center py-16">
+              <div className="inline-flex rounded-full bg-gray-100 p-4 mb-4">
+                <Search className="h-8 w-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">No Coupons Found</h3>
+              <p className="text-gray-500 max-w-md mx-auto">
                 We couldn't find any coupons matching your criteria.
               </p>
-              <Button variant="link" onClick={clearFilters}>
+              <Button 
+                variant="outline" 
+                className="mt-4"
+                onClick={clearFilters}
+              >
                 Clear Filters
               </Button>
             </div>
