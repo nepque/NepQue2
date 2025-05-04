@@ -2842,21 +2842,12 @@ export class DatabaseStorage implements IStorage {
   // Social media links operations
   async getAllSocialMediaLinks(): Promise<SocialMediaLink[]> {
     try {
-      // Use raw SQL query to avoid potential schema issues
-      const result = await pool.query(
-        `SELECT * FROM social_media_links ORDER BY platform`
-      );
+      const result = await db
+        .select()
+        .from(socialMediaLinks)
+        .orderBy(socialMediaLinks.platform);
       
-      // Map the result to match the expected SocialMediaLink type format
-      return result.rows.map(row => ({
-        id: row.id,
-        platform: row.platform,
-        url: row.url,
-        icon: row.icon,
-        isActive: row.is_active,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at
-      }));
+      return result;
     } catch (error) {
       console.error("Error getting all social media links:", error);
       return [];
@@ -2865,24 +2856,12 @@ export class DatabaseStorage implements IStorage {
 
   async getSocialMediaLinkById(id: number): Promise<SocialMediaLink | undefined> {
     try {
-      const result = await db.execute(
-        sql`SELECT * FROM social_media_links WHERE id = ${id}`
-      );
+      const [link] = await db
+        .select()
+        .from(socialMediaLinks)
+        .where(eq(socialMediaLinks.id, id));
       
-      if (result.length === 0) {
-        return undefined;
-      }
-      
-      const row = result[0];
-      return {
-        id: row.id,
-        platform: row.platform,
-        url: row.url,
-        icon: row.icon,
-        isActive: row.is_active,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at
-      };
+      return link;
     } catch (error) {
       console.error(`Error getting social media link with ID ${id}:`, error);
       return undefined;
@@ -3185,9 +3164,9 @@ export const storage = new DatabaseStorage();
     for (const link of socialLinksData) {
       try {
         await storage.createSocialMediaLink(link);
-        console.log(`Created social media link: ${link.name}`);
+        console.log(`Created social media link: ${link.platform}`);
       } catch (error) {
-        console.error(`Error creating social media link ${link.name}:`, error);
+        console.error(`Error creating social media link ${link.platform}:`, error);
       }
     }
   } else {
