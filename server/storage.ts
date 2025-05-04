@@ -932,6 +932,46 @@ import { db } from "./db";
 
 export class DatabaseStorage implements IStorage {
   private initialized: boolean = false;
+  
+  // Points log operations
+  async getPointsLog(userId: number): Promise<PointsLog[]> {
+    const logs = await db
+      .select()
+      .from(pointsLog)
+      .where(eq(pointsLog.userId, userId))
+      .orderBy(desc(pointsLog.createdAt));
+    
+    return logs;
+  }
+  
+  async addPointsLog(insertLog: InsertPointsLog): Promise<PointsLog> {
+    // Insert the points log entry
+    const [log] = await db
+      .insert(pointsLog)
+      .values(insertLog)
+      .returning();
+    
+    // Update the user's points balance
+    const user = await this.getUser(insertLog.userId);
+    if (user) {
+      const currentPoints = user.points || 0;
+      await db
+        .update(users)
+        .set({ points: currentPoints + insertLog.points })
+        .where(eq(users.id, insertLog.userId));
+    }
+    
+    return log;
+  }
+  
+  async getUserPointsBalance(userId: number): Promise<number> {
+    const [result] = await db
+      .select({ total: sql`sum(${pointsLog.points})` })
+      .from(pointsLog)
+      .where(eq(pointsLog.userId, userId));
+    
+    return result?.total || 0;
+  }
   // User operations
   async getUser(id: number): Promise<User | undefined> {
     try {
