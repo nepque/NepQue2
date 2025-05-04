@@ -1038,6 +1038,85 @@ export class MemStorage implements IStorage {
       message: `Congratulations! You spun the wheel and earned ${points} points!`
     };
   }
+  
+  // Banner ad operations
+  async getBannerAds(options?: { 
+    location?: string, 
+    isActive?: boolean 
+  }): Promise<BannerAd[]> {
+    let bannerAds = Array.from(this.bannerAds.values());
+    
+    // Apply filters
+    if (options?.location) {
+      bannerAds = bannerAds.filter(ad => ad.location === options.location);
+    }
+    
+    if (options?.isActive !== undefined) {
+      bannerAds = bannerAds.filter(ad => ad.isActive === options.isActive);
+    }
+    
+    return bannerAds;
+  }
+  
+  async getBannerAdById(id: number): Promise<BannerAd | undefined> {
+    return this.bannerAds.get(id);
+  }
+  
+  async createBannerAd(bannerAd: InsertBannerAd): Promise<BannerAd> {
+    const id = this.currentBannerAdId++;
+    const now = new Date();
+    
+    const newBannerAd: BannerAd = {
+      ...bannerAd,
+      id,
+      createdAt: now,
+      updatedAt: now,
+      isActive: bannerAd.isActive !== undefined ? bannerAd.isActive : true
+    };
+    
+    this.bannerAds.set(id, newBannerAd);
+    return newBannerAd;
+  }
+  
+  async updateBannerAd(bannerAd: BannerAd): Promise<BannerAd> {
+    const existing = await this.getBannerAdById(bannerAd.id);
+    if (!existing) {
+      throw new Error(`Banner ad with ID ${bannerAd.id} not found`);
+    }
+    
+    const updatedBannerAd: BannerAd = {
+      ...bannerAd,
+      updatedAt: new Date()
+    };
+    
+    this.bannerAds.set(bannerAd.id, updatedBannerAd);
+    return updatedBannerAd;
+  }
+  
+  async toggleBannerAdStatus(id: number): Promise<BannerAd> {
+    const bannerAd = await this.getBannerAdById(id);
+    if (!bannerAd) {
+      throw new Error(`Banner ad with ID ${id} not found`);
+    }
+    
+    const updatedBannerAd: BannerAd = {
+      ...bannerAd,
+      isActive: !bannerAd.isActive,
+      updatedAt: new Date()
+    };
+    
+    this.bannerAds.set(id, updatedBannerAd);
+    return updatedBannerAd;
+  }
+  
+  async deleteBannerAd(id: number): Promise<void> {
+    const bannerAd = await this.getBannerAdById(id);
+    if (!bannerAd) {
+      throw new Error(`Banner ad with ID ${id} not found`);
+    }
+    
+    this.bannerAds.delete(id);
+  }
 }
 
 // Database-backed storage implementation
@@ -2258,6 +2337,114 @@ export class DatabaseStorage implements IStorage {
       };
     } catch (error) {
       console.error("Error processing spin:", error);
+      throw error;
+    }
+  }
+  
+  // Banner ad operations
+  async getBannerAds(options?: { 
+    location?: string, 
+    isActive?: boolean 
+  }): Promise<BannerAd[]> {
+    try {
+      let query = db.select().from(bannerAds);
+      
+      // Apply filters
+      const filters = [];
+      
+      if (options?.location) {
+        filters.push(eq(bannerAds.location, options.location));
+      }
+      
+      if (options?.isActive !== undefined) {
+        filters.push(eq(bannerAds.isActive, options.isActive));
+      }
+      
+      if (filters.length > 0) {
+        query = query.where(and(...filters));
+      }
+      
+      return await query.orderBy(desc(bannerAds.createdAt));
+    } catch (error) {
+      console.error("Error getting banner ads:", error);
+      return [];
+    }
+  }
+  
+  async getBannerAdById(id: number): Promise<BannerAd | undefined> {
+    try {
+      const [bannerAd] = await db.select().from(bannerAds).where(eq(bannerAds.id, id));
+      return bannerAd;
+    } catch (error) {
+      console.error("Error getting banner ad by ID:", error);
+      return undefined;
+    }
+  }
+  
+  async createBannerAd(insertBannerAd: InsertBannerAd): Promise<BannerAd> {
+    try {
+      const [bannerAd] = await db.insert(bannerAds).values({
+        ...insertBannerAd,
+        isActive: insertBannerAd.isActive !== undefined ? insertBannerAd.isActive : true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }).returning();
+      
+      return bannerAd;
+    } catch (error) {
+      console.error("Error creating banner ad:", error);
+      throw error;
+    }
+  }
+  
+  async updateBannerAd(bannerAd: BannerAd): Promise<BannerAd> {
+    try {
+      const [updatedBannerAd] = await db
+        .update(bannerAds)
+        .set({
+          ...bannerAd,
+          updatedAt: new Date()
+        })
+        .where(eq(bannerAds.id, bannerAd.id))
+        .returning();
+      
+      return updatedBannerAd;
+    } catch (error) {
+      console.error("Error updating banner ad:", error);
+      throw error;
+    }
+  }
+  
+  async toggleBannerAdStatus(id: number): Promise<BannerAd> {
+    try {
+      // Get the current banner ad
+      const bannerAd = await this.getBannerAdById(id);
+      if (!bannerAd) {
+        throw new Error(`Banner ad with ID ${id} not found`);
+      }
+      
+      // Toggle the isActive status
+      const [updatedBannerAd] = await db
+        .update(bannerAds)
+        .set({
+          isActive: !bannerAd.isActive,
+          updatedAt: new Date()
+        })
+        .where(eq(bannerAds.id, id))
+        .returning();
+      
+      return updatedBannerAd;
+    } catch (error) {
+      console.error("Error toggling banner ad status:", error);
+      throw error;
+    }
+  }
+  
+  async deleteBannerAd(id: number): Promise<void> {
+    try {
+      await db.delete(bannerAds).where(eq(bannerAds.id, id));
+    } catch (error) {
+      console.error("Error deleting banner ad:", error);
       throw error;
     }
   }
