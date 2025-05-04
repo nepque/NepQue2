@@ -2842,11 +2842,21 @@ export class DatabaseStorage implements IStorage {
   // Social media links operations
   async getAllSocialMediaLinks(): Promise<SocialMediaLink[]> {
     try {
-      const links = await db
-        .select()
-        .from(socialMediaLinks)
-        .orderBy(socialMediaLinks.name);
-      return links;
+      // Use raw SQL query to avoid potential schema issues
+      const result = await pool.query(
+        `SELECT * FROM social_media_links ORDER BY platform`
+      );
+      
+      // Map the result to match the expected SocialMediaLink type format
+      return result.rows.map(row => ({
+        id: row.id,
+        platform: row.platform,
+        url: row.url,
+        icon: row.icon,
+        isActive: row.is_active,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      }));
     } catch (error) {
       console.error("Error getting all social media links:", error);
       return [];
@@ -2855,11 +2865,24 @@ export class DatabaseStorage implements IStorage {
 
   async getSocialMediaLinkById(id: number): Promise<SocialMediaLink | undefined> {
     try {
-      const [link] = await db
-        .select()
-        .from(socialMediaLinks)
-        .where(eq(socialMediaLinks.id, id));
-      return link;
+      const result = await db.execute(
+        sql`SELECT * FROM social_media_links WHERE id = ${id}`
+      );
+      
+      if (result.length === 0) {
+        return undefined;
+      }
+      
+      const row = result[0];
+      return {
+        id: row.id,
+        platform: row.platform,
+        url: row.url,
+        icon: row.icon,
+        isActive: row.is_active,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      };
     } catch (error) {
       console.error(`Error getting social media link with ID ${id}:`, error);
       return undefined;
@@ -2869,21 +2892,22 @@ export class DatabaseStorage implements IStorage {
   async createSocialMediaLink(data: InsertSocialMediaLink): Promise<SocialMediaLink> {
     try {
       const now = new Date();
-      const [socialMediaLink] = await db
-        .insert(socialMediaLinks)
-        .values({
-          ...data,
-          createdAt: now,
-          updatedAt: now,
-          isActive: data.isActive !== undefined ? data.isActive : true
-        })
-        .returning();
+      const isActive = data.isActive !== undefined ? data.isActive : true;
       
-      if (!socialMediaLink) {
+      const result = await db.insert(socialMediaLinks).values({
+        platform: data.platform,
+        url: data.url,
+        icon: data.icon,
+        isActive: isActive,
+        createdAt: now,
+        updatedAt: now
+      }).returning();
+      
+      if (result.length === 0) {
         throw new Error("Failed to create social media link - no result returned");
       }
       
-      return socialMediaLink;
+      return result[0];
     } catch (error) {
       console.error("Error creating social media link:", error);
       throw error;
@@ -2892,20 +2916,25 @@ export class DatabaseStorage implements IStorage {
 
   async updateSocialMediaLink(id: number, data: Partial<InsertSocialMediaLink>): Promise<SocialMediaLink> {
     try {
-      const [updatedLink] = await db
+      const updateData: any = { ...data, updatedAt: new Date() };
+      
+      // Convert isActive to the database column name format
+      if (data.isActive !== undefined) {
+        updateData.isActive = data.isActive;
+        delete updateData.isActive;
+      }
+      
+      const result = await db
         .update(socialMediaLinks)
-        .set({
-          ...data,
-          updatedAt: new Date()
-        })
+        .set(updateData)
         .where(eq(socialMediaLinks.id, id))
         .returning();
       
-      if (!updatedLink) {
+      if (result.length === 0) {
         throw new Error(`Social media link with ID ${id} not found`);
       }
       
-      return updatedLink;
+      return result[0];
     } catch (error) {
       console.error(`Error updating social media link with ID ${id}:`, error);
       throw error;
@@ -2914,18 +2943,15 @@ export class DatabaseStorage implements IStorage {
 
   async toggleSocialMediaLinkStatus(id: number): Promise<SocialMediaLink> {
     try {
-      // First get the current link to check its status
-      const [currentLink] = await db
-        .select()
-        .from(socialMediaLinks)
-        .where(eq(socialMediaLinks.id, id));
+      // First get the current status
+      const currentLink = await this.getSocialMediaLinkById(id);
       
       if (!currentLink) {
         throw new Error(`Social media link with ID ${id} not found`);
       }
       
       // Then update with toggled status
-      const [updatedLink] = await db
+      const result = await db
         .update(socialMediaLinks)
         .set({
           isActive: !currentLink.isActive,
@@ -2934,7 +2960,7 @@ export class DatabaseStorage implements IStorage {
         .where(eq(socialMediaLinks.id, id))
         .returning();
       
-      return updatedLink;
+      return result[0];
     } catch (error) {
       console.error(`Error toggling social media link status for ID ${id}:`, error);
       throw error;
@@ -3131,25 +3157,25 @@ export const storage = new DatabaseStorage();
   if (existingSocialLinks.length === 0) {
     const socialLinksData: InsertSocialMediaLink[] = [
       {
-        name: "Facebook",
+        platform: "Facebook",
         url: "https://facebook.com/nepque",
         icon: "facebook",
         isActive: true
       },
       {
-        name: "Twitter",
+        platform: "Twitter",
         url: "https://twitter.com/nepque",
         icon: "twitter",
         isActive: true
       },
       {
-        name: "Instagram",
+        platform: "Instagram",
         url: "https://instagram.com/nepque",
         icon: "instagram",
         isActive: true
       },
       {
-        name: "LinkedIn",
+        platform: "LinkedIn",
         url: "https://linkedin.com/company/nepque",
         icon: "linkedin",
         isActive: true
