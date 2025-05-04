@@ -1,5 +1,6 @@
 import { Link } from "wouter";
-import { Facebook, Twitter, Instagram, Pin } from "lucide-react";
+import { Facebook, Twitter, Instagram, Pin, LucideIcon } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 interface ContentPageData {
@@ -8,6 +9,20 @@ interface ContentPageData {
   title: string;
   isPublished: boolean;
 }
+
+interface SocialMediaLinkData {
+  id: number;
+  platform: string;
+  icon: string;
+  url: string;
+  isActive: boolean;
+}
+
+// Helper function to dynamically get Lucide icon component
+const getDynamicIcon = (iconName: string): LucideIcon => {
+  // Default to the Pin icon if the requested icon doesn't exist
+  return (LucideIcons as any)[iconName] || Pin;
+};
 
 const Footer = () => {
   // Fetch published content pages to display in the footer
@@ -21,6 +36,18 @@ const Footer = () => {
       return response.json() as Promise<ContentPageData[]>;
     }
   });
+  
+  // Fetch social media links
+  const { data: socialMediaLinks } = useQuery({
+    queryKey: ['/api/social-media-links'],
+    queryFn: async () => {
+      const response = await fetch('/api/social-media-links');
+      if (!response.ok) {
+        return [];
+      }
+      return response.json() as Promise<SocialMediaLinkData[]>;
+    }
+  });
 
   return (
     <footer className="bg-neutral-800 text-white pt-12 pb-6">
@@ -32,18 +59,42 @@ const Footer = () => {
             </div>
             <p className="text-neutral-400 mb-4">Your one-stop destination for the best coupons and deals online, helping you save on every purchase.</p>
             <div className="flex space-x-4">
-              <a href="#" className="text-neutral-400 hover:text-white transition-colors">
-                <Facebook className="h-5 w-5" />
-              </a>
-              <a href="#" className="text-neutral-400 hover:text-white transition-colors">
-                <Twitter className="h-5 w-5" />
-              </a>
-              <a href="#" className="text-neutral-400 hover:text-white transition-colors">
-                <Instagram className="h-5 w-5" />
-              </a>
-              <a href="#" className="text-neutral-400 hover:text-white transition-colors">
-                <Pin className="h-5 w-5" />
-              </a>
+              {socialMediaLinks && socialMediaLinks.length > 0 ? (
+                // Display dynamic social media links
+                socialMediaLinks
+                  .filter(link => link.isActive)
+                  .map(link => {
+                    const IconComponent = getDynamicIcon(link.icon);
+                    return (
+                      <a 
+                        key={link.id}
+                        href={link.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        title={link.platform}
+                        className="text-neutral-400 hover:text-white transition-colors"
+                      >
+                        <IconComponent className="h-5 w-5" />
+                      </a>
+                    );
+                  })
+              ) : (
+                // Fallback to default social icons if no links are configured
+                <>
+                  <a href="#" className="text-neutral-400 hover:text-white transition-colors">
+                    <Facebook className="h-5 w-5" />
+                  </a>
+                  <a href="#" className="text-neutral-400 hover:text-white transition-colors">
+                    <Twitter className="h-5 w-5" />
+                  </a>
+                  <a href="#" className="text-neutral-400 hover:text-white transition-colors">
+                    <Instagram className="h-5 w-5" />
+                  </a>
+                  <a href="#" className="text-neutral-400 hover:text-white transition-colors">
+                    <Pin className="h-5 w-5" />
+                  </a>
+                </>
+              )}
             </div>
           </div>
           

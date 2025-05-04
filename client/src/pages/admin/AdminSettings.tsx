@@ -261,103 +261,416 @@ const AdminSettings = () => {
   return (
     <AdminLayout title="Site Settings">
       <div className="space-y-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>SEO Verification</CardTitle>
-            <CardDescription>
-              Add verification codes for search engines like Google Search Console and Bing Webmaster Tools
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="header_verification_code"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Verification Code</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="<meta name='google-site-verification' content='YOUR_CODE' />"
-                          className="font-mono text-sm"
-                          {...field}
+        <Tabs defaultValue="verification">
+          <TabsList className="mb-6">
+            <TabsTrigger value="verification">SEO Verification</TabsTrigger>
+            <TabsTrigger value="social">Social Media Links</TabsTrigger>
+            <TabsTrigger value="general">General Settings</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="verification">
+            <Card>
+              <CardHeader>
+                <CardTitle>SEO Verification</CardTitle>
+                <CardDescription>
+                  Add verification codes for search engines like Google Search Console and Bing Webmaster Tools
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <FormField
+                      control={form.control}
+                      name="header_verification_code"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Verification Code</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="<meta name='google-site-verification' content='YOUR_CODE' />"
+                              className="font-mono text-sm"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Paste the full HTML verification code provided by the search engine.
+                            This will be added to the <code>&lt;head&gt;</code> section of your website.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="header_verification_description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Description (Optional)</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="e.g., Google Search Console verification code"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Add a note to help you remember what this code is for.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Save Settings
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="social">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Social Media Links</CardTitle>
+                  <CardDescription>
+                    Manage social media links displayed in the website footer
+                  </CardDescription>
+                </div>
+                
+                <Dialog open={isAddLinkDialogOpen} onOpenChange={setIsAddLinkDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="mb-2">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add New Link
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add Social Media Link</DialogTitle>
+                      <DialogDescription>
+                        Add a new social media link to be displayed in the footer
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    <Form {...socialMediaLinkForm}>
+                      <form onSubmit={socialMediaLinkForm.handleSubmit(handleAddLink)} className="space-y-4">
+                        <FormField
+                          control={socialMediaLinkForm.control}
+                          name="platform"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Platform Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g., Facebook, Twitter, Instagram" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
                         />
-                      </FormControl>
-                      <FormDescription>
-                        Paste the full HTML verification code provided by the search engine.
-                        This will be added to the <code>&lt;head&gt;</code> section of your website.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="header_verification_description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description (Optional)</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g., Google Search Console verification code"
-                          {...field}
+                        
+                        <FormField
+                          control={socialMediaLinkForm.control}
+                          name="icon"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Icon Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g., facebook, twitter, instagram" {...field} />
+                              </FormControl>
+                              <FormDescription>
+                                Use the name of the icon from Lucide (lowercase)
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
                         />
-                      </FormControl>
-                      <FormDescription>
-                        Add a note to help you remember what this code is for.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Save Settings
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-
-        {isLoading ? (
-          <div className="flex justify-center p-8">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : null}
-
-        {settings && settings.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>All Settings</CardTitle>
-              <CardDescription>
-                Overview of all configured site settings
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Key</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Last Updated</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {settings.map((setting) => (
-                    <TableRow key={setting.id}>
-                      <TableCell className="font-medium">{setting.key}</TableCell>
-                      <TableCell>{setting.description}</TableCell>
-                      <TableCell>{new Date(setting.updatedAt).toLocaleString()}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        )}
+                        
+                        <FormField
+                          control={socialMediaLinkForm.control}
+                          name="url"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>URL</FormLabel>
+                              <FormControl>
+                                <Input placeholder="https://..." {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={socialMediaLinkForm.control}
+                          name="isActive"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                              <div className="space-y-0.5">
+                                <FormLabel>Active</FormLabel>
+                                <FormDescription>
+                                  Show this link on the website
+                                </FormDescription>
+                              </div>
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <DialogFooter>
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            onClick={() => {
+                              setIsAddLinkDialogOpen(false);
+                              socialMediaLinkForm.reset();
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                          <Button type="submit" disabled={createSocialLinkMutation.isPending}>
+                            {createSocialLinkMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Add Link
+                          </Button>
+                        </DialogFooter>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
+                
+                <Dialog open={isEditLinkDialogOpen} onOpenChange={setIsEditLinkDialogOpen}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Edit Social Media Link</DialogTitle>
+                      <DialogDescription>
+                        Edit an existing social media link
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    <Form {...socialMediaLinkForm}>
+                      <form onSubmit={socialMediaLinkForm.handleSubmit(handleEditLink)} className="space-y-4">
+                        <FormField
+                          control={socialMediaLinkForm.control}
+                          name="platform"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Platform Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g., Facebook, Twitter, Instagram" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={socialMediaLinkForm.control}
+                          name="icon"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Icon Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g., facebook, twitter, instagram" {...field} />
+                              </FormControl>
+                              <FormDescription>
+                                Use the name of the icon from Lucide (lowercase)
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={socialMediaLinkForm.control}
+                          name="url"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>URL</FormLabel>
+                              <FormControl>
+                                <Input placeholder="https://..." {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={socialMediaLinkForm.control}
+                          name="isActive"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                              <div className="space-y-0.5">
+                                <FormLabel>Active</FormLabel>
+                                <FormDescription>
+                                  Show this link on the website
+                                </FormDescription>
+                              </div>
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <DialogFooter>
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            onClick={() => {
+                              setIsEditLinkDialogOpen(false);
+                              setSelectedLink(null);
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                          <Button type="submit" disabled={updateSocialLinkMutation.isPending}>
+                            {updateSocialLinkMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Save Changes
+                          </Button>
+                        </DialogFooter>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
+              </CardHeader>
+              
+              <CardContent>
+                {isLoadingLinks ? (
+                  <div className="flex justify-center p-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : socialMediaLinks && socialMediaLinks.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Platform</TableHead>
+                        <TableHead>Icon</TableHead>
+                        <TableHead>URL</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {socialMediaLinks.map((link: SocialMediaLink) => (
+                        <TableRow key={link.id}>
+                          <TableCell className="font-medium">{link.platform}</TableCell>
+                          <TableCell>{link.icon}</TableCell>
+                          <TableCell className="max-w-[200px] truncate">
+                            <a 
+                              href={link.url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline"
+                            >
+                              {link.url}
+                            </a>
+                          </TableCell>
+                          <TableCell>
+                            {link.isActive ? (
+                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                Active
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="bg-gray-50 text-gray-500 border-gray-200">
+                                Inactive
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right space-x-2">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleToggleLink(link.id)}
+                              title={link.isActive ? "Deactivate" : "Activate"}
+                            >
+                              {link.isActive ? <XCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => openEditDialog(link)}
+                              title="Edit"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleDeleteLink(link.id)}
+                              title="Delete"
+                              className="text-red-500 hover:bg-red-50"
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500 mb-4">No social media links have been added yet.</p>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setIsAddLinkDialogOpen(true)}
+                      className="mx-auto"
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Your First Link
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="general">
+            {isLoading ? (
+              <div className="flex justify-center p-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : settings && settings.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>All Settings</CardTitle>
+                  <CardDescription>
+                    Overview of all configured site settings
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Key</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Last Updated</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {settings.map((setting) => (
+                        <TableRow key={setting.id}>
+                          <TableCell className="font-medium">{setting.key}</TableCell>
+                          <TableCell>{setting.description}</TableCell>
+                          <TableCell>{new Date(setting.updatedAt).toLocaleString()}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </AdminLayout>
   );
