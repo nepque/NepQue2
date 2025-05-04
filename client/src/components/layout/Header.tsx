@@ -19,7 +19,8 @@ import {
   Ticket, 
   Menu, 
   UserCircle2,
-  Award
+  Award,
+  Gift
 } from "lucide-react";
 
 const Header = () => {
@@ -73,10 +74,16 @@ const Header = () => {
                 Top Deals
               </Link>
               {currentUser && (
-                <Link href="/earn" className={`py-2 md:py-0 font-medium ${isActive('/earn') ? 'text-primary' : 'text-neutral-600 hover:text-primary'} border-b md:border-b-0 border-gray-100 flex items-center`}>
-                  <Award className="h-4 w-4 mr-1 text-amber-500" />
-                  Earn Points
-                </Link>
+                <>
+                  <Link href="/earn" className={`py-2 md:py-0 font-medium ${isActive('/earn') ? 'text-primary' : 'text-neutral-600 hover:text-primary'} border-b md:border-b-0 border-gray-100 flex items-center`}>
+                    <Award className="h-4 w-4 mr-1 text-amber-500" />
+                    Earn Points
+                  </Link>
+                  <Link href="/spin" className={`py-2 md:py-0 font-medium ${isActive('/spin') ? 'text-primary' : 'text-neutral-600 hover:text-primary'} border-b md:border-b-0 border-gray-100 flex items-center`}>
+                    <Gift className="h-4 w-4 mr-1 text-purple-500" />
+                    Spin & Win
+                  </Link>
+                </>
               )}
             </nav>
             <div className="mt-4 md:mt-0 md:ml-6">
@@ -122,6 +129,12 @@ const Header = () => {
                       <Link href="/earn" className="cursor-pointer">
                         <Award className="mr-2 h-4 w-4 text-amber-500" />
                         <span>Earn Points</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/spin" className="cursor-pointer">
+                        <Gift className="mr-2 h-4 w-4 text-purple-500" />
+                        <span>Spin & Win</span>
                       </Link>
                     </DropdownMenuItem>
                     {currentUser.isAdmin && (
