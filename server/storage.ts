@@ -1144,6 +1144,57 @@ export class MemStorage implements IStorage {
     
     this.bannerAds.delete(id);
   }
+  
+  // Newsletter subscriber operations
+  async getAllSubscribers(): Promise<Subscriber[]> {
+    return Array.from(this.subscribers.values());
+  }
+
+  async getSubscriberByEmail(email: string): Promise<Subscriber | undefined> {
+    return Array.from(this.subscribers.values()).find(
+      (subscriber) => subscriber.email.toLowerCase() === email.toLowerCase()
+    );
+  }
+
+  async createSubscriber(data: InsertSubscriber): Promise<Subscriber | undefined> {
+    const id = this.currentSubscriberId++;
+    const now = new Date();
+    const subscriber: Subscriber = {
+      ...data,
+      id,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.subscribers.set(id, subscriber);
+    return subscriber;
+  }
+
+  async updateSubscriber(id: number, data: Partial<InsertSubscriber>): Promise<Subscriber | undefined> {
+    const existing = this.subscribers.get(id);
+    if (!existing) {
+      return undefined;
+    }
+
+    const now = new Date();
+    const updatedSubscriber: Subscriber = {
+      ...existing,
+      ...data,
+      updatedAt: now
+    };
+    
+    this.subscribers.set(id, updatedSubscriber);
+    return updatedSubscriber;
+  }
+
+  async deleteSubscriber(id: number): Promise<boolean> {
+    const existing = this.subscribers.get(id);
+    if (!existing) {
+      return false;
+    }
+    
+    this.subscribers.delete(id);
+    return true;
+  }
 }
 
 // Database-backed storage implementation
