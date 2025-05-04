@@ -44,6 +44,11 @@ import {
   type Subscriber,
   type InsertSubscriber
 } from "@shared/schema";
+import {
+  socialMediaLinks,
+  type SocialMediaLink,
+  type InsertSocialMediaLink
+} from "@shared/schema";
 
 // Storage interface
 export interface IStorage {
@@ -165,6 +170,14 @@ export interface IStorage {
   createSubscriber(data: InsertSubscriber): Promise<Subscriber | undefined>;
   updateSubscriber(id: number, data: Partial<InsertSubscriber>): Promise<Subscriber | undefined>;
   deleteSubscriber(id: number): Promise<boolean>;
+  
+  // Social media links operations
+  getAllSocialMediaLinks(): Promise<SocialMediaLink[]>;
+  getSocialMediaLinkById(id: number): Promise<SocialMediaLink | undefined>;
+  createSocialMediaLink(data: InsertSocialMediaLink): Promise<SocialMediaLink>;
+  updateSocialMediaLink(id: number, data: Partial<InsertSocialMediaLink>): Promise<SocialMediaLink>;
+  toggleSocialMediaLinkStatus(id: number): Promise<SocialMediaLink>;
+  deleteSocialMediaLink(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -178,6 +191,7 @@ export class MemStorage implements IStorage {
   private pointsLogs: Map<number, PointsLog>;
   private bannerAds: Map<number, BannerAd>;
   private subscribers: Map<number, Subscriber>;
+  private socialMediaLinks: Map<number, SocialMediaLink>;
   
   currentUserId: number;
   currentCategoryId: number;
@@ -189,6 +203,7 @@ export class MemStorage implements IStorage {
   currentPointsLogId: number;
   currentBannerAdId: number;
   currentSubscriberId: number;
+  currentSocialMediaLinkId: number;
 
   constructor() {
     this.users = new Map();
@@ -201,6 +216,7 @@ export class MemStorage implements IStorage {
     this.pointsLogs = new Map();
     this.bannerAds = new Map();
     this.subscribers = new Map();
+    this.socialMediaLinks = new Map();
     
     this.currentUserId = 1;
     this.currentCategoryId = 1;
@@ -212,6 +228,7 @@ export class MemStorage implements IStorage {
     this.currentPointsLogId = 1;
     this.currentBannerAdId = 1;
     this.currentSubscriberId = 1;
+    this.currentSocialMediaLinkId = 1;
   }
 
   // User operations

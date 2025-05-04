@@ -280,6 +280,27 @@ export const insertSiteSettingSchema = createInsertSchema(siteSettings).pick({
 export type InsertSiteSetting = z.infer<typeof insertSiteSettingSchema>;
 export type SiteSetting = typeof siteSettings.$inferSelect;
 
+// Social media links schema
+export const socialMediaLinks = pgTable("social_media_links", {
+  id: serial("id").primaryKey(),
+  platform: text("platform").notNull(), // e.g., 'facebook', 'twitter', 'instagram', 'pinterest'
+  url: text("url").notNull(),
+  icon: text("icon").notNull(), // Icon name from Lucide React
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertSocialMediaLinkSchema = createInsertSchema(socialMediaLinks).pick({
+  platform: true,
+  url: true,
+  icon: true,
+  isActive: true,
+});
+
+export type InsertSocialMediaLink = z.infer<typeof insertSocialMediaLinkSchema>;
+export type SocialMediaLink = typeof socialMediaLinks.$inferSelect;
+
 // Content pages schema - for managing static pages like About Us, FAQ, etc.
 export const contentPages = pgTable("content_pages", {
   id: serial("id").primaryKey(),
