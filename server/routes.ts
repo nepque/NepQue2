@@ -1660,6 +1660,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Newsletter subscribers API routes
+  
+  // Get all subscribers (for admin interface)
+  app.get("/api/subscribers", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to access subscribers");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const subscribers = await storage.getAllSubscribers();
+      res.json(subscribers);
+    } catch (error) {
+      console.error("Error getting subscribers:", error);
+      res.status(500).json({ message: "Failed to get subscribers" });
+    }
+  });
+  
+  // Delete subscriber (for admin interface)
+  app.delete("/api/subscribers/:id", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to delete subscriber");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const id = parseInt(req.params.id);
+      
+      const success = await storage.deleteSubscriber(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Subscriber not found or could not be deleted" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error(`Error deleting subscriber with ID ${req.params.id}:`, error);
+      res.status(500).json({ message: "Failed to delete subscriber" });
+    }
+  });
+  
+  // Add a new subscriber from public newsletter form
   app.post("/api/subscribers", async (req, res) => {
     try {
       const { email } = req.body;
@@ -1673,7 +1718,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (existingSubscriber) {
         if (existingSubscriber.subscribed) {
-          return res.status(400).json({ message: "Email is already subscribed" });
+          return res.status(400).json({ error: "Email is already subscribed" });
         } else {
           // Re-subscribe if previously unsubscribed
           const updated = await storage.updateSubscriber(existingSubscriber.id, { subscribed: true });
