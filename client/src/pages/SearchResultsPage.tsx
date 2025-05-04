@@ -54,11 +54,11 @@ const SearchResultsPage = () => {
 
   // Fetch coupons based on search query
   const { data: coupons, isLoading: isLoadingCoupons } = useQuery<CouponWithRelations[]>({
-    queryKey: ["/api/coupons", { q: searchQuery, sortBy }],
+    queryKey: ["/api/coupons", { search: searchQuery, sortBy }],
     queryFn: async () => {
       if (!searchQuery) return [];
       
-      let url = `/api/coupons?q=${encodeURIComponent(searchQuery)}`;
+      let url = `/api/coupons?search=${encodeURIComponent(searchQuery)}`;
       if (sortBy) {
         url += `&sortBy=${sortBy}`;
       }

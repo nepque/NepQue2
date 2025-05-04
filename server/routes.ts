@@ -215,7 +215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API Routes
   app.get("/api/coupons", async (req, res) => {
     try {
-      const { categoryId, storeId, featured, search, q, sortBy } = req.query;
+      const { categoryId, storeId, featured, search, sortBy } = req.query;
       
       const options: any = {};
       
@@ -231,9 +231,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         options.featured = true;
       }
       
-      // Support both "search" and "q" parameters for backward compatibility
-      if (search || q) {
-        options.search = (search || q) as string;
+      if (search) {
+        options.search = search as string;
       }
       
       if (sortBy) {
