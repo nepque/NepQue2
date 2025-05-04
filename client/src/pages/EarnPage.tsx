@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Award, Calendar, Star, Check, Clock, Gift, Coins } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import BannerAd from "@/components/banner/BannerAd";
 
 interface CheckInResponse {
   success: boolean;
@@ -426,6 +427,11 @@ const EarnPage = () => {
                 </Button>
               </CardFooter>
             </Card>
+          </div>
+          
+          {/* Banner Ad */}
+          <div className="mt-10">
+            <BannerAd location="earn-page" className="mx-auto" />
           </div>
         </TabsContent>
       </Tabs>
