@@ -16,7 +16,6 @@ import {
   User, 
   PlusCircle, 
   UserCircle, 
-  Ticket, 
   Menu, 
   UserCircle2,
   Award,
@@ -51,7 +50,6 @@ const Header = () => {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center">
-              <Ticket className="text-secondary h-6 w-6 mr-2" />
               <span className="text-xl font-bold text-primary">NepQue</span>
             </Link>
             <button 
