@@ -1,7 +1,27 @@
 import { Link } from "wouter";
 import { Facebook, Twitter, Instagram, Pin } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+
+interface ContentPageData {
+  id: number;
+  slug: string;
+  title: string;
+  isPublished: boolean;
+}
 
 const Footer = () => {
+  // Fetch published content pages to display in the footer
+  const { data: contentPages } = useQuery({
+    queryKey: ['/api/pages'],
+    queryFn: async () => {
+      const response = await fetch('/api/pages');
+      if (!response.ok) {
+        return [];
+      }
+      return response.json() as Promise<ContentPageData[]>;
+    }
+  });
+
   return (
     <footer className="bg-neutral-800 text-white pt-12 pb-6">
       <div className="container mx-auto px-4">
@@ -112,6 +132,21 @@ const Footer = () => {
                   Terms of Service
                 </Link>
               </li>
+              
+              {/* Dynamic content pages */}
+              {contentPages && contentPages.length > 0 && contentPages
+                .filter(page => page.isPublished)
+                .map(page => (
+                  <li key={page.id}>
+                    <Link 
+                      href={`/page/${page.slug}`} 
+                      className="text-neutral-400 hover:text-white transition-colors"
+                    >
+                      {page.title}
+                    </Link>
+                  </li>
+                ))
+              }
             </ul>
           </div>
         </div>

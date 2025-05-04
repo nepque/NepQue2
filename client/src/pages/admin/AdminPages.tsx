@@ -1,46 +1,36 @@
 import { useState } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Edit, Trash, Plus, File, Eye, Globe, EyeOff } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { z } from "zod";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/hooks/use-toast";
+import AdminLayout from "@/components/admin/AdminLayout";
+import { queryClient } from "@/lib/queryClient";
+import { Trash, Edit, Plus } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
 
-// Define types for our content page
+// Form schema for content pages
+const pageFormSchema = z.object({
+  slug: z.string().min(2, "Slug must be at least 2 characters").regex(/^[a-z0-9-]+$/, "Slug must contain only lowercase letters, numbers, and hyphens"),
+  title: z.string().min(3, "Title must be at least 3 characters"),
+  content: z.string().min(10, "Content must be at least 10 characters"),
+  isPublished: z.boolean().default(true),
+  noIndex: z.boolean().default(false),
+  metaTitle: z.string().nullable().optional(),
+  metaDescription: z.string().nullable().optional(),
+  metaKeywords: z.string().nullable().optional(),
+});
+
+type PageFormValues = z.infer<typeof pageFormSchema>;
+
 interface ContentPage {
   id: number;
   slug: string;
@@ -55,71 +45,67 @@ interface ContentPage {
   updatedAt: string;
 }
 
-// Form schema for creating/editing pages
-const pageFormSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  slug: z.string().min(1, "Slug is required"),
-  content: z.string().min(1, "Content is required"),
-  isPublished: z.boolean().default(true),
-  noIndex: z.boolean().default(false),
-  metaTitle: z.string().nullable().optional(),
-  metaDescription: z.string().nullable().optional(),
-  metaKeywords: z.string().nullable().optional(),
-});
-
-type PageFormValues = z.infer<typeof pageFormSchema>;
-
 const AdminPages = () => {
-  const { toast } = useToast();
-  const [selectedPage, setSelectedPage] = useState<ContentPage | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  
-  // Create form
+  const [selectedPage, setSelectedPage] = useState<ContentPage | null>(null);
+
+  // Query to fetch all content pages
+  const { data: pages, isLoading } = useQuery({
+    queryKey: ['/api/admin/pages'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/pages', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch pages');
+      }
+      return response.json() as Promise<ContentPage[]>;
+    }
+  });
+
+  // Form for creating new pages
   const createForm = useForm<PageFormValues>({
     resolver: zodResolver(pageFormSchema),
     defaultValues: {
-      title: "",
-      slug: "",
-      content: "",
+      slug: '',
+      title: '',
+      content: '',
       isPublished: true,
       noIndex: false,
-      metaTitle: "",
-      metaDescription: "",
-      metaKeywords: "",
+      metaTitle: '',
+      metaDescription: '',
+      metaKeywords: '',
     },
   });
-  
-  // Edit form
+
+  // Form for editing pages
   const editForm = useForm<PageFormValues>({
     resolver: zodResolver(pageFormSchema),
     defaultValues: {
-      title: "",
-      slug: "",
-      content: "",
+      slug: '',
+      title: '',
+      content: '',
       isPublished: true,
       noIndex: false,
-      metaTitle: "",
-      metaDescription: "",
-      metaKeywords: "",
+      metaTitle: '',
+      metaDescription: '',
+      metaKeywords: '',
     },
   });
-  
-  // Load all pages
-  const { data: pages = [], isLoading } = useQuery({
-    queryKey: ["/api/admin/pages"],
-    queryFn: async () => {
-      const response = await apiRequest<ContentPage[]>("/api/admin/pages");
-      return response || [];
-    },
-  });
-  
-  // Create page mutation
+
+  // Mutation for creating a page
   const createPageMutation = useMutation({
     mutationFn: async (values: PageFormValues) => {
-      return await apiRequest<ContentPage>("/api/admin/pages", {
-        method: "POST",
+      return apiRequest('/api/admin/pages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        },
         body: JSON.stringify(values),
       });
     },
@@ -128,24 +114,28 @@ const AdminPages = () => {
         title: "Success",
         description: "Page created successfully",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/pages"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/pages'] });
       setIsCreateDialogOpen(false);
       createForm.reset();
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to create page: " + (error as Error).message,
+        description: `Failed to create page: ${error.message}`,
         variant: "destructive",
       });
     },
   });
-  
-  // Update page mutation
+
+  // Mutation for updating a page
   const updatePageMutation = useMutation({
     mutationFn: async ({ id, values }: { id: number; values: PageFormValues }) => {
-      return await apiRequest<ContentPage>(`/api/admin/pages/${id}`, {
-        method: "PUT",
+      return apiRequest(`/api/admin/pages/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        },
         body: JSON.stringify(values),
       });
     },
@@ -154,24 +144,27 @@ const AdminPages = () => {
         title: "Success",
         description: "Page updated successfully",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/pages"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/pages'] });
       setIsEditDialogOpen(false);
       setSelectedPage(null);
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to update page: " + (error as Error).message,
+        description: `Failed to update page: ${error.message}`,
         variant: "destructive",
       });
     },
   });
-  
-  // Delete page mutation
+
+  // Mutation for deleting a page
   const deletePageMutation = useMutation({
     mutationFn: async (id: number) => {
-      return await apiRequest(`/api/admin/pages/${id}`, {
-        method: "DELETE",
+      return apiRequest(`/api/admin/pages/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        },
       });
     },
     onSuccess: () => {
@@ -179,237 +172,225 @@ const AdminPages = () => {
         title: "Success",
         description: "Page deleted successfully",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/pages"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/pages'] });
       setIsDeleteDialogOpen(false);
       setSelectedPage(null);
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to delete page: " + (error as Error).message,
+        description: `Failed to delete page: ${error.message}`,
         variant: "destructive",
       });
     },
   });
-  
-  // Handle create form submission
+
   const onCreateSubmit = (values: PageFormValues) => {
     createPageMutation.mutate(values);
   };
-  
-  // Handle edit form submission
+
   const onEditSubmit = (values: PageFormValues) => {
     if (selectedPage) {
       updatePageMutation.mutate({ id: selectedPage.id, values });
     }
   };
-  
-  // Handle delete
-  const onDeleteConfirm = () => {
-    if (selectedPage) {
-      deletePageMutation.mutate(selectedPage.id);
-    }
-  };
-  
-  // Open edit dialog and populate form
+
   const handleEditClick = (page: ContentPage) => {
     setSelectedPage(page);
     editForm.reset({
-      title: page.title,
       slug: page.slug,
+      title: page.title,
       content: page.content,
       isPublished: page.isPublished,
       noIndex: page.noIndex,
-      metaTitle: page.metaTitle || "",
-      metaDescription: page.metaDescription || "",
-      metaKeywords: page.metaKeywords || "",
+      metaTitle: page.metaTitle || '',
+      metaDescription: page.metaDescription || '',
+      metaKeywords: page.metaKeywords || '',
     });
     setIsEditDialogOpen(true);
   };
-  
-  // Open delete dialog
+
   const handleDeleteClick = (page: ContentPage) => {
     setSelectedPage(page);
     setIsDeleteDialogOpen(true);
   };
-  
+
   return (
     <AdminLayout title="Content Pages">
-      <div className="mb-4 flex justify-between items-center">
-        <p className="text-gray-500">
-          Manage static content pages like About Us, FAQ, Privacy Policy, etc.
-        </p>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" /> Add New Page
+      <div className="mb-6 flex justify-between items-center">
+        <p className="text-gray-600">Manage static content pages like About Us, Privacy Policy, etc.</p>
+        <Button 
+          onClick={() => {
+            createForm.reset(); // Reset form when opening
+            setIsCreateDialogOpen(true);
+          }}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Create Page
         </Button>
       </div>
 
-      {isLoading ? (
-        <div className="flex justify-center items-center h-48">
-          <p>Loading pages...</p>
-        </div>
-      ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead>Slug</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="w-20">SEO</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {pages.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-8">
-                  <div className="flex flex-col items-center justify-center text-gray-500">
-                    <File className="h-12 w-12 mb-2 opacity-50" />
-                    <p>No content pages found</p>
-                    <Button 
-                      variant="link" 
-                      onClick={() => setIsCreateDialogOpen(true)}
-                      className="mt-2"
+      {/* Pages list */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {isLoading ? (
+          <>
+            <Card className="animate-pulse">
+              <CardHeader>
+                <div className="h-5 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-4 bg-gray-200 rounded w-3/4 mt-2"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+              </CardContent>
+            </Card>
+            <Card className="animate-pulse">
+              <CardHeader>
+                <div className="h-5 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-4 bg-gray-200 rounded w-3/4 mt-2"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+              </CardContent>
+            </Card>
+            <Card className="animate-pulse">
+              <CardHeader>
+                <div className="h-5 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-4 bg-gray-200 rounded w-3/4 mt-2"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+              </CardContent>
+            </Card>
+          </>
+        ) : pages && pages.length > 0 ? (
+          pages.map(page => (
+            <Card key={page.id} className="overflow-hidden">
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle>{page.title}</CardTitle>
+                    <CardDescription>/{page.slug}</CardDescription>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={() => handleEditClick(page)}
                     >
-                      Create your first page
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="text-red-500 hover:text-red-600 hover:border-red-600"
+                      onClick={() => handleDeleteClick(page)}
+                    >
+                      <Trash className="h-4 w-4" />
                     </Button>
                   </div>
-                </TableCell>
-              </TableRow>
-            ) : (
-              pages.map((page) => (
-                <TableRow key={page.id}>
-                  <TableCell className="font-medium">{page.title}</TableCell>
-                  <TableCell>{page.slug}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      <div className={`h-2 w-2 rounded-full mr-2 ${page.isPublished ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                      <span>{page.isPublished ? 'Published' : 'Draft'}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {page.noIndex ? (
-                      <div className="flex items-center text-amber-600">
-                        <EyeOff className="h-4 w-4 mr-1" />
-                        <span className="text-xs">No-index</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center text-green-600">
-                        <Globe className="h-4 w-4 mr-1" />
-                        <span className="text-xs">Indexed</span>
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <a 
-                        href={`/page/${page.slug}`} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center h-8 w-8 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100"
-                        title="View Page"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </a>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEditClick(page)}
-                        className="h-8 w-8 bg-amber-50 text-amber-600 hover:bg-amber-100"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteClick(page)}
-                        className="h-8 w-8 bg-red-50 text-red-600 hover:bg-red-100"
-                      >
-                        <Trash className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col space-y-2 text-sm">
+                  <div className="flex items-center space-x-2">
+                    <span className={`h-2 w-2 rounded-full ${page.isPublished ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+                    <span>{page.isPublished ? 'Published' : 'Draft'}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className={`h-2 w-2 rounded-full ${page.noIndex ? 'bg-yellow-500' : 'bg-blue-500'}`}></span>
+                    <span>{page.noIndex ? 'No-Index (Hidden from search engines)' : 'Indexed'}</span>
+                  </div>
+                  <div className="text-gray-500 text-xs mt-2">
+                    Last updated: {new Date(page.updatedAt).toLocaleDateString()}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <div className="col-span-3 text-center py-12 bg-gray-50 rounded-lg">
+            <p className="text-gray-500">No content pages found. Create your first page to get started.</p>
+          </div>
+        )}
+      </div>
 
       {/* Create Page Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Create New Page</DialogTitle>
+            <DialogTitle>Create Content Page</DialogTitle>
             <DialogDescription>
-              Add a new content page to your website.
+              Create a new content page that will be accessible from the site.
             </DialogDescription>
           </DialogHeader>
 
           <Form {...createForm}>
             <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={createForm.control}
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Title</FormLabel>
+                      <FormLabel>Page Title</FormLabel>
                       <FormControl>
                         <Input placeholder="About Us" {...field} />
                       </FormControl>
+                      <FormDescription>The title displayed on the page and in browser tabs.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={createForm.control}
                   name="slug"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Slug</FormLabel>
+                      <FormLabel>URL Slug</FormLabel>
                       <FormControl>
                         <Input placeholder="about-us" {...field} />
                       </FormControl>
-                      <FormDescription>
-                        URL-friendly name (e.g., about-us, faq)
-                      </FormDescription>
+                      <FormDescription>Will be accessible at /page/{field.value || 'slug'}</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
-              
+
               <FormField
                 control={createForm.control}
                 name="content"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Content</FormLabel>
+                    <FormLabel>Content (HTML)</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder="Enter your page content here..."
-                        className="min-h-[200px]"
-                        {...field}
+                      <Textarea 
+                        placeholder="<h1>About Us</h1><p>Welcome to our website...</p>" 
+                        className="min-h-[200px] font-mono"
+                        {...field} 
                       />
                     </FormControl>
                     <FormDescription>
-                      HTML content is supported
+                      HTML content of the page. You can include headings, paragraphs, lists, etc.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={createForm.control}
                   name="isPublished"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-4 border rounded-md">
                       <FormControl>
-                        <Checkbox
+                        <Switch
                           checked={field.value}
                           onCheckedChange={field.onChange}
                         />
@@ -417,56 +398,55 @@ const AdminPages = () => {
                       <div className="space-y-1 leading-none">
                         <FormLabel>Published</FormLabel>
                         <FormDescription>
-                          Make this page visible to users
+                          If turned off, the page will not be accessible to users.
                         </FormDescription>
                       </div>
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={createForm.control}
                   name="noIndex"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-4 border rounded-md">
                       <FormControl>
-                        <Checkbox
+                        <Switch
                           checked={field.value}
                           onCheckedChange={field.onChange}
                         />
                       </FormControl>
                       <div className="space-y-1 leading-none">
-                        <FormLabel>No Index</FormLabel>
+                        <FormLabel>Hide from Search Engines</FormLabel>
                         <FormDescription>
-                          Hide this page from search engines
+                          If turned on, adds a noindex meta tag to prevent search engines from indexing this page.
                         </FormDescription>
                       </div>
                     </FormItem>
                   )}
                 />
               </div>
-              
-              <div className="border-t pt-4 mt-4">
-                <h3 className="text-lg font-medium mb-4">SEO Settings</h3>
-                
+
+              <div className="border p-4 rounded-md">
+                <h3 className="font-medium mb-4">SEO Settings (Optional)</h3>
                 <div className="space-y-4">
                   <FormField
                     control={createForm.control}
                     name="metaTitle"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Meta Title</FormLabel>
+                        <FormLabel>SEO Title</FormLabel>
                         <FormControl>
-                          <Input placeholder="SEO Title" {...field} value={field.value || ""} />
+                          <Input placeholder="Custom page title for search engines" {...field} value={field.value || ''} />
                         </FormControl>
                         <FormDescription>
-                          Leave empty to use the page title
+                          Overrides the page title in search results. If left empty, the page title will be used.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={createForm.control}
                     name="metaDescription"
@@ -474,18 +454,16 @@ const AdminPages = () => {
                       <FormItem>
                         <FormLabel>Meta Description</FormLabel>
                         <FormControl>
-                          <Textarea
-                            placeholder="Brief description for search engines"
-                            className="min-h-[80px]"
-                            {...field}
-                            value={field.value || ""}
-                          />
+                          <Textarea placeholder="Brief description for search engine results" {...field} value={field.value || ''} />
                         </FormControl>
+                        <FormDescription>
+                          A short description that appears in search engine results.
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={createForm.control}
                     name="metaKeywords"
@@ -493,19 +471,18 @@ const AdminPages = () => {
                       <FormItem>
                         <FormLabel>Meta Keywords</FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder="keyword1, keyword2, keyword3"
-                            {...field}
-                            value={field.value || ""}
-                          />
+                          <Input placeholder="keyword1, keyword2, keyword3" {...field} value={field.value || ''} />
                         </FormControl>
+                        <FormDescription>
+                          Comma-separated keywords related to the page.
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
               </div>
-              
+
               <DialogFooter>
                 <Button 
                   type="button" 
@@ -514,7 +491,11 @@ const AdminPages = () => {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={createPageMutation.isPending}>
+                <Button 
+                  type="submit"
+                  className="bg-blue-600 hover:bg-blue-700"
+                  disabled={createPageMutation.isPending}
+                >
                   {createPageMutation.isPending ? "Creating..." : "Create Page"}
                 </Button>
               </DialogFooter>
@@ -527,190 +508,190 @@ const AdminPages = () => {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Page</DialogTitle>
+            <DialogTitle>Edit Content Page</DialogTitle>
             <DialogDescription>
-              Update content page information.
+              Update the content and settings for this page.
             </DialogDescription>
           </DialogHeader>
 
-          <Form {...editForm}>
-            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={editForm.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Title</FormLabel>
-                      <FormControl>
-                        <Input placeholder="About Us" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={editForm.control}
-                  name="slug"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Slug</FormLabel>
-                      <FormControl>
-                        <Input placeholder="about-us" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        URL-friendly name (e.g., about-us, faq)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <FormField
-                control={editForm.control}
-                name="content"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Content</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Enter your page content here..."
-                        className="min-h-[200px]"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      HTML content is supported
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={editForm.control}
-                  name="isPublished"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>Published</FormLabel>
-                        <FormDescription>
-                          Make this page visible to users
-                        </FormDescription>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={editForm.control}
-                  name="noIndex"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>No Index</FormLabel>
-                        <FormDescription>
-                          Hide this page from search engines
-                        </FormDescription>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <div className="border-t pt-4 mt-4">
-                <h3 className="text-lg font-medium mb-4">SEO Settings</h3>
-                
-                <div className="space-y-4">
+          {selectedPage && (
+            <Form {...editForm}>
+              <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
                     control={editForm.control}
-                    name="metaTitle"
+                    name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Meta Title</FormLabel>
+                        <FormLabel>Page Title</FormLabel>
                         <FormControl>
-                          <Input placeholder="SEO Title" {...field} value={field.value || ""} />
+                          <Input {...field} />
                         </FormControl>
-                        <FormDescription>
-                          Leave empty to use the page title
-                        </FormDescription>
+                        <FormDescription>The title displayed on the page and in browser tabs.</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={editForm.control}
-                    name="metaDescription"
+                    name="slug"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Meta Description</FormLabel>
+                        <FormLabel>URL Slug</FormLabel>
                         <FormControl>
-                          <Textarea
-                            placeholder="Brief description for search engines"
-                            className="min-h-[80px]"
-                            {...field}
-                            value={field.value || ""}
-                          />
+                          <Input {...field} />
                         </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={editForm.control}
-                    name="metaKeywords"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Meta Keywords</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="keyword1, keyword2, keyword3"
-                            {...field}
-                            value={field.value || ""}
-                          />
-                        </FormControl>
+                        <FormDescription>Will be accessible at /page/{field.value}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
-              </div>
-              
-              <DialogFooter>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsEditDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={updatePageMutation.isPending}>
-                  {updatePageMutation.isPending ? "Updating..." : "Update Page"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
+
+                <FormField
+                  control={editForm.control}
+                  name="content"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Content (HTML)</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          className="min-h-[200px] font-mono"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        HTML content of the page. You can include headings, paragraphs, lists, etc.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={editForm.control}
+                    name="isPublished"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-4 border rounded-md">
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Published</FormLabel>
+                          <FormDescription>
+                            If turned off, the page will not be accessible to users.
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editForm.control}
+                    name="noIndex"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-4 border rounded-md">
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Hide from Search Engines</FormLabel>
+                          <FormDescription>
+                            If turned on, adds a noindex meta tag to prevent search engines from indexing this page.
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="border p-4 rounded-md">
+                  <h3 className="font-medium mb-4">SEO Settings (Optional)</h3>
+                  <div className="space-y-4">
+                    <FormField
+                      control={editForm.control}
+                      name="metaTitle"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>SEO Title</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={field.value || ''} />
+                          </FormControl>
+                          <FormDescription>
+                            Overrides the page title in search results. If left empty, the page title will be used.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={editForm.control}
+                      name="metaDescription"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Meta Description</FormLabel>
+                          <FormControl>
+                            <Textarea {...field} value={field.value || ''} />
+                          </FormControl>
+                          <FormDescription>
+                            A short description that appears in search engine results.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={editForm.control}
+                      name="metaKeywords"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Meta Keywords</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={field.value || ''} />
+                          </FormControl>
+                          <FormDescription>
+                            Comma-separated keywords related to the page.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setIsEditDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit"
+                    className="bg-blue-600 hover:bg-blue-700"
+                    disabled={updatePageMutation.isPending}
+                  >
+                    {updatePageMutation.isPending ? "Updating..." : "Update Page"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          )}
         </DialogContent>
       </Dialog>
 
-      {/* Delete Page Dialog */}
+      {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -721,28 +702,30 @@ const AdminPages = () => {
           </DialogHeader>
           
           {selectedPage && (
-            <div className="py-4">
-              <p className="font-semibold">{selectedPage.title}</p>
-              <p className="text-sm text-gray-500">/{selectedPage.slug}</p>
-            </div>
+            <>
+              <div className="py-4">
+                <p><strong>Page:</strong> {selectedPage.title}</p>
+                <p><strong>URL:</strong> /page/{selectedPage.slug}</p>
+              </div>
+              
+              <DialogFooter>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsDeleteDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  variant="destructive"
+                  onClick={() => deletePageMutation.mutate(selectedPage.id)}
+                  disabled={deletePageMutation.isPending}
+                >
+                  {deletePageMutation.isPending ? "Deleting..." : "Delete Page"}
+                </Button>
+              </DialogFooter>
+            </>
           )}
-          
-          <DialogFooter>
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => setIsDeleteDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={onDeleteConfirm}
-              disabled={deletePageMutation.isPending}
-            >
-              {deletePageMutation.isPending ? "Deleting..." : "Delete Page"}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </AdminLayout>
