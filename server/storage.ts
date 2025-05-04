@@ -903,12 +903,25 @@ export class MemStorage implements IStorage {
     
     this.checkIns.set(checkIn.id, checkIn);
     
-    // Update user's streak and points
+    // Add entry to points log instead of directly updating points
+    const action = streakDay === 7 ? 'streak_complete' : 'daily_check_in';
+    const description = streakDay === 7 
+      ? `Completed 7-day streak` 
+      : `Daily check-in (day ${streakDay})`;
+    
+    await this.addPointsLog({
+      userId,
+      points,
+      action,
+      description,
+      createdAt: now
+    });
+    
+    // Update user's streak and last check-in (points are handled by addPointsLog)
     const updatedUser: User = {
       ...user,
       currentStreak: newStreak,
-      lastCheckIn: now,
-      points: (user.points || 0) + points
+      lastCheckIn: now
     };
     
     this.users.set(userId, updatedUser);

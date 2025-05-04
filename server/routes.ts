@@ -1156,6 +1156,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Points log endpoints
+  // Get points log for a user by ID
+  app.get("/api/users/:userId/points-log", async (req, res) => {
+    try {
+      // Set cache control headers to prevent browser caching
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      const pointsLog = await storage.getPointsLog(userId);
+      res.json(pointsLog || []);
+    } catch (error) {
+      console.error("Error getting points log:", error);
+      res.status(500).json({ message: "Failed to fetch points log" });
+    }
+  });
+  
+  // Get points log for a user by Firebase UID
+  app.get("/api/users/firebase/:firebaseUid/points-log", async (req, res) => {
+    try {
+      // Set cache control headers to prevent browser caching
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      
+      const { firebaseUid } = req.params;
+      console.log(`Fetching points log for Firebase UID: ${firebaseUid}`);
+      
+      // First get the database user by Firebase UID
+      const user = await storage.getUserByFirebaseUid(firebaseUid);
+      
+      if (!user) {
+        console.log(`User with Firebase UID ${firebaseUid} not found`);
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      console.log(`Found user with database ID: ${user.id} for Firebase UID: ${firebaseUid}`);
+      
+      const pointsLog = await storage.getPointsLog(user.id);
+      res.json(pointsLog || []);
+    } catch (error) {
+      console.error("Error getting points log for Firebase UID:", error);
+      res.status(500).json({ message: "Failed to fetch points log" });
+    }
+  });
+  
+  // Get points balance for a user by ID
+  app.get("/api/users/:userId/points-balance", async (req, res) => {
+    try {
+      // Set cache control headers to prevent browser caching
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      const balance = await storage.getUserPointsBalance(userId);
+      res.json({ balance });
+    } catch (error) {
+      console.error("Error getting points balance:", error);
+      res.status(500).json({ message: "Failed to fetch points balance" });
+    }
+  });
+  
+  // Get points balance for a user by Firebase UID
+  app.get("/api/users/firebase/:firebaseUid/points-balance", async (req, res) => {
+    try {
+      // Set cache control headers to prevent browser caching
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      
+      const { firebaseUid } = req.params;
+      console.log(`Fetching points balance for Firebase UID: ${firebaseUid}`);
+      
+      // First get the database user by Firebase UID
+      const user = await storage.getUserByFirebaseUid(firebaseUid);
+      
+      if (!user) {
+        console.log(`User with Firebase UID ${firebaseUid} not found`);
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      console.log(`Found user with database ID: ${user.id} for Firebase UID: ${firebaseUid}`);
+      
+      const balance = await storage.getUserPointsBalance(user.id);
+      res.json({ balance });
+    } catch (error) {
+      console.error("Error getting points balance for Firebase UID:", error);
+      res.status(500).json({ message: "Failed to fetch points balance" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
