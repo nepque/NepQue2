@@ -44,7 +44,7 @@ const AdminBannerAds = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentBanner, setCurrentBanner] = useState<BannerAdType | null>(null);
-  const [formData, setFormData] = useState<Partial<BannerAdType>>({
+  const [formData, setFormData] = useState<Partial<BannerAdType> & { isActive?: boolean }>({
     title: '',
     description: '',
     imageUrl: '',
@@ -441,7 +441,7 @@ const AdminBannerAds = () => {
                 type="checkbox"
                 id="isActive"
                 name="isActive"
-                checked={formData.isActive === undefined ? true : formData.isActive}
+                checked={formData.isActive === undefined || formData.isActive === null ? true : formData.isActive}
                 onChange={(e) => setFormData((prev) => ({ ...prev, isActive: e.target.checked }))}
                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />

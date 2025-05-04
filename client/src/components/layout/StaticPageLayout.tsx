@@ -1,8 +1,5 @@
 import { ReactNode } from "react";
 import { Helmet } from "react-helmet";
-import { ArrowLeft } from "lucide-react";
-import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
 
 interface StaticPageLayoutProps {
   title: string;
@@ -21,14 +18,7 @@ const StaticPageLayout = ({ title, description, keywords, children }: StaticPage
       </Helmet>
       
       <div className="container mx-auto px-4">
-        <div className="mb-6">
-          <Button variant="ghost" asChild className="mb-6">
-            <Link href="/" className="inline-flex items-center">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Home
-            </Link>
-          </Button>
-          
+        <div className="mb-6">          
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{title}</h1>
           <div className="h-1 w-20 bg-blue-600 rounded mb-6"></div>
         </div>
