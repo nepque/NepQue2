@@ -2453,6 +2453,65 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
+
+  // Site Settings methods
+  async getAllSettings(): Promise<SiteSetting[]> {
+    try {
+      return await db.select().from(siteSettings).orderBy(desc(siteSettings.updatedAt));
+    } catch (error) {
+      console.error("Error getting all settings:", error);
+      return [];
+    }
+  }
+
+  async getSettingByKey(key: string): Promise<SiteSetting | undefined> {
+    try {
+      const [setting] = await db.select().from(siteSettings).where(eq(siteSettings.key, key));
+      return setting;
+    } catch (error) {
+      console.error(`Error getting setting by key '${key}':`, error);
+      return undefined;
+    }
+  }
+
+  async createOrUpdateSetting(data: InsertSiteSetting): Promise<SiteSetting | undefined> {
+    try {
+      // Check if the setting already exists
+      const existingSetting = await this.getSettingByKey(data.key);
+      
+      if (existingSetting) {
+        // Update existing setting
+        const [updated] = await db.update(siteSettings)
+          .set({
+            value: data.value,
+            description: data.description,
+            updatedAt: new Date(),
+          })
+          .where(eq(siteSettings.id, existingSetting.id))
+          .returning();
+        return updated;
+      } else {
+        // Create new setting
+        const [created] = await db.insert(siteSettings)
+          .values(data)
+          .returning();
+        return created;
+      }
+    } catch (error) {
+      console.error("Error creating/updating setting:", error);
+      return undefined;
+    }
+  }
+
+  async deleteSetting(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(siteSettings).where(eq(siteSettings.id, id)).returning();
+      return result.length > 0;
+    } catch (error) {
+      console.error("Error deleting setting:", error);
+      return false;
+    }
+  }
 }
 
 // Use the database storage implementation

@@ -1511,6 +1511,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  
+  // Site Settings Routes
+  
+  // Get all settings
+  app.get("/api/admin/settings", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to access settings");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const settings = await storage.getAllSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching settings:", error);
+      res.status(500).json({ message: "Failed to fetch settings" });
+    }
+  });
+  
+  // Get setting by key
+  app.get("/api/admin/settings/:key", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to get setting");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const { key } = req.params;
+      const setting = await storage.getSettingByKey(key);
+      
+      if (!setting) {
+        return res.status(404).json({ message: `Setting with key '${key}' not found` });
+      }
+      
+      res.json(setting);
+    } catch (error) {
+      console.error(`Error fetching setting by key:`, error);
+      res.status(500).json({ message: "Failed to fetch setting" });
+    }
+  });
+  
+  // Create or update a setting
+  app.post("/api/admin/settings", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to create/update setting");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const { key, value, description } = req.body;
+      
+      if (!key) {
+        return res.status(400).json({ message: "Key is required" });
+      }
+      
+      const setting = await storage.createOrUpdateSetting({
+        key,
+        value,
+        description
+      });
+      
+      res.status(200).json(setting);
+    } catch (error) {
+      console.error("Error creating/updating setting:", error);
+      res.status(500).json({ message: "Failed to create/update setting" });
+    }
+  });
+  
+  // Delete a setting
+  app.delete("/api/admin/settings/:id", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to delete setting");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const id = Number(req.params.id);
+      const success = await storage.deleteSetting(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Setting not found" });
+      }
+      
+      res.status(200).json({ success: true });
+    } catch (error) {
+      console.error("Error deleting setting:", error);
+      res.status(500).json({ message: "Failed to delete setting" });
+    }
+  });
+  
+  // Public route to get verification code for site header
+  app.get("/api/site-verification", async (req, res) => {
+    try {
+      const verificationCode = await storage.getSettingByKey("header_verification_code");
+      res.json({ 
+        verificationCode: verificationCode?.value || null 
+      });
+    } catch (error) {
+      console.error("Error fetching site verification code:", error);
+      res.status(500).json({ message: "Failed to fetch site verification code" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

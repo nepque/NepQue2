@@ -1,4 +1,6 @@
 import { Helmet } from 'react-helmet';
+import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 
 interface SEOProps {
   title: string;
@@ -21,6 +23,19 @@ const SEO = ({
 }: SEOProps) => {
   const siteName = "NepQue";
   const fullTitle = title ? `${title} | ${siteName}` : siteName;
+  const [verificationCode, setVerificationCode] = useState<string | null>(null);
+  
+  // Fetch verification code
+  const { data: verificationData } = useQuery({
+    queryKey: ['/api/site-verification'],
+    staleTime: 3600000, // 1 hour
+  });
+  
+  useEffect(() => {
+    if (verificationData?.verificationCode) {
+      setVerificationCode(verificationData.verificationCode);
+    }
+  }, [verificationData]);
   
   return (
     <Helmet>
@@ -46,6 +61,11 @@ const SEO = ({
       
       {/* Canonical URL */}
       {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+      
+      {/* Site verification code - Inserted as raw HTML */}
+      {verificationCode && (
+        <div dangerouslySetInnerHTML={{ __html: verificationCode }} />
+      )}
     </Helmet>
   );
 };

@@ -46,6 +46,7 @@ import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminSubmissions from "@/pages/admin/AdminSubmissions";
 import AdminWithdrawals from "@/pages/admin/AdminWithdrawals";
 import AdminBannerAds from "@/pages/admin/AdminBannerAds"; // Added import for banner ads
+import AdminSettings from "@/pages/admin/AdminSettings"; // Added import for admin settings
 
 function UserRouter() {
   return (
@@ -130,6 +131,7 @@ function AdminRouter() {
       <Route path="/admin/categories/edit/:id" component={AdminCategoryEdit} />
       <Route path="/admin/withdrawals" component={AdminWithdrawals} />
       <Route path="/admin/banner-ads" component={AdminBannerAds} /> {/* Added banner ads route */}
+      <Route path="/admin/settings" component={AdminSettings} /> {/* Added settings route */}
       <Route component={NotFound} />
     </Switch>
   );
