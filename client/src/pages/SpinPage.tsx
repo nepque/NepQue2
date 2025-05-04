@@ -88,6 +88,7 @@ const SpinPage = () => {
       onSuccess: (data) => {
         // Get the points awarded from the API response
         const pointsAwarded = data.points;
+        console.log("Points awarded:", pointsAwarded);
         
         // The index in the POINTS array where our result is
         const resultIndex = POINTS.indexOf(pointsAwarded);
@@ -96,11 +97,22 @@ const SpinPage = () => {
         // Each segment is 72 degrees (360 / 5)
         // We add 4 full rotations (1440 degrees) for effect, plus the position
         const segmentDegrees = 360 / POINTS.length;
-        const segmentOffset = (segmentDegrees / 2); // Offset to center of segment
-        const destinationDegrees = (resultIndex * segmentDegrees) + segmentOffset;
         
-        // Final rotation = multiple full rotations + destination position + a small random offset
-        const totalRotation = 1440 + destinationDegrees + (Math.random() * 30 - 15); // 4 full rotations + destination
+        // Important: The wheel rotates clockwise, but we need to adjust the destination
+        // because of how the wheel segments are positioned relative to the pointer
+        // Index 0 (value 1) is at the top-left, Index 1 (value 2) is at top-right, etc.
+        // We subtract from 360 to get the correct angle (rotating counter-clockwise)
+        const destinationDegrees = 360 - (resultIndex * segmentDegrees) - (segmentDegrees / 2);
+        
+        // Final rotation = multiple full rotations + destination position
+        const totalRotation = 1440 + destinationDegrees; // 4 full rotations + destination
+        
+        console.log("Wheel rotation:", {
+          segmentDegrees,
+          resultIndex,
+          destinationDegrees,
+          totalRotation
+        });
         
         // Set the rotation
         setRotation(totalRotation);
@@ -177,19 +189,20 @@ const SpinPage = () => {
 
       <div className="grid md:grid-cols-2 gap-8">
         <div className="flex flex-col items-center justify-center">
-          <div className="relative w-[300px] h-[300px]">
+          <div className="relative w-[340px] h-[340px]">
             {/* Wheel background */}
-            <div className="absolute inset-0 rounded-full bg-purple-700"></div>
+            <div className="absolute inset-0 rounded-full shadow-lg"></div>
             
             {/* Pointer triangle */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-0 h-0 
-                            border-l-[15px] border-r-[15px] border-b-[30px] 
-                            border-l-transparent border-r-transparent border-b-yellow-400 z-20"></div>
+                           border-l-[16px] border-r-[16px] border-b-[32px] 
+                           border-l-transparent border-r-transparent border-b-yellow-400 z-20
+                           drop-shadow-md"></div>
             
             {/* Wheel */}
             <motion.div 
               ref={wheelRef}
-              className="absolute inset-0 rounded-full overflow-hidden"
+              className="absolute inset-0 rounded-full overflow-hidden border-4 border-purple-800"
               style={{
                 transformOrigin: "center center",
               }}
@@ -206,6 +219,10 @@ const SpinPage = () => {
                 // Calculate the rotation and position for each segment
                 const segmentDegrees = 360 / POINTS.length;
                 const rotation = index * segmentDegrees;
+                
+                // Create a darker shade for alternating segments for better visual clarity
+                const isAlternate = index % 2 === 0;
+                
                 return (
                   <div 
                     key={index} 
@@ -213,12 +230,14 @@ const SpinPage = () => {
                     style={{
                       transform: `rotate(${rotation}deg)`,
                       clipPath: `polygon(50% 50%, 50% 0%, ${50 + segmentDegrees}% 0%, 50% 50%)`,
-                      backgroundColor: COLORS[index % COLORS.length],
-                      transformOrigin: "center"
+                      backgroundColor: isAlternate ? COLORS[0] : COLORS[1],
+                      transformOrigin: "center",
+                      boxShadow: "inset 0 0 10px rgba(0,0,0,0.1)",
                     }}
                   >
                     <div 
-                      className="absolute top-[25%] left-1/2 -translate-x-1/2 text-white font-bold text-xl"
+                      className="absolute top-[22%] left-1/2 -translate-x-1/2 text-white font-bold text-2xl
+                               drop-shadow-md"
                       style={{ transform: `rotate(${-rotation + segmentDegrees/2}deg)` }}
                     >
                       {point}
@@ -231,18 +250,18 @@ const SpinPage = () => {
             {/* Center button */}
             <div 
               className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
-                       w-20 h-20 rounded-full bg-yellow-400 z-10 
-                       flex items-center justify-center 
-                       cursor-pointer hover:bg-yellow-500 transition-colors"
+                       w-24 h-24 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-500 z-10 
+                       flex items-center justify-center shadow-md
+                       cursor-pointer hover:from-yellow-400 hover:to-yellow-600 transition-colors"
               onClick={handleSpin}
               style={{ pointerEvents: canSpin && !isSpinning ? "auto" : "none" }}
             >
-              <span className="font-bold text-orange-800 text-lg">SPIN</span>
+              <span className="font-bold text-orange-900 text-xl">SPIN</span>
             </div>
           </div>
           
           <Button 
-            className="mt-8 px-8 py-6 text-lg"
+            className="mt-8 px-8 py-6 text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
             onClick={handleSpin}
             disabled={!canSpin || isSpinning}
           >
@@ -282,11 +301,11 @@ const SpinPage = () => {
               </div>
               
               {result && (
-                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                  <h3 className="font-semibold text-green-700 flex items-center gap-2">
-                    <Target className="h-5 w-5" /> Your last spin result:
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-5 rounded-lg border border-green-200 animate-[pulse_0.5s_ease-in-out]">
+                  <h3 className="font-semibold text-emerald-700 flex items-center gap-2">
+                    <Target className="h-5 w-5 text-emerald-600" /> Your last spin result:
                   </h3>
-                  <p className="text-2xl font-bold mt-2">
+                  <p className="text-3xl font-bold mt-2 bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
                     {result} points!
                   </p>
                 </div>
@@ -294,17 +313,26 @@ const SpinPage = () => {
               
               {/* Only show the sign-in message if actually not logged in */}
               {authLoading === false && !currentUser && (
-                <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                  <p className="text-yellow-700">
+                <div className="bg-gradient-to-r from-amber-50 to-yellow-50 p-5 rounded-lg border border-amber-200 shadow-sm">
+                  <p className="text-amber-700 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"></path>
+                    </svg>
                     Please sign in to spin the wheel and earn points.
                   </p>
                 </div>
               )}
               
               {currentUser && spinStatus && !spinStatus.success && (
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                  <h3 className="font-semibold text-blue-700">Next spin available:</h3>
-                  <p className="text-xl mt-1">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-5 rounded-lg border border-blue-200 shadow-sm">
+                  <h3 className="font-semibold text-blue-700 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    Next spin available:
+                  </h3>
+                  <p className="text-xl font-semibold mt-2 bg-gradient-to-r from-blue-700 to-indigo-600 bg-clip-text text-transparent">
                     {getTimeUntilNextSpin()}
                   </p>
                 </div>
