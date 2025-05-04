@@ -2838,6 +2838,122 @@ export class DatabaseStorage implements IStorage {
       return false;
     }
   }
+
+  // Social media links operations
+  async getAllSocialMediaLinks(): Promise<SocialMediaLink[]> {
+    try {
+      const links = await db
+        .select()
+        .from(socialMediaLinks)
+        .orderBy(socialMediaLinks.name);
+      return links;
+    } catch (error) {
+      console.error("Error getting all social media links:", error);
+      return [];
+    }
+  }
+
+  async getSocialMediaLinkById(id: number): Promise<SocialMediaLink | undefined> {
+    try {
+      const [link] = await db
+        .select()
+        .from(socialMediaLinks)
+        .where(eq(socialMediaLinks.id, id));
+      return link;
+    } catch (error) {
+      console.error(`Error getting social media link with ID ${id}:`, error);
+      return undefined;
+    }
+  }
+
+  async createSocialMediaLink(data: InsertSocialMediaLink): Promise<SocialMediaLink> {
+    try {
+      const now = new Date();
+      const [socialMediaLink] = await db
+        .insert(socialMediaLinks)
+        .values({
+          ...data,
+          createdAt: now,
+          updatedAt: now,
+          isActive: data.isActive !== undefined ? data.isActive : true
+        })
+        .returning();
+      
+      if (!socialMediaLink) {
+        throw new Error("Failed to create social media link - no result returned");
+      }
+      
+      return socialMediaLink;
+    } catch (error) {
+      console.error("Error creating social media link:", error);
+      throw error;
+    }
+  }
+
+  async updateSocialMediaLink(id: number, data: Partial<InsertSocialMediaLink>): Promise<SocialMediaLink> {
+    try {
+      const [updatedLink] = await db
+        .update(socialMediaLinks)
+        .set({
+          ...data,
+          updatedAt: new Date()
+        })
+        .where(eq(socialMediaLinks.id, id))
+        .returning();
+      
+      if (!updatedLink) {
+        throw new Error(`Social media link with ID ${id} not found`);
+      }
+      
+      return updatedLink;
+    } catch (error) {
+      console.error(`Error updating social media link with ID ${id}:`, error);
+      throw error;
+    }
+  }
+
+  async toggleSocialMediaLinkStatus(id: number): Promise<SocialMediaLink> {
+    try {
+      // First get the current link to check its status
+      const [currentLink] = await db
+        .select()
+        .from(socialMediaLinks)
+        .where(eq(socialMediaLinks.id, id));
+      
+      if (!currentLink) {
+        throw new Error(`Social media link with ID ${id} not found`);
+      }
+      
+      // Then update with toggled status
+      const [updatedLink] = await db
+        .update(socialMediaLinks)
+        .set({
+          isActive: !currentLink.isActive,
+          updatedAt: new Date()
+        })
+        .where(eq(socialMediaLinks.id, id))
+        .returning();
+      
+      return updatedLink;
+    } catch (error) {
+      console.error(`Error toggling social media link status for ID ${id}:`, error);
+      throw error;
+    }
+  }
+
+  async deleteSocialMediaLink(id: number): Promise<boolean> {
+    try {
+      const result = await db
+        .delete(socialMediaLinks)
+        .where(eq(socialMediaLinks.id, id))
+        .returning({ id: socialMediaLinks.id });
+      
+      return result.length > 0;
+    } catch (error) {
+      console.error(`Error deleting social media link with ID ${id}:`, error);
+      return false;
+    }
+  }
 }
 
 // Use the database storage implementation
@@ -3007,5 +3123,48 @@ export const storage = new DatabaseStorage();
     }
   } else {
     console.log("Coupons already exist, skipping initialization");
+  }
+  
+  // Add initial social media links if they don't exist
+  const existingSocialLinks = await storage.getAllSocialMediaLinks();
+  
+  if (existingSocialLinks.length === 0) {
+    const socialLinksData: InsertSocialMediaLink[] = [
+      {
+        name: "Facebook",
+        url: "https://facebook.com/nepque",
+        icon: "facebook",
+        isActive: true
+      },
+      {
+        name: "Twitter",
+        url: "https://twitter.com/nepque",
+        icon: "twitter",
+        isActive: true
+      },
+      {
+        name: "Instagram",
+        url: "https://instagram.com/nepque",
+        icon: "instagram",
+        isActive: true
+      },
+      {
+        name: "LinkedIn",
+        url: "https://linkedin.com/company/nepque",
+        icon: "linkedin",
+        isActive: true
+      }
+    ];
+    
+    for (const link of socialLinksData) {
+      try {
+        await storage.createSocialMediaLink(link);
+        console.log(`Created social media link: ${link.name}`);
+      } catch (error) {
+        console.error(`Error creating social media link ${link.name}:`, error);
+      }
+    }
+  } else {
+    console.log("Social media links already exist, skipping initialization");
   }
 })();
