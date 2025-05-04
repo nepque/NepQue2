@@ -100,16 +100,18 @@ const CouponCard = ({ coupon, onShowCode }: CouponCardProps) => {
         </button>
       </div>
       <div className="p-4">
-        {coupon.verified && (
-          <Badge variant="outline" className="bg-green-100 text-success border-0 mb-2">
-            <i className="fas fa-check-circle mr-1"></i> Verified
-          </Badge>
-        )}
-        {isExpiringSoon(coupon.expiresAt) && (
-          <Badge variant="outline" className="bg-red-100 text-error border-0 mb-2">
-            <i className="fas fa-fire-alt mr-1"></i> Expiring Soon
-          </Badge>
-        )}
+        <div className="min-h-[28px] mb-2">
+          {coupon.verified && (
+            <Badge variant="outline" className="bg-green-100 text-success border-0">
+              <i className="fas fa-check-circle mr-1"></i> Verified
+            </Badge>
+          )}
+          {isExpiringSoon(coupon.expiresAt) && (
+            <Badge variant="outline" className="bg-red-100 text-error border-0 ml-2">
+              <i className="fas fa-fire-alt mr-1"></i> Expiring Soon
+            </Badge>
+          )}
+        </div>
         <p className="font-medium text-neutral-800 mb-2">{coupon.title}</p>
         <p className="text-sm text-neutral-500 mb-3">{coupon.description}</p>
         <div className="flex items-center text-sm text-neutral-500 mb-4">
