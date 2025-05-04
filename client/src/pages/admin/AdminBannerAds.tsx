@@ -1,10 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'wouter';
-import { PlusCircle, Edit, Trash2, CheckCircle, XCircle } from 'lucide-react';
-import { apiRequest } from '../../lib/queryClient';
+import { Plus, Edit, Trash2, CheckCircle, XCircle, MoreHorizontal, Search, ExternalLink, Image } from 'lucide-react';
+import { apiRequest } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -19,12 +17,28 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { BannerAd as BannerAdType } from '@shared/schema';
-import { Helmet } from 'react-helmet';
+import AdminLayout from '@/components/admin/AdminLayout';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 /**
  * Admin interface for managing banner ads
  */
-const AdminBannerAds: React.FC = () => {
+const AdminBannerAds = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
@@ -42,7 +56,7 @@ const AdminBannerAds: React.FC = () => {
   // Fetch all banner ads
   const { data: bannerAds, isLoading } = useQuery({
     queryKey: ['/api/admin/banner-ads'],
-    queryFn: () => apiRequest<BannerAdType[]>('/api/admin/banner-ads'),
+    queryFn: () => apiRequest('/api/admin/banner-ads'),
   });
 
   // Create a new banner ad
@@ -186,7 +200,7 @@ const AdminBannerAds: React.FC = () => {
     setCurrentBanner(banner);
     setFormData({
       title: banner.title,
-      description: banner.description,
+      description: banner.description || '',
       imageUrl: banner.imageUrl || '',
       linkUrl: banner.linkUrl || '',
       location: banner.location,
@@ -211,104 +225,139 @@ const AdminBannerAds: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <Helmet>
-        <title>Banner Ads Management | NepQue Admin</title>
-      </Helmet>
-      
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Banner Ads Management</h1>
+    <AdminLayout title="Banner Ads">
+      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search banners..."
+            className="pl-10 pr-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent w-full sm:w-[280px]"
+          />
+        </div>
+        
         <Button onClick={() => { resetForm(); setIsOpen(true); }}>
-          <PlusCircle className="mr-2 h-4 w-4" /> 
-          Add New Banner
+          <Plus className="h-4 w-4 mr-2" /> 
+          Add Banner
         </Button>
       </div>
       
-      {isLoading ? (
-        <div className="flex justify-center my-10">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
-        </div>
-      ) : bannerAds && bannerAds.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {bannerAds.map((banner) => (
-            <Card key={banner.id} className="overflow-hidden">
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg">{banner.title}</CardTitle>
-                  <div className="flex space-x-2">
-                    <Badge 
-                      variant={banner.isActive ? "default" : "outline"}
-                      className="ml-2"
-                    >
-                      {banner.isActive ? 'Active' : 'Inactive'}
-                    </Badge>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="mb-4">
-                  <div className="text-sm text-gray-500 mb-1">Location: {banner.location}</div>
-                  <p className="text-sm">{banner.description}</p>
-                </div>
-                
-                {/* Banner preview */}
-                <div className="relative w-full h-[90px] rounded overflow-hidden mb-4">
-                  <div 
-                    className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-500"
-                    style={{ 
-                      backgroundImage: banner.imageUrl ? `url(${banner.imageUrl})` : undefined,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center'
-                    }}
-                  />
-                  <div className="absolute inset-0 flex flex-col justify-center p-4 text-white">
-                    <h3 className="text-lg font-bold">{banner.title}</h3>
-                    <p className="text-sm">{banner.description}</p>
-                  </div>
-                  <div className="absolute top-1 right-1 bg-black/40 text-white text-xs px-1 rounded">
-                    Ad
-                  </div>
-                </div>
-                
-                <div className="flex justify-end space-x-2">
-                  <Button 
-                    size="sm" 
-                    variant={banner.isActive ? "outline" : "default"} 
-                    onClick={() => handleToggleStatus(banner)}
-                  >
-                    {banner.isActive ? (
-                      <><XCircle className="h-4 w-4 mr-1" /> Deactivate</>
-                    ) : (
-                      <><CheckCircle className="h-4 w-4 mr-1" /> Activate</>
-                    )}
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={() => handleEdit(banner)}
-                  >
-                    <Edit className="h-4 w-4 mr-1" /> Edit
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="destructive" 
-                    onClick={() => handleDelete(banner)}
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" /> Delete
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-10">
-          <p className="text-gray-500 mb-4">No banner ads found</p>
-          <Button onClick={() => { resetForm(); setIsOpen(true); }}>
-            Create Your First Banner Ad
-          </Button>
-        </div>
-      )}
+      <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+        {isLoading ? (
+          <div className="p-4">
+            <div className="space-y-3">
+              {Array(5).fill(0).map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
+            </div>
+          </div>
+        ) : bannerAds && bannerAds.length > 0 ? (
+          <>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[250px]">Banner</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Preview</TableHead>
+                  <TableHead className="w-[80px] text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {bannerAds.map((banner: BannerAdType) => (
+                  <TableRow key={banner.id}>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{banner.title}</span>
+                        {banner.description && (
+                          <span className="text-sm text-gray-500 truncate max-w-[250px]">
+                            {banner.description}
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">
+                        {banner.location}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={banner.isActive ? "default" : "outline"}>
+                        {banner.isActive ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="relative w-[120px] h-[30px] rounded overflow-hidden">
+                        {banner.imageUrl ? (
+                          <img 
+                            src={banner.imageUrl} 
+                            alt={banner.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-r from-purple-600 to-blue-500 flex items-center justify-center text-white text-xs">
+                            {banner.title}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEdit(banner)}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleToggleStatus(banner)}>
+                            {banner.isActive ? (
+                              <>
+                                <XCircle className="h-4 w-4 mr-2" /> 
+                                Deactivate
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle className="h-4 w-4 mr-2" /> 
+                                Activate
+                              </>
+                            )}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            className="text-red-600 cursor-pointer"
+                            onClick={() => handleDelete(banner)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </>
+        ) : (
+          <div className="py-12 text-center">
+            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+              <Image className="h-6 w-6 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-1">No banner ads found</h3>
+            <p className="text-gray-500 mb-4">
+              Get started by adding your first banner ad
+            </p>
+            <Button onClick={() => { resetForm(); setIsOpen(true); }}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Banner
+            </Button>
+          </div>
+        )}
+      </div>
       
       {/* Create/Edit Banner Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -340,7 +389,7 @@ const AdminBannerAds: React.FC = () => {
               <Textarea
                 id="description"
                 name="description"
-                value={formData.description}
+                value={formData.description || ''}
                 onChange={handleInputChange}
                 rows={2}
                 placeholder="Brief description for the banner"
@@ -352,7 +401,7 @@ const AdminBannerAds: React.FC = () => {
               <Input
                 id="imageUrl"
                 name="imageUrl"
-                value={formData.imageUrl}
+                value={formData.imageUrl || ''}
                 onChange={handleInputChange}
                 placeholder="https://example.com/image.jpg"
               />
@@ -364,7 +413,7 @@ const AdminBannerAds: React.FC = () => {
               <Input
                 id="linkUrl"
                 name="linkUrl"
-                value={formData.linkUrl}
+                value={formData.linkUrl || ''}
                 onChange={handleInputChange}
                 placeholder="https://example.com"
               />
@@ -391,7 +440,7 @@ const AdminBannerAds: React.FC = () => {
                 type="checkbox"
                 id="isActive"
                 name="isActive"
-                checked={formData.isActive}
+                checked={formData.isActive === undefined ? true : formData.isActive}
                 onChange={(e) => setFormData((prev) => ({ ...prev, isActive: e.target.checked }))}
                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
@@ -453,7 +502,7 @@ const AdminBannerAds: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </AdminLayout>
   );
 };
 
