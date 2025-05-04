@@ -1212,6 +1212,70 @@ export class MemStorage implements IStorage {
     this.subscribers.delete(id);
     return true;
   }
+  
+  // Social media links operations
+  async getAllSocialMediaLinks(): Promise<SocialMediaLink[]> {
+    return Array.from(this.socialMediaLinks.values());
+  }
+  
+  async getSocialMediaLinkById(id: number): Promise<SocialMediaLink | undefined> {
+    return this.socialMediaLinks.get(id);
+  }
+  
+  async createSocialMediaLink(data: InsertSocialMediaLink): Promise<SocialMediaLink> {
+    const id = this.currentSocialMediaLinkId++;
+    const now = new Date();
+    const socialMediaLink: SocialMediaLink = {
+      ...data,
+      id,
+      createdAt: now,
+      updatedAt: now,
+      isActive: data.isActive !== undefined ? data.isActive : true
+    };
+    this.socialMediaLinks.set(id, socialMediaLink);
+    return socialMediaLink;
+  }
+  
+  async updateSocialMediaLink(id: number, data: Partial<InsertSocialMediaLink>): Promise<SocialMediaLink> {
+    const socialMediaLink = this.socialMediaLinks.get(id);
+    if (!socialMediaLink) {
+      throw new Error(`Social media link with ID ${id} not found`);
+    }
+    
+    const now = new Date();
+    const updatedSocialMediaLink: SocialMediaLink = {
+      ...socialMediaLink,
+      ...data,
+      updatedAt: now
+    };
+    this.socialMediaLinks.set(id, updatedSocialMediaLink);
+    return updatedSocialMediaLink;
+  }
+  
+  async toggleSocialMediaLinkStatus(id: number): Promise<SocialMediaLink> {
+    const socialMediaLink = this.socialMediaLinks.get(id);
+    if (!socialMediaLink) {
+      throw new Error(`Social media link with ID ${id} not found`);
+    }
+    
+    const now = new Date();
+    const updatedSocialMediaLink: SocialMediaLink = {
+      ...socialMediaLink,
+      isActive: !socialMediaLink.isActive,
+      updatedAt: now
+    };
+    this.socialMediaLinks.set(id, updatedSocialMediaLink);
+    return updatedSocialMediaLink;
+  }
+  
+  async deleteSocialMediaLink(id: number): Promise<boolean> {
+    const exists = this.socialMediaLinks.has(id);
+    if (!exists) {
+      return false;
+    }
+    this.socialMediaLinks.delete(id);
+    return true;
+  }
 }
 
 // Database-backed storage implementation
