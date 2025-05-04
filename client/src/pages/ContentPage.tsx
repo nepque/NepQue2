@@ -19,12 +19,11 @@ interface ContentPageData {
 }
 
 const ContentPage = () => {
-  // Check both route patterns for the slug
-  const [matchWithPage, paramsWithPage] = useRoute("/page/:slug");
-  const [matchDirect, paramsDirect] = useRoute("/:slug");
+  // Only use the direct slug route now
+  const [match, params] = useRoute("/:slug");
   
-  // Get the slug from whichever route matched
-  const slug = (matchWithPage ? paramsWithPage?.slug : paramsDirect?.slug) || "";
+  // Get the slug from the route
+  const slug = params?.slug || "";
   
   // Skip homepage and known routes to avoid conflicts
   const skipRoutes = [
