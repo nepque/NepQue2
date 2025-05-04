@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
+
 import CouponCard from "@/components/coupon/CouponCard";
 import CouponDetailModal from "@/components/coupon/CouponDetailModal";
 import { CouponWithRelations } from "@shared/schema";
@@ -56,10 +56,7 @@ const FeaturedCoupons = () => {
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <h2 className="text-2xl font-bold text-neutral-800 mb-4 md:mb-0">Featured Coupons</h2>
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" className="bg-white hover:bg-neutral-100 text-neutral-600 font-medium px-4 py-2 rounded border border-neutral-200 transition-colors">
-              <i className="fas fa-filter mr-2"></i> Filter
-            </Button>
+          <div className="flex items-center">
             <Select value={selectedSort} onValueChange={handleSortChange}>
               <SelectTrigger className="bg-white text-neutral-600 font-medium px-4 py-2 rounded border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary/50 h-auto w-[160px]">
                 <SelectValue placeholder="Sort by" />
