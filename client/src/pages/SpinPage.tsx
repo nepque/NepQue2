@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from "react";
-import { Helmet } from "react-helmet";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
@@ -10,6 +9,7 @@ import { Loader2, Gift, Target } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import BannerAd from "@/components/banner/BannerAd";
+import SEO from "@/components/common/SEO";
 
 interface SpinResponse {
   success: boolean;
@@ -180,10 +180,11 @@ const SpinPage = () => {
       <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-indigo-700 -z-10"></div>
       
       <div className="container py-8 max-w-4xl mx-auto relative z-10">
-        <Helmet>
-          <title>Spin the Wheel - NepQue</title>
-          <meta name="description" content="Spin the wheel to earn points at NepQue!" />
-        </Helmet>
+        <SEO 
+          title="Spin the Wheel" 
+          description="Spin the wheel to earn points at NepQue!" 
+          noIndex={true}
+        />
 
         <div className="bg-white p-8 rounded-2xl shadow-xl mx-auto">
           <div className="text-center mb-6">

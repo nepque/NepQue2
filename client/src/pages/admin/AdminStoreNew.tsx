@@ -195,6 +195,7 @@ const AdminStoreNew = () => {
                     <Input 
                       placeholder={`${form.getValues("name")} Coupons & Promo Codes - Save With NepQue`} 
                       {...field} 
+                      value={field.value || ''}
                     />
                   </FormControl>
                   <FormMessage />
@@ -211,7 +212,8 @@ const AdminStoreNew = () => {
                   <FormControl>
                     <Input 
                       placeholder={`Find the best ${form.getValues("name")} coupons, promo codes, and deals to save on your next purchase.`} 
-                      {...field} 
+                      {...field}
+                      value={field.value || ''}
                     />
                   </FormControl>
                   <FormMessage />

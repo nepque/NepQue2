@@ -11,12 +11,13 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { usePointsLog } from "@/hooks/use-points-log";
-import { Loader2, Edit, PlusCircle, Clock, CheckCircle, XCircle, CreditCard, History, CoinIcon } from "lucide-react";
+import { Loader2, Edit, PlusCircle, Clock, CheckCircle, XCircle, CreditCard, History, CoinsIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { User, UserSubmittedCouponWithRelations, WithdrawalRequestWithUser } from "@shared/schema";
 import { format } from "date-fns";
 import { Link } from "wouter";
+import SEO from "@/components/common/SEO";
 
 export default function ProfilePage() {
   const { currentUser, isAdmin } = useAuth();
@@ -133,6 +134,7 @@ export default function ProfilePage() {
   
   return (
     <div className="container mx-auto py-8">
+      <SEO title="My Profile" noIndex={true} />
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Profile information */}
         <Card className="md:col-span-1">
