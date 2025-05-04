@@ -308,3 +308,20 @@ export const insertContentPageSchema = createInsertSchema(contentPages).pick({
 
 export type InsertContentPage = z.infer<typeof insertContentPageSchema>;
 export type ContentPage = typeof contentPages.$inferSelect;
+
+// Newsletter subscribers schema
+export const subscribers = pgTable("subscribers", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  subscribed: boolean("subscribed").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertSubscriberSchema = createInsertSchema(subscribers).pick({
+  email: true,
+  subscribed: true,
+});
+
+export type InsertSubscriber = z.infer<typeof insertSubscriberSchema>;
+export type Subscriber = typeof subscribers.$inferSelect;

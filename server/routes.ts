@@ -1659,6 +1659,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Newsletter subscribers API routes
+  app.post("/api/subscribers", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+      
+      // Check if email already exists
+      const existingSubscriber = await storage.getSubscriberByEmail(email);
+      
+      if (existingSubscriber) {
+        if (existingSubscriber.subscribed) {
+          return res.status(400).json({ message: "Email is already subscribed" });
+        } else {
+          // Re-subscribe if previously unsubscribed
+          const updated = await storage.updateSubscriber(existingSubscriber.id, { subscribed: true });
+          return res.status(200).json(updated);
+        }
+      }
+      
+      // Create new subscriber
+      const newSubscriber = await storage.createSubscriber({ 
+        email,
+        subscribed: true
+      });
+      
+      res.status(201).json(newSubscriber);
+    } catch (error) {
+      console.error("Error creating subscriber:", error);
+      res.status(500).json({ message: "Error creating subscriber" });
+    }
+  });
+  
   // Admin routes
   
   // Get all content pages (published and unpublished)

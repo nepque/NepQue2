@@ -2609,6 +2609,76 @@ export class DatabaseStorage implements IStorage {
       return false;
     }
   }
+
+  // Newsletter Subscribers operations
+  
+  async getAllSubscribers(): Promise<schema.Subscriber[]> {
+    try {
+      return await db
+        .select()
+        .from(schema.subscribers)
+        .orderBy(desc(schema.subscribers.createdAt));
+    } catch (error) {
+      console.error("Error getting all subscribers:", error);
+      return [];
+    }
+  }
+
+  async getSubscriberByEmail(email: string): Promise<schema.Subscriber | undefined> {
+    try {
+      const [subscriber] = await db
+        .select()
+        .from(schema.subscribers)
+        .where(eq(schema.subscribers.email, email));
+      return subscriber;
+    } catch (error) {
+      console.error(`Error getting subscriber with email ${email}:`, error);
+      return undefined;
+    }
+  }
+
+  async createSubscriber(data: schema.InsertSubscriber): Promise<schema.Subscriber | undefined> {
+    try {
+      const [subscriber] = await db
+        .insert(schema.subscribers)
+        .values(data)
+        .returning();
+      return subscriber;
+    } catch (error) {
+      console.error("Error creating subscriber:", error);
+      return undefined;
+    }
+  }
+
+  async updateSubscriber(id: number, data: Partial<schema.InsertSubscriber>): Promise<schema.Subscriber | undefined> {
+    try {
+      const [subscriber] = await db
+        .update(schema.subscribers)
+        .set({
+          ...data,
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.subscribers.id, id))
+        .returning();
+      return subscriber;
+    } catch (error) {
+      console.error(`Error updating subscriber with ID ${id}:`, error);
+      return undefined;
+    }
+  }
+
+  async deleteSubscriber(id: number): Promise<boolean> {
+    try {
+      const result = await db
+        .delete(schema.subscribers)
+        .where(eq(schema.subscribers.id, id))
+        .returning();
+      return result.length > 0;
+    } catch (error) {
+      console.error(`Error deleting subscriber with ID ${id}:`, error);
+      return false;
+    }
+  }
 }
 
 // Use the database storage implementation
