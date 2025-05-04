@@ -39,6 +39,11 @@ import {
   type SiteSetting,
   type InsertSiteSetting
 } from "@shared/schema";
+import {
+  subscribers,
+  type Subscriber,
+  type InsertSubscriber
+} from "@shared/schema";
 
 // Storage interface
 export interface IStorage {
@@ -153,6 +158,13 @@ export interface IStorage {
     nextSpinTime: string;
     message: string;
   }>;
+  
+  // Newsletter subscriber operations
+  getAllSubscribers(): Promise<Subscriber[]>;
+  getSubscriberByEmail(email: string): Promise<Subscriber | undefined>;
+  createSubscriber(data: InsertSubscriber): Promise<Subscriber | undefined>;
+  updateSubscriber(id: number, data: Partial<InsertSubscriber>): Promise<Subscriber | undefined>;
+  deleteSubscriber(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -165,6 +177,7 @@ export class MemStorage implements IStorage {
   private checkIns: Map<number, CheckIn>;
   private pointsLogs: Map<number, PointsLog>;
   private bannerAds: Map<number, BannerAd>;
+  private subscribers: Map<number, Subscriber>;
   
   currentUserId: number;
   currentCategoryId: number;
@@ -175,6 +188,7 @@ export class MemStorage implements IStorage {
   currentCheckInId: number;
   currentPointsLogId: number;
   currentBannerAdId: number;
+  currentSubscriberId: number;
 
   constructor() {
     this.users = new Map();
@@ -186,6 +200,7 @@ export class MemStorage implements IStorage {
     this.checkIns = new Map();
     this.pointsLogs = new Map();
     this.bannerAds = new Map();
+    this.subscribers = new Map();
     
     this.currentUserId = 1;
     this.currentCategoryId = 1;
@@ -196,6 +211,7 @@ export class MemStorage implements IStorage {
     this.currentCheckInId = 1;
     this.currentPointsLogId = 1;
     this.currentBannerAdId = 1;
+    this.currentSubscriberId = 1;
   }
 
   // User operations
