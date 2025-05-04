@@ -1,80 +1,110 @@
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+
+// Form validation schema
+const newsletterSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+});
+
+type NewsletterFormValues = z.infer<typeof newsletterSchema>;
 
 const Newsletter = () => {
-  const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
+  
+  // Initialize form
+  const form = useForm<NewsletterFormValues>({
+    resolver: zodResolver(newsletterSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter your email address",
-        variant: "destructive"
+  // Create subscriber mutation
+  const subscribeMutation = useMutation({
+    mutationFn: async (data: NewsletterFormValues) => {
+      return await apiRequest("/api/subscribers", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
       });
-      return;
-    }
-    
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid email address",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    // Simulate subscription process
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setEmail("");
+    },
+    onSuccess: () => {
       toast({
         title: "Success!",
-        description: "You've been subscribed to our newsletter.",
-        variant: "default"
+        description: "You've been subscribed to our newsletter",
       });
-    }, 1000);
+      form.reset();
+      setIsSubmitting(false);
+    },
+    onError: (error: any) => {
+      // Check if the error is because email is already subscribed
+      if (error.status === 400 && error.message === "Email is already subscribed") {
+        toast({
+          title: "Already subscribed",
+          description: "This email is already subscribed to our newsletter",
+        });
+      } else {
+        toast({
+          title: "Subscription failed",
+          description: "There was an error subscribing to the newsletter. Please try again.",
+          variant: "destructive",
+        });
+      }
+      setIsSubmitting(false);
+    },
+  });
+
+  // Handle form submission
+  const onSubmit = (data: NewsletterFormValues) => {
+    setIsSubmitting(true);
+    subscribeMutation.mutate(data);
   };
 
   return (
-    <section className="py-12 bg-primary">
-      <div className="container mx-auto px-4">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">Never Miss a Deal</h2>
-          <p className="text-white/80 mb-6">Subscribe to get personalized deals and updates delivered straight to your inbox</p>
-          
-          <form onSubmit={handleSubmit} className="max-w-md mx-auto flex">
-            <div className="flex-1">
-              <input
-                type="email"
-                placeholder="Enter your email address"
-                className="w-full px-4 py-3 rounded-l-md border-0 h-12 shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isSubmitting}
-              />
-            </div>
-            <button 
-              type="submit" 
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 rounded-r-md shadow-sm transition-colors h-12 whitespace-nowrap"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Subscribing..." : "Subscribe"}
-            </button>
-          </form>
-          <p className="text-white/70 text-sm mt-4">By subscribing, you agree to our privacy policy and terms of service</p>
-        </div>
+    <div className="bg-gradient-to-r from-blue-600 to-blue-800 py-12 px-6 rounded-xl shadow-md">
+      <div className="mx-auto max-w-3xl text-center">
+        <h2 className="text-2xl font-bold text-white mb-2">Subscribe to Our Newsletter</h2>
+        <p className="text-blue-100 mb-6">
+          Get the latest deals and coupons delivered directly to your inbox
+        </p>
+        
+        <form 
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
+        >
+          <div className="flex-1">
+            <Input
+              type="email"
+              placeholder="Enter your email"
+              autoComplete="email"
+              className="h-11 bg-white/90 border-0"
+              {...form.register("email")}
+            />
+            {form.formState.errors.email && (
+              <p className="text-sm text-white mt-1 text-left">
+                {form.formState.errors.email.message}
+              </p>
+            )}
+          </div>
+          <Button 
+            type="submit"
+            className="h-11 px-6 bg-white text-blue-700 hover:bg-blue-50"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Subscribing..." : "Subscribe"}
+          </Button>
+        </form>
       </div>
-    </section>
+    </div>
   );
 };
 

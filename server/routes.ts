@@ -1846,6 +1846,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete content page" });
     }
   });
+  
+  // Subscribers admin API routes
+  
+  // Get all subscribers (admin only)
+  app.get("/api/admin/subscribers", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to access subscribers");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const subscribers = await storage.getAllSubscribers();
+      res.json(subscribers);
+    } catch (error) {
+      console.error("Error getting subscribers:", error);
+      res.status(500).json({ message: "Failed to get subscribers" });
+    }
+  });
+  
+  // Export subscribers to CSV (admin only)
+  app.get("/api/admin/subscribers/export", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to export subscribers");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const subscribers = await storage.getAllSubscribers();
+      
+      // Create CSV content
+      const csvHeader = "id,email,subscribed,createdAt,updatedAt\n";
+      const csvRows = subscribers.map(sub => {
+        return `${sub.id},"${sub.email}",${sub.subscribed},${sub.createdAt},${sub.updatedAt}`;
+      }).join("\n");
+      
+      const csvContent = csvHeader + csvRows;
+      
+      // Set headers for file download
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename=subscribers.csv');
+      
+      res.send(csvContent);
+    } catch (error) {
+      console.error("Error exporting subscribers to CSV:", error);
+      res.status(500).json({ message: "Failed to export subscribers" });
+    }
+  });
+  
+  // Update subscriber status (admin only)
+  app.put("/api/admin/subscribers/:id", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to update subscriber");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const id = parseInt(req.params.id);
+      const { subscribed } = req.body;
+      
+      if (subscribed === undefined) {
+        return res.status(400).json({ message: "Subscribed status is required" });
+      }
+      
+      const updatedSubscriber = await storage.updateSubscriber(id, { subscribed });
+      
+      if (!updatedSubscriber) {
+        return res.status(404).json({ message: "Subscriber not found" });
+      }
+      
+      res.json(updatedSubscriber);
+    } catch (error) {
+      console.error(`Error updating subscriber with ID ${req.params.id}:`, error);
+      res.status(500).json({ message: "Failed to update subscriber" });
+    }
+  });
+  
+  // Delete subscriber (admin only)
+  app.delete("/api/admin/subscribers/:id", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to delete subscriber");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const id = parseInt(req.params.id);
+      
+      const success = await storage.deleteSubscriber(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Subscriber not found or could not be deleted" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error(`Error deleting subscriber with ID ${req.params.id}:`, error);
+      res.status(500).json({ message: "Failed to delete subscriber" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

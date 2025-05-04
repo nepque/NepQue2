@@ -49,6 +49,7 @@ import AdminWithdrawals from "@/pages/admin/AdminWithdrawals";
 import AdminBannerAds from "@/pages/admin/AdminBannerAds"; // Added import for banner ads
 import AdminSettings from "@/pages/admin/AdminSettings"; // Added import for admin settings
 import AdminPages from "@/pages/admin/AdminPages"; // Added import for content pages management
+import AdminSubscribers from "@/pages/admin/AdminSubscribers"; // Added import for subscribers management
 
 function UserRouter() {
   return (
@@ -137,6 +138,7 @@ function AdminRouter() {
       <Route path="/admin/banner-ads" component={AdminBannerAds} /> {/* Added banner ads route */}
       <Route path="/admin/settings" component={AdminSettings} /> {/* Added settings route */}
       <Route path="/admin/pages" component={AdminPages} /> {/* Added content pages route */}
+      <Route path="/admin/subscribers" component={AdminSubscribers} /> {/* Added subscribers route */}
       <Route component={NotFound} />
     </Switch>
   );
