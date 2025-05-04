@@ -189,7 +189,9 @@ const AdminBannerAds = () => {
     
     if (currentBanner) {
       // Update existing banner
-      updateMutation.mutate({ ...currentBanner, ...formData } as BannerAdType);
+      // Prepare data for update - remove the timestamp fields to avoid the toISOString error
+      const { createdAt, updatedAt, ...bannerToUpdate } = currentBanner;
+      updateMutation.mutate({ ...bannerToUpdate, ...formData } as BannerAdType);
     } else {
       // Create new banner
       createMutation.mutate(formData);
