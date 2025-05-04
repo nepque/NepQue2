@@ -20,6 +20,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { AuthModal } from "@/components/auth/AuthModal";
+import SEO from "@/components/common/SEO";
 
 // Extend the insert schema with client-side validation
 const submitCouponSchema = insertUserSubmittedCouponSchema.extend({
@@ -196,6 +197,11 @@ export default function SubmitCouponPage() {
   
   return (
     <div className="container mx-auto py-8 max-w-3xl">
+      <SEO 
+        title="Submit a Coupon" 
+        description="Share coupon deals with the NepQue community. All submissions will be reviewed before publishing."
+        noIndex={true}
+      />
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle>Submit a Coupon</CardTitle>

@@ -6,10 +6,10 @@ import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Helmet } from "react-helmet";
 import { ArrowLeft, RefreshCcw } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import SEO from "@/components/common/SEO";
 
 export default function WithdrawalsPage() {
   const { currentUser } = useAuth();
@@ -81,9 +81,11 @@ export default function WithdrawalsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Helmet>
-        <title>Withdrawal History | NepQue</title>
-      </Helmet>
+      <SEO 
+        title="Withdrawal History" 
+        description="Track all your point withdrawal requests on NepQue."
+        noIndex={true}
+      />
 
       <div className="container mx-auto px-4 py-8">
         <Button variant="ghost" asChild className="mb-6">
