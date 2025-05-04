@@ -23,7 +23,7 @@ const COLORS = ["#9333ea", "#a855f7", "#c084fc", "#9333ea", "#a855f7"];
 const POINTS = [1, 2, 3, 4, 5];
 
 const SpinPage = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { currentUser, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isSpinning, setIsSpinning] = useState(false);
@@ -33,14 +33,14 @@ const SpinPage = () => {
 
   // Get spin status
   const { data: spinStatus, isLoading } = useQuery<SpinResponse>({
-    queryKey: ["/api/users/firebase", user?.uid, "spin-status"],
+    queryKey: ["/api/users/firebase", currentUser?.uid, "spin-status"],
     queryFn: async () => {
-      if (!user?.uid) {
+      if (!currentUser?.uid) {
         throw new Error("User not logged in");
       }
       try {
         // Use a GET request to check if user can spin
-        const response = await fetch(`/api/users/firebase/${user.uid}/spin-status`);
+        const response = await fetch(`/api/users/firebase/${currentUser.uid}/spin-status`);
         if (!response.ok) throw new Error("Failed to fetch spin status");
         return response.json();
       } catch (error) {
@@ -48,7 +48,7 @@ const SpinPage = () => {
         throw error;
       }
     },
-    enabled: !!user?.uid,
+    enabled: !!currentUser?.uid,
     // Refetch periodically to update countdown
     refetchInterval: 60000, // every minute
   });
@@ -56,16 +56,16 @@ const SpinPage = () => {
   // Process a spin
   const spinMutation = useMutation<SpinResponse>({
     mutationFn: async () => {
-      if (!user?.uid) throw new Error("User not logged in");
-      console.log("Initiating spin for user:", user.uid);
-      return apiRequest(`/api/users/firebase/${user.uid}/spin`, {
+      if (!currentUser?.uid) throw new Error("User not logged in");
+      console.log("Initiating spin for user:", currentUser.uid);
+      return apiRequest(`/api/users/firebase/${currentUser.uid}/spin`, {
         method: "POST",
       });
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/users/firebase", user?.uid, "points-balance"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/users/firebase", user?.uid, "points-log"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/users/firebase", user?.uid, "spin-status"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users/firebase", currentUser?.uid, "points-balance"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users/firebase", currentUser?.uid, "points-log"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users/firebase", currentUser?.uid, "spin-status"] });
     },
     onError: (error) => {
       toast({
@@ -78,7 +78,7 @@ const SpinPage = () => {
   });
 
   const handleSpin = () => {
-    if (isSpinning || !user?.uid) return;
+    if (isSpinning || !currentUser?.uid) return;
     
     setIsSpinning(true);
     setResult(null);
@@ -147,7 +147,19 @@ const SpinPage = () => {
     return formatDistance(nextSpinTime, now, { addSuffix: true });
   };
 
-  const canSpin = !authLoading && !isLoading && !!user && (!spinStatus || spinStatus.success);
+  // Debug log to trace authentication state
+  useEffect(() => {
+    console.log("Authentication state:", { 
+      currentUser: !!currentUser, 
+      uid: currentUser?.uid,
+      authLoading, 
+      isLoading, 
+      spinStatus: !!spinStatus,
+      success: spinStatus?.success 
+    });
+  }, [currentUser, authLoading, isLoading, spinStatus]);
+
+  const canSpin = !authLoading && !isLoading && !!currentUser && (!spinStatus || spinStatus.success);
 
   return (
     <div className="container py-8 max-w-4xl">
@@ -238,7 +250,7 @@ const SpinPage = () => {
               <>
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Spinning...
               </>
-            ) : !user ? (
+            ) : !currentUser ? (
               "Login to Spin"
             ) : !spinStatus?.success ? (
               `Spin Again ${getTimeUntilNextSpin()}`
@@ -280,7 +292,8 @@ const SpinPage = () => {
                 </div>
               )}
               
-              {!user && (
+              {/* Only show the sign-in message if actually not logged in */}
+              {authLoading === false && !currentUser && (
                 <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
                   <p className="text-yellow-700">
                     Please sign in to spin the wheel and earn points.
@@ -288,7 +301,7 @@ const SpinPage = () => {
                 </div>
               )}
               
-              {user && spinStatus && !spinStatus.success && (
+              {currentUser && spinStatus && !spinStatus.success && (
                 <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                   <h3 className="font-semibold text-blue-700">Next spin available:</h3>
                   <p className="text-xl mt-1">
