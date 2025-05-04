@@ -36,7 +36,7 @@ interface StreakInfo {
 }
 
 const EarnPage = () => {
-  const { user } = useAuth();
+  const { currentUser: user } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [checkingIn, setCheckingIn] = useState(false);
