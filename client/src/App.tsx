@@ -81,8 +81,6 @@ function UserRouter() {
         <Route path="/contact" component={ContactPage} />
         <Route path="/privacy-policy" component={PrivacyPolicyPage} />
         <Route path="/terms-of-service" component={TermsOfServicePage} />
-        {/* Only direct slug route for content pages */}
-        <Route path="/:slug" component={ContentPage} />
         <Route path="/withdrawals">
           {() => (
             <ProtectedRoute>
@@ -104,6 +102,8 @@ function UserRouter() {
             </ProtectedRoute>
           )}
         </Route>
+        {/* Only direct slug route for content pages - must be after all other routes */}
+        <Route path="/:slug" component={ContentPage} />
         <Route component={NotFound} />
       </Switch>
       <Footer />
