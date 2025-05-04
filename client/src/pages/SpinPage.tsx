@@ -33,7 +33,7 @@ const SpinPage = () => {
 
   // Get spin status
   const { data: spinStatus, isLoading } = useQuery<SpinResponse>({
-    queryKey: ["/api/users", user?.uid, "spin-status"],
+    queryKey: ["/api/users/firebase", user?.uid, "spin-status"],
     queryFn: async () => {
       if (!user?.uid) {
         throw new Error("User not logged in");
@@ -45,13 +45,7 @@ const SpinPage = () => {
         return response.json();
       } catch (error) {
         console.error("Error fetching spin status:", error);
-        // Return a default response indicating user can spin (will be fixed when endpoint is available)
-        return {
-          success: true,
-          points: 0,
-          nextSpinTime: new Date().toISOString(),
-          message: "You can spin now!"
-        };
+        throw error;
       }
     },
     enabled: !!user?.uid,
@@ -69,9 +63,9 @@ const SpinPage = () => {
       });
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/users", user?.uid, "points-balance"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/users", user?.uid, "points-log"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/users", user?.uid, "spin-status"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users/firebase", user?.uid, "points-balance"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users/firebase", user?.uid, "points-log"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users/firebase", user?.uid, "spin-status"] });
     },
     onError: (error) => {
       toast({
@@ -89,40 +83,44 @@ const SpinPage = () => {
     setIsSpinning(true);
     setResult(null);
     
-    // Determine how many degrees to rotate
-    // We need to ensure the wheel lands on the result we want
-    const spinResult = Math.floor(Math.random() * 5) + 1; // Random int between 1-5
-    
-    // The index in the POINTS array where our result is
-    const resultIndex = POINTS.indexOf(spinResult);
-    
-    // Calculate how many degrees we need to spin to land on our result
-    // Each segment is 72 degrees (360 / 5)
-    // We add 2-5 full rotations (720-1800 degrees) for effect, plus the position
-    const segmentDegrees = 360 / POINTS.length;
-    const segmentOffset = (segmentDegrees / 2); // Offset to center of segment
-    const destinationDegrees = (resultIndex * segmentDegrees) + segmentOffset;
-    
-    // Final rotation = multiple full rotations + destination position + a small random offset
-    const totalRotation = 1440 + destinationDegrees + (Math.random() * 30 - 15); // 4 full rotations (1440) + destination
-    
-    // Set the rotation
-    setRotation(totalRotation);
-    
-    // After animation completes, call the API to record the spin
-    setTimeout(() => {
-      setResult(spinResult);
-      
-      // Call the spin API
-      spinMutation.mutate();
-      
-      // Show the result toast
-      toast({
-        title: "Congratulations!",
-        description: `You won ${spinResult} points!`,
-        variant: "default",
-      });
-    }, 5000); // Match this to animation duration
+    // Call the spin API first to get the actual points awarded
+    spinMutation.mutate(undefined, {
+      onSuccess: (data) => {
+        // Get the points awarded from the API response
+        const pointsAwarded = data.points;
+        
+        // The index in the POINTS array where our result is
+        const resultIndex = POINTS.indexOf(pointsAwarded);
+        
+        // Calculate how many degrees we need to spin to land on our result
+        // Each segment is 72 degrees (360 / 5)
+        // We add 4 full rotations (1440 degrees) for effect, plus the position
+        const segmentDegrees = 360 / POINTS.length;
+        const segmentOffset = (segmentDegrees / 2); // Offset to center of segment
+        const destinationDegrees = (resultIndex * segmentDegrees) + segmentOffset;
+        
+        // Final rotation = multiple full rotations + destination position + a small random offset
+        const totalRotation = 1440 + destinationDegrees + (Math.random() * 30 - 15); // 4 full rotations + destination
+        
+        // Set the rotation
+        setRotation(totalRotation);
+        
+        // After animation completes, update the UI
+        setTimeout(() => {
+          setResult(pointsAwarded);
+          
+          // Show the result toast
+          toast({
+            title: "Congratulations!",
+            description: `You won ${pointsAwarded} points!`,
+            variant: "default",
+          });
+        }, 5000); // Match this to animation duration
+      },
+      onError: () => {
+        setIsSpinning(false);
+      }
+    });
   };
 
   // Reset spinning state after animation completes
