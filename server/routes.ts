@@ -2007,6 +2007,168 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete subscriber" });
     }
   });
+  
+  // Social Media Links API Routes
+  
+  // Get all active social media links (public)
+  app.get("/api/social-media-links", async (req, res) => {
+    try {
+      const links = await storage.getAllSocialMediaLinks();
+      // Only return active links for public API
+      const activeLinks = links.filter(link => link.isActive);
+      res.json(activeLinks);
+    } catch (error) {
+      console.error("Error getting social media links:", error);
+      res.status(500).json({ message: "Failed to get social media links" });
+    }
+  });
+  
+  // Get all social media links (admin only)
+  app.get("/api/admin/social-media-links", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to access social media links");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const links = await storage.getAllSocialMediaLinks();
+      res.json(links);
+    } catch (error) {
+      console.error("Error getting social media links:", error);
+      res.status(500).json({ message: "Failed to get social media links" });
+    }
+  });
+  
+  // Get social media link by ID (admin only)
+  app.get("/api/admin/social-media-links/:id", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to access social media link");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const id = parseInt(req.params.id);
+      const link = await storage.getSocialMediaLinkById(id);
+      
+      if (!link) {
+        return res.status(404).json({ message: "Social media link not found" });
+      }
+      
+      res.json(link);
+    } catch (error) {
+      console.error("Error getting social media link:", error);
+      res.status(500).json({ message: "Failed to get social media link" });
+    }
+  });
+  
+  // Create social media link (admin only)
+  app.post("/api/admin/social-media-links", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to create social media link");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const { platform, url, icon, isActive } = req.body;
+      
+      if (!platform || !url || !icon) {
+        return res.status(400).json({ message: "Platform, URL, and icon are required" });
+      }
+      
+      const link = await storage.createSocialMediaLink({
+        platform,
+        url,
+        icon,
+        isActive: isActive !== undefined ? isActive : true
+      });
+      
+      res.status(201).json(link);
+    } catch (error) {
+      console.error("Error creating social media link:", error);
+      res.status(500).json({ message: "Failed to create social media link" });
+    }
+  });
+  
+  // Update social media link (admin only)
+  app.put("/api/admin/social-media-links/:id", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to update social media link");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const id = parseInt(req.params.id);
+      const { platform, url, icon, isActive } = req.body;
+      
+      if (!platform || !url || !icon) {
+        return res.status(400).json({ message: "Platform, URL, and icon are required" });
+      }
+      
+      const link = await storage.updateSocialMediaLink(id, {
+        platform,
+        url,
+        icon,
+        isActive
+      });
+      
+      res.json(link);
+    } catch (error) {
+      console.error("Error updating social media link:", error);
+      res.status(500).json({ message: "Failed to update social media link" });
+    }
+  });
+  
+  // Toggle social media link status (admin only)
+  app.post("/api/admin/social-media-links/:id/toggle", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to toggle social media link status");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const id = parseInt(req.params.id);
+      const link = await storage.toggleSocialMediaLinkStatus(id);
+      
+      res.json(link);
+    } catch (error) {
+      console.error("Error toggling social media link status:", error);
+      res.status(500).json({ message: "Failed to toggle social media link status" });
+    }
+  });
+  
+  // Delete social media link (admin only)
+  app.delete("/api/admin/social-media-links/:id", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to delete social media link");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteSocialMediaLink(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Social media link not found or could not be deleted" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error(`Error deleting social media link with ID ${req.params.id}:`, error);
+      res.status(500).json({ message: "Failed to delete social media link" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
