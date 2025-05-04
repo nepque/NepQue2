@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Loader2, Gift, Target } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
+import BannerAd from "@/components/banner/BannerAd";
 
 interface SpinResponse {
   success: boolean;
@@ -334,6 +335,11 @@ const SpinPage = () => {
                   </div>
                 </div>
               )}
+            </div>
+            
+            {/* Banner Ad */}
+            <div className="mt-10">
+              <BannerAd location="spin-page" className="mx-auto" />
             </div>
           </div>
         </div>
