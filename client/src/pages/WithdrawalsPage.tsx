@@ -14,15 +14,34 @@ import { Button } from "@/components/ui/button";
 export default function WithdrawalsPage() {
   const { currentUser } = useAuth();
 
-  // Use a hardcoded user ID 1 for the withdrawal requests
+  // Get current user's data
+  const { data: userData, isLoading: userLoading } = useQuery({
+    queryKey: currentUser?.uid ? [`/api/users/${currentUser.uid}`] : ['no-user'],
+    queryFn: async () => {
+      if (!currentUser?.uid) return null;
+      const response = await fetch(`/api/users/${currentUser.uid}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch user: ${response.status}`);
+      }
+      return await response.json();
+    },
+    retry: 1,
+    enabled: !!currentUser
+  });
+
+  // Fetch withdrawals for the current user
   const { data: withdrawals = [], isLoading, error, refetch } = useQuery<WithdrawalRequestWithUser[]>({
-    queryKey: ['/api/users/1/withdrawals'],
+    queryKey: userData?.id ? [`/api/users/${userData.id}/withdrawals`] : ['no-withdrawals'],
     queryFn: async () => {
       try {
-        console.log('Fetching withdrawal data for hardcoded user ID: 1');
+        if (!userData?.id) {
+          console.log('No user ID available, cannot fetch withdrawals');
+          return [];
+        }
         
-        // Use the hardcoded user ID 1 for the API request
-        const response = await apiRequest('/api/users/1/withdrawals', {
+        console.log(`Fetching withdrawal data for user ID: ${userData.id}`);
+        
+        const response = await apiRequest(`/api/users/${userData.id}/withdrawals`, {
           method: 'GET',
           headers: {
             'Cache-Control': 'no-cache',
@@ -37,7 +56,7 @@ export default function WithdrawalsPage() {
         throw err;
       }
     },
-    enabled: !!currentUser, // Only run when the user is logged in
+    enabled: !!userData?.id, // Only run when we have the user ID
     refetchOnWindowFocus: true,
     staleTime: 0, // Don't cache the data
   });
@@ -48,8 +67,12 @@ export default function WithdrawalsPage() {
     }
   }, [error]);
 
+  // Handle refresh button click - refetch both user data and withdrawals
   const handleRefresh = () => {
-    refetch();
+    // If we have a valid user ID, refetch withdrawals 
+    if (userData?.id) {
+      refetch();
+    }
   }
 
   if (!currentUser) {
@@ -76,7 +99,7 @@ export default function WithdrawalsPage() {
             <p className="text-gray-500 mt-1">Track all your point withdrawal requests</p>
           </div>
 
-          {isLoading ? (
+          {userLoading || isLoading ? (
             <div className="p-6">
               <div className="animate-pulse space-y-4">
                 {[1, 2, 3].map((i) => (
