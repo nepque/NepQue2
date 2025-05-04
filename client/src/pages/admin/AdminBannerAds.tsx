@@ -204,7 +204,7 @@ const AdminBannerAds = () => {
       imageUrl: banner.imageUrl || '',
       linkUrl: banner.linkUrl || '',
       location: banner.location,
-      isActive: banner.isActive,
+      isActive: banner.isActive === null ? undefined : banner.isActive,
     });
     setIsOpen(true);
   };
