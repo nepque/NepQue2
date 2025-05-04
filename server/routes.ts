@@ -1621,6 +1621,196 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch site verification code" });
     }
   });
+  
+  // Content Pages Routes
+  
+  // Public routes
+  
+  // Get all published content pages
+  app.get("/api/pages", async (req, res) => {
+    try {
+      const pages = await storage.getPublishedContentPages();
+      res.json(pages);
+    } catch (error) {
+      console.error("Error getting content pages:", error);
+      res.status(500).json({ message: "Failed to get content pages" });
+    }
+  });
+  
+  // Get published content page by slug
+  app.get("/api/pages/:slug", async (req, res) => {
+    try {
+      const { slug } = req.params;
+      const page = await storage.getContentPageBySlug(slug);
+      
+      if (!page) {
+        return res.status(404).json({ message: "Content page not found" });
+      }
+      
+      // Only return published pages to public API
+      if (!page.isPublished) {
+        return res.status(404).json({ message: "Content page not found" });
+      }
+      
+      res.json(page);
+    } catch (error) {
+      console.error(`Error getting content page with slug '${req.params.slug}':`, error);
+      res.status(500).json({ message: "Failed to get content page" });
+    }
+  });
+  
+  // Admin routes
+  
+  // Get all content pages (published and unpublished)
+  app.get("/api/admin/pages", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to access content pages");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const pages = await storage.getAllContentPages();
+      res.json(pages);
+    } catch (error) {
+      console.error("Error getting admin content pages:", error);
+      res.status(500).json({ message: "Failed to get content pages" });
+    }
+  });
+  
+  // Get content page by ID (for admin)
+  app.get("/api/admin/pages/:id", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to access content page");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const id = parseInt(req.params.id);
+      const page = await storage.getContentPageById(id);
+      
+      if (!page) {
+        return res.status(404).json({ message: "Content page not found" });
+      }
+      
+      res.json(page);
+    } catch (error) {
+      console.error(`Error getting admin content page with ID ${req.params.id}:`, error);
+      res.status(500).json({ message: "Failed to get content page" });
+    }
+  });
+  
+  // Create content page (admin only)
+  app.post("/api/admin/pages", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to create content page");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const pageData = req.body;
+      
+      // Validate required fields
+      if (!pageData.title || !pageData.slug || !pageData.content) {
+        return res.status(400).json({ message: "Title, slug, and content are required" });
+      }
+      
+      // Format slug to be URL-friendly
+      pageData.slug = pageData.slug.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      
+      // Check if slug already exists
+      const existingPage = await storage.getContentPageBySlug(pageData.slug);
+      if (existingPage) {
+        return res.status(400).json({ message: "A page with this slug already exists" });
+      }
+      
+      const createdPage = await storage.createContentPage(pageData);
+      
+      if (!createdPage) {
+        return res.status(500).json({ message: "Failed to create content page" });
+      }
+      
+      res.status(201).json(createdPage);
+    } catch (error) {
+      console.error("Error creating content page:", error);
+      res.status(500).json({ message: "Failed to create content page" });
+    }
+  });
+  
+  // Update content page (admin only)
+  app.put("/api/admin/pages/:id", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to update content page");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const id = parseInt(req.params.id);
+      const pageData = req.body;
+      
+      // Get existing page
+      const existingPage = await storage.getContentPageById(id);
+      if (!existingPage) {
+        return res.status(404).json({ message: "Content page not found" });
+      }
+      
+      // Format slug if provided
+      if (pageData.slug) {
+        pageData.slug = pageData.slug.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        
+        // Check if slug already exists and belongs to another page
+        if (pageData.slug !== existingPage.slug) {
+          const duplicateSlug = await storage.getContentPageBySlug(pageData.slug);
+          if (duplicateSlug && duplicateSlug.id !== id) {
+            return res.status(400).json({ message: "A page with this slug already exists" });
+          }
+        }
+      }
+      
+      const updatedPage = await storage.updateContentPage(id, pageData);
+      
+      if (!updatedPage) {
+        return res.status(500).json({ message: "Failed to update content page" });
+      }
+      
+      res.json(updatedPage);
+    } catch (error) {
+      console.error(`Error updating content page with ID ${req.params.id}:`, error);
+      res.status(500).json({ message: "Failed to update content page" });
+    }
+  });
+  
+  // Delete content page (admin only)
+  app.delete("/api/admin/pages/:id", async (req, res) => {
+    try {
+      // Verify admin token for protected route
+      const authHeader = req.headers.authorization;
+      if (authHeader !== "Bearer admin-development-token") {
+        console.log("Unauthorized attempt to delete content page");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const id = parseInt(req.params.id);
+      
+      const success = await storage.deleteContentPage(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Content page not found or could not be deleted" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error(`Error deleting content page with ID ${req.params.id}:`, error);
+      res.status(500).json({ message: "Failed to delete content page" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

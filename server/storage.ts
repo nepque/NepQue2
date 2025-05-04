@@ -2512,6 +2512,93 @@ export class DatabaseStorage implements IStorage {
       return false;
     }
   }
+  
+  // Content Pages operations
+  
+  async getAllContentPages(): Promise<ContentPage[]> {
+    try {
+      return await db.select().from(contentPages).orderBy(asc(contentPages.title));
+    } catch (error) {
+      console.error("Error getting all content pages:", error);
+      return [];
+    }
+  }
+  
+  async getPublishedContentPages(): Promise<ContentPage[]> {
+    try {
+      return await db.select()
+        .from(contentPages)
+        .where(eq(contentPages.isPublished, true))
+        .orderBy(asc(contentPages.title));
+    } catch (error) {
+      console.error("Error getting published content pages:", error);
+      return [];
+    }
+  }
+  
+  async getContentPageBySlug(slug: string): Promise<ContentPage | undefined> {
+    try {
+      const [page] = await db.select()
+        .from(contentPages)
+        .where(eq(contentPages.slug, slug));
+      return page;
+    } catch (error) {
+      console.error(`Error getting content page by slug '${slug}':`, error);
+      return undefined;
+    }
+  }
+  
+  async getContentPageById(id: number): Promise<ContentPage | undefined> {
+    try {
+      const [page] = await db.select()
+        .from(contentPages)
+        .where(eq(contentPages.id, id));
+      return page;
+    } catch (error) {
+      console.error(`Error getting content page by ID ${id}:`, error);
+      return undefined;
+    }
+  }
+  
+  async createContentPage(data: InsertContentPage): Promise<ContentPage | undefined> {
+    try {
+      const [created] = await db.insert(contentPages)
+        .values(data)
+        .returning();
+      return created;
+    } catch (error) {
+      console.error("Error creating content page:", error);
+      return undefined;
+    }
+  }
+  
+  async updateContentPage(id: number, data: Partial<InsertContentPage>): Promise<ContentPage | undefined> {
+    try {
+      const [updated] = await db.update(contentPages)
+        .set({
+          ...data,
+          updatedAt: new Date(),
+        })
+        .where(eq(contentPages.id, id))
+        .returning();
+      return updated;
+    } catch (error) {
+      console.error(`Error updating content page with ID ${id}:`, error);
+      return undefined;
+    }
+  }
+  
+  async deleteContentPage(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(contentPages)
+        .where(eq(contentPages.id, id))
+        .returning();
+      return result.length > 0;
+    } catch (error) {
+      console.error(`Error deleting content page with ID ${id}:`, error);
+      return false;
+    }
+  }
 }
 
 // Use the database storage implementation

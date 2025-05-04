@@ -279,3 +279,32 @@ export const insertSiteSettingSchema = createInsertSchema(siteSettings).pick({
 
 export type InsertSiteSetting = z.infer<typeof insertSiteSettingSchema>;
 export type SiteSetting = typeof siteSettings.$inferSelect;
+
+// Content pages schema - for managing static pages like About Us, FAQ, etc.
+export const contentPages = pgTable("content_pages", {
+  id: serial("id").primaryKey(),
+  slug: text("slug").notNull().unique(), // URL slug, e.g., "about-us", "faq", etc.
+  title: text("title").notNull(),
+  content: text("content").notNull(), // HTML content
+  isPublished: boolean("is_published").default(true),
+  noIndex: boolean("no_index").default(false), // SEO noindex control
+  metaTitle: text("meta_title"), // SEO title
+  metaDescription: text("meta_description"), // SEO description
+  metaKeywords: text("meta_keywords"), // SEO keywords
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertContentPageSchema = createInsertSchema(contentPages).pick({
+  slug: true,
+  title: true,
+  content: true,
+  isPublished: true,
+  noIndex: true,
+  metaTitle: true,
+  metaDescription: true,
+  metaKeywords: true,
+});
+
+export type InsertContentPage = z.infer<typeof insertContentPageSchema>;
+export type ContentPage = typeof contentPages.$inferSelect;
