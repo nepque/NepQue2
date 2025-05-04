@@ -81,6 +81,8 @@ function UserRouter() {
         <Route path="/privacy-policy" component={PrivacyPolicyPage} />
         <Route path="/terms-of-service" component={TermsOfServicePage} />
         <Route path="/page/:slug" component={ContentPage} />
+        {/* Add direct slug route for content pages */}
+        <Route path="/:slug" component={ContentPage} />
         <Route path="/withdrawals">
           {() => (
             <ProtectedRoute>

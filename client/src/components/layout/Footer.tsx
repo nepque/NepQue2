@@ -139,7 +139,7 @@ const Footer = () => {
                 .map(page => (
                   <li key={page.id}>
                     <Link 
-                      href={`/page/${page.slug}`} 
+                      href={`/${page.slug}`} 
                       className="text-neutral-400 hover:text-white transition-colors"
                     >
                       {page.title}

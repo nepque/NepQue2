@@ -19,8 +19,21 @@ interface ContentPageData {
 }
 
 const ContentPage = () => {
-  const [, params] = useRoute("/page/:slug");
-  const slug = params?.slug || "";
+  // Check both route patterns for the slug
+  const [matchWithPage, paramsWithPage] = useRoute("/page/:slug");
+  const [matchDirect, paramsDirect] = useRoute("/:slug");
+  
+  // Get the slug from whichever route matched
+  const slug = (matchWithPage ? paramsWithPage?.slug : paramsDirect?.slug) || "";
+  
+  // Skip homepage and known routes to avoid conflicts
+  const skipRoutes = [
+    "about", "faq", "contact", "privacy-policy", "terms-of-service", 
+    "coupons", "admin", "profile", "search", "withdrawals", "earn", 
+    "spin", "submit-coupon"
+  ];
+  
+  const isValidContentPage = !skipRoutes.includes(slug);
   
   const { data: page, isLoading, error } = useQuery({
     queryKey: [`/api/pages/${slug}`],
@@ -31,7 +44,8 @@ const ContentPage = () => {
       }
       return response.json() as Promise<ContentPageData>;
     },
-    enabled: !!slug,
+    // Only run the query if we have a slug and it's not one of our known routes
+    enabled: !!slug && isValidContentPage,
   });
 
   if (isLoading) {
@@ -52,6 +66,25 @@ const ContentPage = () => {
     );
   }
 
+  // If we're trying to load a reserved route, we should show 404
+  if (!isValidContentPage) {
+    return (
+      <div className="container max-w-4xl mx-auto px-4 py-16 text-center">
+        <h1 className="text-3xl font-bold mb-4">Page Not Found</h1>
+        <p className="text-gray-600 mb-8">
+          The page you are looking for doesn't exist or has been moved.
+        </p>
+        <a
+          href="/"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors"
+        >
+          Return to Home
+        </a>
+      </div>
+    );
+  }
+  
+  // Show error for API errors or no page found
   if (error || !page) {
     return (
       <div className="container max-w-4xl mx-auto px-4 py-16 text-center">
