@@ -7,6 +7,7 @@ interface SEOProps {
   ogImage?: string;
   ogType?: 'website' | 'article';
   canonicalUrl?: string;
+  noIndex?: boolean;
 }
 
 const SEO = ({
@@ -16,6 +17,7 @@ const SEO = ({
   ogImage,
   ogType = 'website',
   canonicalUrl,
+  noIndex = false,
 }: SEOProps) => {
   const siteName = "NepQue";
   const fullTitle = title ? `${title} | ${siteName}` : siteName;
@@ -25,6 +27,9 @@ const SEO = ({
       <title>{fullTitle}</title>
       {description && <meta name="description" content={description} />}
       {keywords && <meta name="keywords" content={keywords} />}
+      
+      {/* Robots directive */}
+      {noIndex && <meta name="robots" content="noindex, nofollow" />}
       
       {/* Open Graph / Facebook */}
       <meta property="og:type" content={ogType} />

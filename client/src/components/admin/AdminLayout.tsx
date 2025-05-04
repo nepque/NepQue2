@@ -16,6 +16,7 @@ import {
   Image
 } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
+import SEO from "@/components/common/SEO";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -47,6 +48,7 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
 
   return (
     <div className="min-h-screen flex bg-gray-50">
+      <SEO title={`Admin - ${title}`} noIndex={true} />
       {/* Sidebar */}
       <aside className="bg-gray-800 text-white w-64 shrink-0 fixed h-screen overflow-y-auto">
         {/* Logo */}
