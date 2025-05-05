@@ -13,7 +13,6 @@ import {
 } from "firebase/auth";
 
 // Log environment variables to debug initialization
-console.log("Firebase initialization - Using hardcoded configuration (temporary fix)");
 
 // TEMPORARY FIX: Hardcoding Firebase configuration values for production
 // TODO: Implement proper environment variable handling for production builds
@@ -26,20 +25,11 @@ const firebaseConfig = {
   appId: "1:743824652833:web:e3b9eed8b43e44c814c160",
 };
 
-console.log("Firebase config (without sensitive values):", {
-  apiKey: firebaseConfig.apiKey ? "Exists (value hidden)" : "MISSING",
-  authDomain: firebaseConfig.authDomain,
-  projectId: firebaseConfig.projectId,
-  storageBucket: firebaseConfig.storageBucket,
-  appId: firebaseConfig.appId ? "Exists (value hidden)" : "MISSING"
-});
 
 // Initialize Firebase
 let app;
 try {
-  console.log("Attempting to initialize Firebase...");
   app = initializeApp(firebaseConfig);
-  console.log("Firebase initialized successfully");
 } catch (err) {
   console.error("Error initializing Firebase:", err);
   throw err;
