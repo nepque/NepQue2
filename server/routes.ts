@@ -5,8 +5,8 @@ import { z } from "zod";
 
 // Admin credentials for development
 const ADMIN_CREDENTIALS = {
-  username: "admin",
-  password: "admin123",
+  username: "admin@nepque.com",
+  password: "admin@123",
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -394,6 +394,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { categoryId, storeId, featured, search, sortBy } = req.query;
       
+      console.log('Search query received:', { search });
+      
       const options: any = {};
       
       if (categoryId) {
@@ -410,13 +412,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (search) {
         options.search = search as string;
+        console.log('Adding search to options:', options.search);
       }
       
       if (sortBy) {
         options.sortBy = sortBy as 'newest' | 'expiring' | 'popular';
       }
       
+      console.log('Fetching coupons with options:', options);
       const coupons = await storage.getCoupons(options);
+      console.log(`Found ${coupons.length} coupons matching the search criteria`);
       res.json(coupons);
     } catch (error) {
       console.error("Error fetching coupons:", error);

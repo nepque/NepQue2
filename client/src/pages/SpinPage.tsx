@@ -185,6 +185,11 @@ const SpinPage = () => {
           description="Spin the wheel to earn points at NepQue!" 
           noIndex={true}
         />
+        
+        {/* Banner Ad Above the Spin Wheel */}
+        <div className="mb-6">
+          <BannerAd location="spin-page" className="mx-auto" />
+        </div>
 
         <div className="bg-white p-8 rounded-2xl shadow-xl mx-auto">
           <div className="text-center mb-6">
@@ -337,12 +342,12 @@ const SpinPage = () => {
                 </div>
               )}
             </div>
-            
-            {/* Banner Ad */}
-            <div className="mt-10">
-              <BannerAd location="spin-page" className="mx-auto" />
-            </div>
           </div>
+        </div>
+        
+        {/* Banner Ad Below the Spin Wheel */}
+        <div className="mt-10">
+          <BannerAd location="spin-page" className="mx-auto" />
         </div>
       </div>
     </div>

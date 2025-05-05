@@ -476,22 +476,47 @@ export class MemStorage implements IStorage {
     }
 
     if (options?.search) {
+      console.log(`DEBUG: In-memory search for term: "${options.search}"`);
       const searchLower = options.search.toLowerCase();
-      filteredCoupons = filteredCoupons.filter(
-        (coupon) => {
-          const couponTitle = coupon.title.toLowerCase();
-          const couponDesc = coupon.description.toLowerCase();
-          const store = this.stores.get(coupon.storeId);
-          const storeName = store ? store.name.toLowerCase() : '';
-          
-          // Focus on title, description, and store name (company) for better relevance and consistency with DB implementation
-          return (
-            couponTitle.includes(searchLower) || 
-            couponDesc.includes(searchLower) ||
-            storeName.includes(searchLower)
-          );
-        }
+      
+      // First try exact match on store name (to match database implementation behavior)
+      const exactStoreMatch = Array.from(this.stores.values()).find(
+        store => store.name.toLowerCase() === searchLower
       );
+      
+      if (exactStoreMatch) {
+        console.log(`DEBUG: Found exact store name match for "${searchLower}": ${exactStoreMatch.name} (ID: ${exactStoreMatch.id})`);
+        // If we have an exact store name match, only return coupons from that store
+        filteredCoupons = filteredCoupons.filter(
+          coupon => coupon.storeId === exactStoreMatch.id
+        );
+        console.log(`DEBUG: In-memory exact store match found ${filteredCoupons.length} coupons for ${exactStoreMatch.name}`);
+      } else {
+        // Otherwise do standard partial matching
+        console.log('DEBUG: No exact store match, performing partial text search');
+        
+        filteredCoupons = filteredCoupons.filter(
+          (coupon) => {
+            const couponTitle = coupon.title.toLowerCase();
+            const couponDesc = coupon.description.toLowerCase();
+            const store = this.stores.get(coupon.storeId);
+            const storeName = store ? store.name.toLowerCase() : '';
+            
+            // Focus on title, description, and store name for consistency with DB implementation
+            const matches = 
+              couponTitle.includes(searchLower) || 
+              couponDesc.includes(searchLower) ||
+              storeName.includes(searchLower);
+              
+            if (storeName.includes(searchLower)) {
+              console.log(`DEBUG: In-memory partial match found in store name: ${store?.name}`);
+            }
+              
+            return matches;
+          }
+        );
+        console.log(`DEBUG: In-memory partial search found ${filteredCoupons.length} results`);
+      }
     }
 
     // Apply sorting
@@ -1584,15 +1609,18 @@ export class DatabaseStorage implements IStorage {
       if (options?.search) {
         // Create a more focused fuzzy search on the most important fields
         const searchTerm = `%${options.search}%`;
+        console.log(`DEBUG: Search term for SQL query: "${searchTerm}"`);
         
-        // Focus on title, description, and store name (company) for better relevance
+        // Use SQL LOWER function to make case-insensitive search
         filters.push(
           or(
-            like(coupons.title, searchTerm),
-            like(coupons.description, searchTerm),
-            like(stores.name, searchTerm)
+            sql`LOWER(${coupons.title}) LIKE LOWER(${searchTerm})`,
+            sql`LOWER(${coupons.description}) LIKE LOWER(${searchTerm})`,
+            sql`LOWER(${stores.name}) LIKE LOWER(${searchTerm})`
           )
         );
+        
+        console.log('DEBUG: Applied case-insensitive search filter');
       }
       
       if (filters.length > 0) {
@@ -1611,14 +1639,64 @@ export class DatabaseStorage implements IStorage {
         query = query.orderBy(desc(coupons.id));
       }
       
+      // Handle store name searches more directly
+      if (options?.search) {
+        const searchTermLower = options.search.toLowerCase();
+        console.log(`DEBUG: Checking if search "${searchTermLower}" matches a store name directly`);
+        
+        // Find any store that matches the search term (case-insensitive)
+        const matchingStores = await db.select()
+          .from(stores)
+          .where(sql`LOWER(${stores.name}) = ${searchTermLower}`);
+          
+        console.log(`DEBUG: Found ${matchingStores.length} stores matching name "${searchTermLower}" exactly`);
+        
+        // If we found a matching store, look up all coupons for that store
+        if (matchingStores.length > 0) {
+          const storeId = matchingStores[0].id;
+          console.log(`DEBUG: Getting coupons for store ID ${storeId} (${matchingStores[0].name})`);
+          
+          const storeCoupons = await db.select()
+            .from(coupons)
+            .leftJoin(stores, eq(coupons.storeId, stores.id))
+            .leftJoin(categories, eq(coupons.categoryId, categories.id))
+            .where(eq(coupons.storeId, storeId));
+            
+          console.log(`DEBUG: Found ${storeCoupons.length} coupons for store ID ${storeId}`);
+          
+          // If we found coupons, return them
+          if (storeCoupons.length > 0) {
+            // Transform to expected format
+            const formattedStoreCoupons = storeCoupons.map(row => ({
+              ...row.coupons,
+              store: row.stores,
+              category: row.categories
+            }));
+            
+            console.log(`DEBUG: Returning ${formattedStoreCoupons.length} coupons for ${matchingStores[0].name}`);
+            return formattedStoreCoupons;
+          }
+        }
+      }
+      
+      // Extract the SQL query being run for debugging
+      const querySQL = query.toSQL();
+      console.log('DEBUG: SQL Query being executed:', querySQL.sql, 'with params:', querySQL.params);
+
       const results = await query;
+      console.log(`DEBUG: Raw query results for coupons:`, 
+                 JSON.stringify(results.slice(0, 1), null, 2), // just show first result to avoid huge log
+                 `... and ${results.length-1} more results`);
       
       // Transform results to expected CouponWithRelations format
-      return results.map(row => ({
+      const formattedResults = results.map(row => ({
         ...row.coupons,
         store: row.stores,
         category: row.categories
       }));
+      
+      console.log(`DEBUG: Returning ${formattedResults.length} coupons`);
+      return formattedResults;
     } catch (error) {
       console.error("Error getting coupons:", error);
       return [];
