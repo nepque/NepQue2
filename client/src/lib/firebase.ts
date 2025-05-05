@@ -12,16 +12,38 @@ import {
   UserCredential
 } from "firebase/auth";
 
+// Log environment variables to debug initialization
+console.log("Firebase initialization - Using hardcoded configuration (temporary fix)");
+
+// TEMPORARY FIX: Hardcoding Firebase configuration values for production
+// TODO: Implement proper environment variable handling for production builds
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.appspot.com`,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  // Values taken from .env file
+  apiKey: "AIzaSyBp7YOF0aJkuqvOtl4ReznVlMDxx3yB6PA",
+  authDomain: "nepque-app.firebaseapp.com",
+  projectId: "nepque-app",
+  storageBucket: "nepque-app.appspot.com",
+  appId: "1:743824652833:web:e3b9eed8b43e44c814c160",
 };
 
+console.log("Firebase config (without sensitive values):", {
+  apiKey: firebaseConfig.apiKey ? "Exists (value hidden)" : "MISSING",
+  authDomain: firebaseConfig.authDomain,
+  projectId: firebaseConfig.projectId,
+  storageBucket: firebaseConfig.storageBucket,
+  appId: firebaseConfig.appId ? "Exists (value hidden)" : "MISSING"
+});
+
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+let app;
+try {
+  console.log("Attempting to initialize Firebase...");
+  app = initializeApp(firebaseConfig);
+  console.log("Firebase initialized successfully");
+} catch (err) {
+  console.error("Error initializing Firebase:", err);
+  throw err;
+}
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
